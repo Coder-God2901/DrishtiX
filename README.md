@@ -1,5 +1,5 @@
 
-  # Professional Contrast Features
+  # EventSphere Features
 
   This is a code bundle for Professional Contrast Features. The original project is available at https://www.figma.com/design/0onjffBbprHRxNm53hhLqj/Professional-Contrast-Features.
 
