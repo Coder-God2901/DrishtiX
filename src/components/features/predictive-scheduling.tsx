@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Progress } from "../ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { recommendationsData, forecastOutputs } from "../../data/predictive-simulation-data";
 
 interface Recommendation {
   id: string;
@@ -27,49 +28,7 @@ interface Recommendation {
 }
 
 export function PredictiveScheduling() {
-  const [recommendations] = useState<Recommendation[]>([
-    {
-      id: "1",
-      zone: "Main Stage",
-      action: "Delay opening by 7 minutes",
-      expectedImpact: -40,
-      confidence: 87,
-      drivers: [
-        { icon: Users, label: "Gate A inflow ↑" },
-        { icon: AlertTriangle, label: "Traffic congestion" },
-        { icon: TrendingUp, label: "Weather heat" },
-      ],
-      timeHorizon: "Next 30 min",
-      forecast: [45, 62, 78, 92, 85, 73],
-    },
-    {
-      id: "2",
-      zone: "Food Court",
-      action: "Add 2 mobile vendors to north side",
-      expectedImpact: -25,
-      confidence: 92,
-      drivers: [
-        { icon: Users, label: "Queue buildup" },
-        { icon: Clock, label: "Peak lunch time" },
-        { icon: TrendingUp, label: "Concert break" },
-      ],
-      timeHorizon: "Next 15 min",
-      forecast: [35, 48, 65, 58, 42, 35],
-    },
-    {
-      id: "3",
-      zone: "VIP Area",
-      action: "Open second bar station",
-      expectedImpact: -30,
-      confidence: 79,
-      drivers: [
-        { icon: Users, label: "VIP arrivals ↑" },
-        { icon: Clock, label: "Pre-show rush" },
-      ],
-      timeHorizon: "Next 10 min",
-      forecast: [25, 38, 52, 45, 35, 28],
-    },
-  ]);
+  const [recommendations] = useState(recommendationsData);
 
   const [expandedExplainer, setExpandedExplainer] = useState<string | null>(null);
 

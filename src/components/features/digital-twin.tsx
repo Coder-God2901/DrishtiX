@@ -20,6 +20,7 @@ import {
   Clock
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { scenariosData, simulationParameters } from "../../data/predictive-simulation-data";
 
 interface Scenario {
   id: string;
@@ -29,20 +30,13 @@ interface Scenario {
   severity: "low" | "medium" | "high" | "critical";
 }
 
-const scenarios: Scenario[] = [
-  { id: "fire", name: "Fire Emergency", icon: Flame, description: "Simulate fire outbreak and evacuation", severity: "critical" },
-  { id: "panic", name: "Crowd Panic", icon: Users, description: "Mass panic scenario with crowd surge", severity: "critical" },
-  { id: "weather", name: "Severe Weather", icon: CloudRain, description: "Heavy rain and lightning evacuation", severity: "high" },
-  { id: "gate-surge", name: "Gate Surge", icon: TrendingUp, description: "Excessive crowd at single entry point", severity: "medium" },
-];
-
 export function DigitalTwin() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [playbackSpeed, setPlaybackSpeed] = useState(simulationParameters.speedMultiplier);
   const [simulationTime, setSimulationTime] = useState(0);
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
-  const [agentCount, setAgentCount] = useState(5000);
-  const [arrivalRate, setArrivalRate] = useState(50);
+  const [agentCount, setAgentCount] = useState(simulationParameters.totalAgents);
+  const [arrivalRate, setArrivalRate] = useState(simulationParameters.arrivalRatePerMinute);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -79,7 +73,7 @@ export function DigitalTwin() {
               <div>
                 <h4 className="mb-3">Preset Scenarios</h4>
                 <div className="space-y-2">
-                  {scenarios.map((scenario) => {
+                  {scenariosData.map((scenario) => {
                     const Icon = scenario.icon;
                     return (
                       <Card

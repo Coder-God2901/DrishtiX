@@ -20,6 +20,9 @@ import {
 import { KPICard } from "../shared/kpi-card";
 import { StatusChip } from "../shared/status-chip";
 import { Slider } from "../ui/slider";
+import { heatgrid, teamLocations } from "../../data/realtime-data";
+import { alertsData } from "../../data/alerts-incidents-data";
+import { usersData } from "../../data/team-role-data";
 
 interface Alert {
   id: string;
@@ -40,45 +43,37 @@ interface TeamMember {
   status: "active" | "responding" | "available";
 }
 
+const buildTeamMembers = () => {
+  return teamLocations.map(loc => {
+    const u = usersData.find(x => x.userId === loc.userId);
+    const initials = (u?.name || loc.userId).split(" ").map(n => n[0]).join("").toUpperCase();
+    return {
+      id: loc.userId,
+      name: u?.name || loc.userId,
+      initials,
+      role: (u?.roles["evt_101"] || loc.role),
+      location: {
+        x: 25 + Math.random() * 50, // placeholder mapping
+        y: 25 + Math.random() * 50
+      },
+      status: "active" as const
+    };
+  });
+};
+
 export function OperationsDashboard() {
   const [selectedEvent] = useState("Summer Music Festival 2025");
   const [timeMode, setTimeMode] = useState<"live" | "replay" | "simulation">("live");
-  const [alerts, setAlerts] = useState<Alert[]>([
-    {
-      id: "1",
-      type: "critical",
-      title: "High crowd density detected",
-      zone: "Main Stage",
-      time: "2 min ago",
-      confidence: 92,
-      suggestedAction: "Deploy security team & close entry"
-    },
-    {
-      id: "2",
-      type: "high",
-      title: "Medical incident reported",
-      zone: "Food Court",
-      time: "5 min ago",
-      confidence: 87,
-      suggestedAction: "Dispatch medical team"
-    },
-    {
-      id: "3",
-      type: "info",
-      title: "Gate A throughput optimal",
-      zone: "Gate A",
-      time: "10 min ago",
-      confidence: 95,
-      suggestedAction: "Continue monitoring"
-    },
-  ]);
-
-  const [teamMembers] = useState<TeamMember[]>([
-    { id: "1", name: "John Smith", initials: "JS", role: "Security", location: { x: 25, y: 30 }, status: "active" },
-    { id: "2", name: "Sarah Johnson", initials: "SJ", role: "Security", location: { x: 45, y: 40 }, status: "responding" },
-    { id: "3", name: "Dr. Emily Chen", initials: "EC", role: "Medical", location: { x: 60, y: 55 }, status: "available" },
-    { id: "4", name: "Mike Rodriguez", initials: "MR", role: "Logistics", location: { x: 35, y: 65 }, status: "active" },
-  ]);
+  const [alerts, setAlerts] = useState<Alert[]>(alertsData.map(a => ({
+    id: a.alertId,
+    type: a.priority === "critical" ? "critical" : a.priority === "high" ? "high" : "info",
+    title: a.summary,
+    zone: a.zoneId || "N/A",
+    time: "Just now",
+    confidence: Math.round(a.confidence * 100),
+    suggestedAction: a.suggestedActions[0]?.actionType === "dispatch_team" ? "Dispatch team" : "Review"
+  })));
+  const [teamMembers] = useState(buildTeamMembers());
 
   const dismissAlert = (id: string) => {
     setAlerts(alerts.filter(a => a.id !== id));

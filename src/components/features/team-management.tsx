@@ -5,11 +5,11 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { 
-  Users, 
-  Plus, 
-  Mail, 
-  Copy, 
+import {
+  Users,
+  Plus,
+  Mail,
+  Copy,
   QrCode,
   Shield,
   Activity,
@@ -20,6 +20,12 @@ import { RoleChip } from "../shared/role-chip";
 import { StatusChip } from "../shared/status-chip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import {
+  teamsData,
+  usersData,
+  rolePermissionsData,
+  allPermissionsMeta
+} from "../../data/team-role-data";
 
 interface TeamMember {
   id: string;
@@ -49,43 +55,42 @@ const allPermissions = [
   { id: "exportData", label: "Export Data", description: "Download event data and logs" },
 ];
 
+const permissionRoleOrder: Team["role"][] = ["security", "logistics", "medical", "organizer", "volunteer"];
+
+function buildInitialTeams(): Team[] {
+  return teamsData.map(t => {
+    const permObj = rolePermissionsData.find(r => r.role === t.role)?.permissions || {};
+    const activePerms = Object.entries(permObj)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    const members: TeamMember[] = t.members.map(uid => {
+      const u = usersData.find(x => x.userId === uid);
+      return {
+        id: uid,
+        name: u?.name || uid,
+        role: t.role,
+        status: (u?.status as any) || "offline",
+        lastSeen: u?.lastSeen || "",
+        assignment: u?.assignment
+      };
+    });
+    return {
+      id: t.teamId,
+      name: t.name,
+      role: t.role,
+      members,
+      permissions: activePerms
+    };
+  });
+}
+
 export function TeamManagement() {
-  const [teams, setTeams] = useState<Team[]>([
-    {
-      id: "1",
-      name: "Security Alpha",
-      role: "security",
-      members: [
-        { id: "1", name: "John Smith", role: "security", status: "online", lastSeen: "Active now", assignment: "Main Gate" },
-        { id: "2", name: "Sarah Johnson", role: "security", status: "online", lastSeen: "Active now", assignment: "Stage Area" },
-      ],
-      permissions: ["viewHeatmap", "dispatch", "viewTeamLocations", "createAlerts"],
-    },
-    {
-      id: "2",
-      name: "Medical Response",
-      role: "medical",
-      members: [
-        { id: "3", name: "Dr. Emily Chen", role: "medical", status: "online", lastSeen: "Active now", assignment: "Medical Tent" },
-      ],
-      permissions: ["viewHeatmap", "viewTeamLocations", "createAlerts"],
-    },
-    {
-      id: "3",
-      name: "Logistics Team",
-      role: "logistics",
-      members: [
-        { id: "4", name: "Mike Rodriguez", role: "logistics", status: "offline", lastSeen: "2 hours ago" },
-      ],
-      permissions: ["viewHeatmap", "manageSchedule", "viewTeamLocations"],
-    },
-  ]);
-  
+  const [teams, setTeams] = useState<Team[]>(buildInitialTeams());
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [showNewTeamDialog, setShowNewTeamDialog] = useState(false);
 
   const selectedTeamData = teams.find(t => t.id === selectedTeam);
-  const onlineCount = teams.reduce((acc, team) => 
+  const onlineCount = teams.reduce((acc, team) =>
     acc + team.members.filter(m => m.status === "online").length, 0
   );
   const totalMembers = teams.reduce((acc, team) => acc + team.members.length, 0);
@@ -285,7 +290,7 @@ export function TeamManagement() {
                           </td>
                         </tr>
                       ))
-                    )}
+                    }
                   </tbody>
                 </table>
               </div>
@@ -307,15 +312,13 @@ export function TeamManagement() {
                     <thead className="border-b">
                       <tr>
                         <th className="text-left p-3">Permission</th>
-                        <th className="text-center p-3">Security</th>
-                        <th className="text-center p-3">Logistics</th>
-                        <th className="text-center p-3">Medical</th>
-                        <th className="text-center p-3">Organizer</th>
-                        <th className="text-center p-3">Volunteer</th>
+                        {permissionRoleOrder.map(r => (
+                          <th key={r} className="text-center p-3 capitalize">{r}</th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {allPermissions.map((perm) => (
+                      {allPermissionsMeta.map((perm) => (
                         <tr key={perm.id} className="border-b hover:bg-muted/50">
                           <td className="p-3">
                             <div>
@@ -323,15 +326,20 @@ export function TeamManagement() {
                               <p className="text-muted-foreground">{perm.description}</p>
                             </div>
                           </td>
-                          {["security", "logistics", "medical", "organizer", "volunteer"].map((role) => (
-                            <td key={role} className="text-center p-3">
-                              <input
-                                type="checkbox"
-                                defaultChecked={Math.random() > 0.5}
-                                className="w-5 h-5"
-                              />
-                            </td>
-                          ))}
+                          {permissionRoleOrder.map(role => {
+                            const rp = rolePermissionsData.find(r => r.role === role)?.permissions || {};
+                            const enabled = !!rp[perm.id as keyof typeof rp];
+                            return (
+                              <td key={role} className="text-center p-3">
+                                <input
+                                  type="checkbox"
+                                  checked={enabled}
+                                  readOnly
+                                  className="w-5 h-5 cursor-not-allowed opacity-70"
+                                />
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>
@@ -354,6 +362,7 @@ export function TeamManagement() {
 }
 
 function TeamBuilder({ onClose }: { onClose: () => void }) {
+  // Optionally integrate with data layer later
   const [inviteLink] = useState("https://eventsafety.app/invite/abc123");
   
   return (

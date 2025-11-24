@@ -18,6 +18,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Textarea } from "../ui/textarea";
+import { incidentsData, respondersData } from "../../data/alerts-incidents-data";
 
 interface Incident {
   id: string;
@@ -46,55 +47,10 @@ interface Responder {
 }
 
 export function AlertsDispatch() {
-  const [incidents, setIncidents] = useState<Incident[]>([
-    {
-      id: "1",
-      type: "medical",
-      severity: "critical",
-      title: "Person collapsed",
-      description: "Adult male, unresponsive, crowd gathering",
-      location: "Food Court, near Vendor 7",
-      coordinates: { x: 45, y: 50 },
-      timestamp: "2 minutes ago",
-      reporter: "Security Team Alpha",
-      status: "new",
-    },
-    {
-      id: "2",
-      type: "security",
-      severity: "high",
-      title: "Fight reported",
-      description: "Two individuals in altercation",
-      location: "VIP Area entrance",
-      coordinates: { x: 65, y: 40 },
-      timestamp: "5 minutes ago",
-      status: "dispatched",
-      assignedTo: ["John Smith", "Sarah Johnson"],
-      eta: "2 min",
-    },
-    {
-      id: "3",
-      type: "safety",
-      severity: "medium",
-      title: "Spill hazard",
-      description: "Large liquid spill creating slip hazard",
-      location: "Main Stage, left side",
-      coordinates: { x: 30, y: 35 },
-      timestamp: "8 minutes ago",
-      status: "responding",
-      assignedTo: ["Mike Rodriguez"],
-    },
-  ]);
-
+  const [incidents, setIncidents] = useState(incidentsData);
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
   const [showDispatchDialog, setShowDispatchDialog] = useState(false);
-
-  const [responders] = useState<Responder[]>([
-    { id: "1", name: "Dr. Emily Chen", role: "Medical", status: "available", location: { x: 50, y: 60 }, eta: "1.5 min", distance: "120m" },
-    { id: "2", name: "John Smith", role: "Security", status: "busy", location: { x: 65, y: 40 }, eta: "3 min", distance: "200m" },
-    { id: "3", name: "Sarah Johnson", role: "Security", status: "available", location: { x: 40, y: 45 }, eta: "2 min", distance: "150m" },
-    { id: "4", name: "Mike Rodriguez", role: "Logistics", status: "available", location: { x: 35, y: 50 }, eta: "4 min", distance: "280m" },
-  ]);
+  const [responders] = useState(respondersData);
 
   const selectedIncidentData = incidents.find(i => i.id === selectedIncident);
   const availableResponders = responders.filter(r => r.status === "available");
