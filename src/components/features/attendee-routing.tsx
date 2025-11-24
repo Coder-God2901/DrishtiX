@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { 
+import {
   Navigation,
   MapPin,
   AlertTriangle,
@@ -17,39 +17,12 @@ import {
   Phone
 } from "lucide-react";
 import { StatusChip } from "../shared/status-chip";
-
-interface Gate {
-  id: string;
-  name: string;
-  crowdLevel: "low" | "medium" | "high";
-  eta: string;
-  distance: string;
-  waitTime: string;
-}
-
-interface NavigationStep {
-  instruction: string;
-  distance: string;
-  safetyNote?: string;
-}
+import { gates, navigationSteps, Gate, NavigationStep } from "../../data/navigation-data";
 
 export function AttendeeRouting() {
   const [currentView, setCurrentView] = useState<"home" | "gate-selection" | "navigation" | "emergency">("home");
   const [selectedGate, setSelectedGate] = useState<string | null>(null);
   const [eventStatus] = useState<"safe" | "caution" | "critical">("safe");
-
-  const gates: Gate[] = [
-    { id: "A", name: "Gate A - Main Entrance", crowdLevel: "high", eta: "12 min", distance: "850m", waitTime: "~8 min" },
-    { id: "B", name: "Gate B - North Entrance", crowdLevel: "low", eta: "15 min", distance: "1.1km", waitTime: "~2 min" },
-    { id: "C", name: "Gate C - VIP Entrance", crowdLevel: "medium", eta: "10 min", distance: "720m", waitTime: "~5 min" },
-  ];
-
-  const navigationSteps: NavigationStep[] = [
-    { instruction: "Head north on Main Street", distance: "250m" },
-    { instruction: "Turn right onto Festival Avenue", distance: "180m", safetyNote: "Watch for pedestrian crossing" },
-    { instruction: "Continue straight past the parking lot", distance: "200m" },
-    { instruction: "Gate B entrance will be on your left", distance: "90m" },
-  ];
 
   const selectedGateData = gates.find(g => g.id === selectedGate);
 

@@ -4,40 +4,30 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
-import { 
-  Pentagon, 
-  Plus, 
-  MapPin, 
-  Route, 
-  Undo, 
+import {
+  Pentagon,
+  Plus,
+  MapPin,
+  Route,
+  Undo,
   Grid3x3,
   Save,
   Trash2
 } from "lucide-react";
 import { Slider } from "../ui/slider";
-
-interface Zone {
-  id: string;
-  name: string;
-  capacity: number;
-  riskLevel: "low" | "medium" | "high";
-  color: string;
-  allowedRoles: string[];
-}
+import { venueData, zoneColors, zoneRoles, Zone } from "../../data/venue-data";
 
 export function VenueMapping() {
   const [drawMode, setDrawMode] = useState<"polygon" | "zone" | "gate" | "route" | null>(null);
-  const [zones, setZones] = useState<Zone[]>([
-    { id: "1", name: "Main Stage", capacity: 5000, riskLevel: "high", color: "#FF6A00", allowedRoles: ["all"] },
-    { id: "2", name: "VIP Area", capacity: 500, riskLevel: "low", color: "#0B3D91", allowedRoles: ["vip", "security"] },
-  ]);
+  const [zones, setZones] = useState<Zone[]>(venueData.zones);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [snapToBuildings, setSnapToBuildings] = useState(true);
 
-  const selectedZoneData = zones.find(z => z.id === selectedZone);
+  const selectedZoneData = zones.find(z => z.zoneId === selectedZone);
 
-  const updateZone = (id: string, updates: Partial<Zone>) => {
-    setZones(zones.map(z => z.id === id ? { ...z, ...updates } : z));
+  const updateZone = (zoneId: string | null, updates: Partial<Zone>) => {
+    if (!zoneId) return;
+    setZones(zones.map(z => z.zoneId === zoneId ? { ...z, ...updates } : z));
   };
 
   return (
@@ -117,9 +107,9 @@ export function VenueMapping() {
             {/* Zones */}
             {zones.map((zone, index) => (
               <div
-                key={zone.id}
+                key={zone.zoneId}
                 className={`absolute cursor-pointer hover:opacity-80 transition-opacity ${
-                  selectedZone === zone.id ? 'ring-2 ring-primary' : ''
+                  selectedZone === zone.zoneId ? 'ring-2 ring-primary' : ''
                 }`}
                 style={{
                   left: `${20 + index * 15}%`,
@@ -130,7 +120,7 @@ export function VenueMapping() {
                   border: `2px solid ${zone.color}`,
                   borderRadius: '8px',
                 }}
-                onClick={() => setSelectedZone(zone.id)}
+                onClick={() => setSelectedZone(zone.zoneId)}
               >
                 <div className="absolute top-2 left-2">
                   <Badge variant="secondary" className="bg-white/90">
@@ -179,11 +169,7 @@ export function VenueMapping() {
       <div className="w-80 bg-card border-l p-6 overflow-y-auto">
         {selectedZoneData ? (
           <div className="space-y-6">
-            <div>
-              <h3>Zone Properties</h3>
-              <p className="text-muted-foreground mt-1">Configure selected zone</p>
-            </div>
-
+            {/* Zone Properties */}
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="zone-name">Zone Name</Label>
@@ -193,42 +179,39 @@ export function VenueMapping() {
                   onChange={(e) => updateZone(selectedZone, { name: e.target.value })}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="zone-capacity">Capacity</Label>
                 <Input
                   id="zone-capacity"
                   type="number"
                   value={selectedZoneData.capacity}
-                  onChange={(e) => updateZone(selectedZone, { capacity: parseInt(e.target.value) })}
+                  onChange={(e) => updateZone(selectedZone, { capacity: parseInt(e.target.value) || 0 })}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label>Risk Level</Label>
                 <div className="flex gap-2">
                   {["low", "medium", "high"].map((level) => (
                     <Button
                       key={level}
-                      variant={selectedZoneData.riskLevel === level ? "default" : "outline"}
+                      variant={selectedZoneData.riskProfile.baseRisk === level ? "default" : "outline"}
                       size="sm"
                       className={`flex-1 capitalize ${
-                        selectedZoneData.riskLevel === level && level === "low" ? "bg-[#16A34A] hover:bg-[#16A34A]/90" :
-                        selectedZoneData.riskLevel === level && level === "medium" ? "bg-[#F59E0B] hover:bg-[#F59E0B]/90" :
-                        selectedZoneData.riskLevel === level && level === "high" ? "bg-[#E02D2D] hover:bg-[#E02D2D]/90" : ""
+                        selectedZoneData.riskProfile.baseRisk === level && level === "low" ? "bg-[#16A34A] hover:bg-[#16A34A]/90" :
+                        selectedZoneData.riskProfile.baseRisk === level && level === "medium" ? "bg-[#F59E0B] hover:bg-[#F59E0B]/90" :
+                        selectedZoneData.riskProfile.baseRisk === level && level === "high" ? "bg-[#E02D2D] hover:bg-[#E02D2D]/90" : ""
                       }`}
-                      onClick={() => updateZone(selectedZone, { riskLevel: level as any })}
+                      onClick={() => updateZone(selectedZone, { riskProfile: { ...selectedZoneData.riskProfile, baseRisk: level as any } })}
                     >
                       {level}
                     </Button>
                   ))}
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>Zone Color</Label>
                 <div className="flex gap-2">
-                  {["#FF6A00", "#0B3D91", "#16A34A", "#F59E0B", "#E02D2D"].map((color) => (
+                  {zoneColors.map((color) => (
                     <button
                       key={color}
                       className={`w-10 h-10 rounded border-2 ${
@@ -240,11 +223,10 @@ export function VenueMapping() {
                   ))}
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>Allowed Roles</Label>
                 <div className="space-y-2">
-                  {["all", "vip", "security", "medical", "staff"].map((role) => (
+                  {zoneRoles.map((role) => (
                     <div key={role} className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -265,13 +247,12 @@ export function VenueMapping() {
                   ))}
                 </div>
               </div>
-
               <div className="pt-4 border-t">
                 <Button
                   variant="destructive"
                   className="w-full"
                   onClick={() => {
-                    setZones(zones.filter(z => z.id !== selectedZone));
+                    setZones(zones.filter(z => z.zoneId !== selectedZone));
                     setSelectedZone(null);
                   }}
                 >
@@ -287,13 +268,12 @@ export function VenueMapping() {
               <h3>Zone List</h3>
               <p className="text-muted-foreground mt-1">Select a zone to edit</p>
             </div>
-
             <div className="space-y-2">
               {zones.map((zone) => (
                 <Card
-                  key={zone.id}
+                  key={zone.zoneId}
                   className="p-4 cursor-pointer hover:border-primary transition-colors"
-                  onClick={() => setSelectedZone(zone.id)}
+                  onClick={() => setSelectedZone(zone.zoneId)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -310,32 +290,44 @@ export function VenueMapping() {
                       <Badge
                         variant="outline"
                         className={
-                          zone.riskLevel === "low" ? "bg-[#16A34A]/10 text-[#16A34A]" :
-                          zone.riskLevel === "medium" ? "bg-[#F59E0B]/10 text-[#F59E0B]" :
+                          zone.riskProfile.baseRisk === "low" ? "bg-[#16A34A]/10 text-[#16A34A]" :
+                          zone.riskProfile.baseRisk === "medium" ? "bg-[#F59E0B]/10 text-[#F59E0B]" :
                           "bg-[#E02D2D]/10 text-[#E02D2D]"
                         }
                       >
-                        {zone.riskLevel}
+                        {zone.riskProfile.baseRisk}
                       </Badge>
                     </div>
                   </div>
                 </Card>
               ))}
             </div>
-
             <Button
               className="w-full"
               onClick={() => {
                 const newZone: Zone = {
-                  id: Date.now().toString(),
+                  zoneId: `zone_${Date.now()}`,
                   name: `Zone ${zones.length + 1}`,
+                  type: "generic",
                   capacity: 1000,
-                  riskLevel: "low",
+                  shape: {
+                    type: "Polygon",
+                    coordinates: [
+                      [
+                        [73.8569, 18.5204],
+                        [73.8570, 18.5204],
+                        [73.8570, 18.5205],
+                        [73.8569, 18.5205],
+                        [73.8569, 18.5204]
+                      ]
+                    ]
+                  },
                   color: "#0B3D91",
-                  allowedRoles: ["all"],
+                  riskProfile: { baseRisk: "low" },
+                  allowedRoles: ["all"]
                 };
                 setZones([...zones, newZone]);
-                setSelectedZone(newZone.id);
+                setSelectedZone(newZone.zoneId);
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
