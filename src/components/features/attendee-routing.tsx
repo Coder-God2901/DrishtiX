@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Card } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import { useState, useEffect } from 'react';
+import { Card } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import {
   Navigation,
   MapPin,
@@ -13,20 +13,69 @@ import {
   Info,
   Route,
   X,
-  Plus,
-  Phone
-} from "lucide-react";
-import { StatusChip } from "../shared/status-chip";
-import { gates, navigationSteps, Gate, NavigationStep } from "../../data/navigation-data";
+  Phone,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
+import { StatusChip } from '../shared/status-chip';
+import { gates, navigationSteps } from '../../data/navigation-data';
+import { useGCPRealtime } from '@/hooks/useGCPRealtime';
+
+interface CrowdZone {
+  id: string;
+  lat: number;
+  lon: number;
+  density: number; // 0-1
+  level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  peopleCount: number;
+}
 
 export function AttendeeRouting() {
-  const [currentView, setCurrentView] = useState<"home" | "gate-selection" | "navigation" | "emergency">("home");
+  const [currentView, setCurrentView] = useState<'home' | 'gate-selection' | 'navigation' | 'emergency'>('home');
   const [selectedGate, setSelectedGate] = useState<string | null>(null);
-  const [eventStatus] = useState<"safe" | "caution" | "critical">("safe");
+  const [eventStatus] = useState<'safe' | 'caution' | 'critical'>('safe');
+  const [showCrowdOverlay, setShowCrowdOverlay] = useState<boolean>(true);
+  const [crowdZones, setCrowdZones] = useState<CrowdZone[]>([]);
 
-  const selectedGateData = gates.find(g => g.id === selectedGate);
+  // Subscribe to real-time crowd predictions
+  const { predictions } = useGCPRealtime({
+    eventId: 'evt_101',
+    enablePredictions: true,
+    enableVideoAnalytics: false,
+    enableSocialSignals: false,
+    enableAnomalies: false,
+    enableAlerts: false,
+    enableIncidents: false,
+    enableResponderUpdates: false,
+  });
 
-  if (currentView === "home") {
+  // Update crowd zones from real-time predictions
+  useEffect(() => {
+    if (predictions.length > 0) {
+      const zones: CrowdZone[] = predictions.map((pred, idx) => {
+        const riskLevelStr = pred.riskLevel?.toUpperCase() || 'LOW';
+        const validLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(
+          riskLevelStr
+        )
+          ? (riskLevelStr as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL')
+          : 'LOW';
+
+        return {
+          id: pred.zoneId || `zone-${idx}`,
+          lat: 37.7749 + (Math.random() - 0.5) * 0.01,
+          lon: -122.4194 + (Math.random() - 0.5) * 0.01,
+          density: pred.predictedDensity,
+          level: validLevel,
+          peopleCount: Math.round(pred.predictedDensity * 500),
+        };
+      });
+      setCrowdZones(zones);
+    }
+  }, [predictions]);
+
+  const selectedGateData = gates.find((g) => g.id === selectedGate);
+
+  if (currentView === 'home') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
@@ -36,9 +85,9 @@ export function AttendeeRouting() {
             <div className="flex items-center gap-2">
               <StatusChip status={eventStatus} showIcon />
               <span className="text-muted-foreground">
-                {eventStatus === "safe" && "All systems normal"}
-                {eventStatus === "caution" && "Moderate crowd levels"}
-                {eventStatus === "critical" && "High crowd density - follow instructions"}
+                {eventStatus === 'safe' && 'All systems normal'}
+                {eventStatus === 'caution' && 'Moderate crowd levels'}
+                {eventStatus === 'critical' && 'High crowd density - follow instructions'}
               </span>
             </div>
           </div>
@@ -56,9 +105,7 @@ export function AttendeeRouting() {
                   </div>
                   <div className="flex-1">
                     <h2>Welcome to the Festival!</h2>
-                    <p className="text-muted-foreground mt-1">
-                      Get real-time navigation and safety updates
-                    </p>
+                    <p className="text-muted-foreground mt-1">Get real-time navigation and safety updates</p>
                   </div>
                 </div>
 
@@ -78,10 +125,10 @@ export function AttendeeRouting() {
             {/* Navigation Options */}
             <div className="space-y-3">
               <h3>Navigation</h3>
-              
+
               <Button
                 className="w-full h-auto p-6 justify-start bg-[#FF6A00] hover:bg-[#FF6A00]/90"
-                onClick={() => setCurrentView("gate-selection")}
+                onClick={() => setCurrentView('gate-selection')}
               >
                 <div className="flex items-center gap-4 w-full">
                   <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -95,10 +142,7 @@ export function AttendeeRouting() {
                 </div>
               </Button>
 
-              <Button
-                variant="outline"
-                className="w-full h-auto p-6 justify-start"
-              >
+              <Button variant="outline" className="w-full h-auto p-6 justify-start">
                 <div className="flex items-center gap-4 w-full">
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                     <MapPin className="w-6 h-6 text-primary" />
@@ -114,7 +158,7 @@ export function AttendeeRouting() {
               <Button
                 variant="outline"
                 className="w-full h-auto p-6 justify-start border-[#E02D2D] hover:bg-[#E02D2D]/5"
-                onClick={() => setCurrentView("emergency")}
+                onClick={() => setCurrentView('emergency')}
               >
                 <div className="flex items-center gap-4 w-full">
                   <div className="w-12 h-12 bg-[#E02D2D]/10 rounded-lg flex items-center justify-center">
@@ -150,18 +194,16 @@ export function AttendeeRouting() {
     );
   }
 
-  if (currentView === "gate-selection") {
+  if (currentView === 'gate-selection') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <div className="bg-card border-b p-6">
           <div className="max-w-2xl mx-auto">
-            <Button variant="ghost" onClick={() => setCurrentView("home")} className="mb-3">
+            <Button variant="ghost" onClick={() => setCurrentView('home')} className="mb-3">
               ← Back
             </Button>
             <h2>Select Entry Gate</h2>
-            <p className="text-muted-foreground mt-1">
-              Choose the best entrance based on current crowd levels
-            </p>
+            <p className="text-muted-foreground mt-1">Choose the best entrance based on current crowd levels</p>
           </div>
         </div>
 
@@ -171,7 +213,7 @@ export function AttendeeRouting() {
               <Card
                 key={gate.id}
                 className={`p-6 cursor-pointer hover:shadow-lg transition-all ${
-                  selectedGate === gate.id ? "ring-2 ring-primary" : ""
+                  selectedGate === gate.id ? 'ring-2 ring-primary' : ''
                 }`}
                 onClick={() => setSelectedGate(gate.id)}
               >
@@ -183,19 +225,19 @@ export function AttendeeRouting() {
                         <Badge
                           variant="outline"
                           className={
-                            gate.crowdLevel === "low"
-                              ? "bg-[#16A34A]/10 text-[#16A34A]"
-                              : gate.crowdLevel === "medium"
-                              ? "bg-[#F59E0B]/10 text-[#F59E0B]"
-                              : "bg-[#E02D2D]/10 text-[#E02D2D]"
+                            gate.crowdLevel === 'low'
+                              ? 'bg-[#16A34A]/10 text-[#16A34A]'
+                              : gate.crowdLevel === 'medium'
+                                ? 'bg-[#F59E0B]/10 text-[#F59E0B]'
+                                : 'bg-[#E02D2D]/10 text-[#E02D2D]'
                           }
                         >
-                          {gate.crowdLevel === "low" && "Low Crowd"}
-                          {gate.crowdLevel === "medium" && "Moderate Crowd"}
-                          {gate.crowdLevel === "high" && "Busy"}
+                          {gate.crowdLevel === 'low' && 'Low Crowd'}
+                          {gate.crowdLevel === 'medium' && 'Moderate Crowd'}
+                          {gate.crowdLevel === 'high' && 'Busy'}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-3 gap-4 mt-3">
                         <div>
                           <div className="flex items-center gap-1 text-muted-foreground mb-1">
@@ -222,7 +264,7 @@ export function AttendeeRouting() {
                     </div>
                   </div>
 
-                  {gate.crowdLevel === "low" && (
+                  {gate.crowdLevel === 'low' && (
                     <div className="flex items-center gap-2 p-3 bg-[#16A34A]/10 rounded-lg">
                       <CheckCircle className="w-4 h-4 text-[#16A34A]" />
                       <span className="text-[#16A34A]">Recommended - Shortest wait time</span>
@@ -235,7 +277,7 @@ export function AttendeeRouting() {
             {selectedGate && (
               <Button
                 className="w-full bg-[#FF6A00] hover:bg-[#FF6A00]/90 h-14"
-                onClick={() => setCurrentView("navigation")}
+                onClick={() => setCurrentView('navigation')}
               >
                 <Navigation className="w-5 h-5 mr-2" />
                 Start Navigation to Gate {selectedGate}
@@ -247,21 +289,60 @@ export function AttendeeRouting() {
     );
   }
 
-  if (currentView === "navigation") {
+  if (currentView === 'navigation') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Map View */}
         <div className="h-96 bg-[#E5E7EB] relative">
-          <div 
+          <div
             className="absolute inset-0"
             style={{
-              backgroundImage: 'linear-gradient(#D1D5DB 1px, transparent 1px), linear-gradient(90deg, #D1D5DB 1px, transparent 1px)',
-              backgroundSize: '40px 40px'
+              backgroundImage:
+                'linear-gradient(#D1D5DB 1px, transparent 1px), linear-gradient(90deg, #D1D5DB 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
             }}
           />
-          
+
+          {/* Crowd Density Heatmap Overlay */}
+          {showCrowdOverlay &&
+            crowdZones.map((zone, idx) => {
+              const color =
+                zone.level === 'CRITICAL'
+                  ? 'rgba(224, 45, 45, 0.4)'
+                  : zone.level === 'HIGH'
+                    ? 'rgba(245, 158, 11, 0.3)'
+                    : zone.level === 'MEDIUM'
+                      ? 'rgba(251, 191, 36, 0.25)'
+                      : 'rgba(22, 163, 74, 0.2)';
+
+              // Position zones based on index for demo (should use actual lat/lon mapping)
+              const x = 50 + (idx % 5) * 60;
+              const y = 50 + Math.floor(idx / 5) * 60;
+
+              return (
+                <div
+                  key={zone.id}
+                  className="absolute rounded-full blur-xl transition-all duration-500"
+                  style={{
+                    left: `${x}px`,
+                    top: `${y}px`,
+                    width: `${80 + zone.density * 60}px`,
+                    height: `${80 + zone.density * 60}px`,
+                    backgroundColor: color,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-medium">
+                      {zone.peopleCount}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
           {/* Route Line */}
-          <svg className="absolute inset-0 w-full h-full">
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
             <path
               d="M 80 300 Q 150 250 200 200 T 350 150"
               stroke="#FF6A00"
@@ -273,7 +354,7 @@ export function AttendeeRouting() {
 
           {/* User Location */}
           <div className="absolute left-20 top-72 w-4 h-4 bg-[#0B3D91] rounded-full border-4 border-white shadow-lg animate-pulse" />
-          
+
           {/* Destination */}
           <div className="absolute right-24 top-36">
             <div className="w-12 h-12 bg-[#16A34A] rounded-full border-4 border-white shadow-lg flex items-center justify-center">
@@ -281,22 +362,56 @@ export function AttendeeRouting() {
             </div>
           </div>
 
-          {/* Safety Badge */}
-          <div className="absolute top-4 left-4">
+          {/* Crowd Overlay Toggle */}
+          <div className="absolute top-4 left-4 flex gap-2">
             <Card className="p-3 bg-white/95 backdrop-blur">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-[#16A34A]" />
                 <span className="text-foreground">Safe Route</span>
               </div>
             </Card>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="bg-white/95 backdrop-blur shadow-lg"
+              onClick={() => setShowCrowdOverlay(!showCrowdOverlay)}
+              title={showCrowdOverlay ? 'Hide crowd overlay' : 'Show crowd overlay'}
+            >
+              {showCrowdOverlay ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </Button>
           </div>
+
+          {/* Crowd Density Legend */}
+          {showCrowdOverlay && (
+            <Card className="absolute bottom-4 left-4 p-3 bg-white/95 backdrop-blur">
+              <h4 className="text-xs font-medium mb-2">Crowd Density</h4>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-[#16A34A]/30" />
+                  <span className="text-xs text-muted-foreground">Low</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-[#FBB03B]/30" />
+                  <span className="text-xs text-muted-foreground">Medium</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-[#F59E0B]/30" />
+                  <span className="text-xs text-muted-foreground">High</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-[#E02D2D]/40" />
+                  <span className="text-xs text-muted-foreground">Critical</span>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Back Button */}
           <Button
             variant="secondary"
             size="icon"
             className="absolute top-4 right-4 bg-white shadow-lg"
-            onClick={() => setCurrentView("gate-selection")}
+            onClick={() => setCurrentView('gate-selection')}
           >
             <X className="w-4 h-4" />
           </Button>
@@ -363,14 +478,14 @@ export function AttendeeRouting() {
     );
   }
 
-  if (currentView === "emergency") {
+  if (currentView === 'emergency') {
     return (
       <div className="min-h-screen bg-[#E02D2D] flex flex-col text-white">
         <div className="p-6 border-b border-white/20">
           <div className="max-w-2xl mx-auto">
             <Button
               variant="ghost"
-              onClick={() => setCurrentView("home")}
+              onClick={() => setCurrentView('home')}
               className="mb-3 text-white hover:bg-white/10"
             >
               ← Back to Home
@@ -426,7 +541,7 @@ export function AttendeeRouting() {
                   <p className="text-muted-foreground">120 meters away</p>
                 </div>
               </div>
-              
+
               <Button className="w-full h-14 bg-[#16A34A] hover:bg-[#16A34A]/90">
                 <Navigation className="w-5 h-5 mr-2" />
                 Show Exit Route

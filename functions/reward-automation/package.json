@@ -1,0 +1,19 @@
+{
+  "name": "reward-automation",
+  "version": "1.0.0",
+  "description": "Cloud Function for automated gamification reward triggers",
+  "main": "index.js",
+  "scripts": {
+    "start": "functions-framework --target=handleRewardTrigger",
+    "deploy": "gcloud functions deploy handleRewardTrigger --runtime nodejs20 --trigger-topic reward-events --entry-point handleRewardTrigger --region us-central1 --set-env-vars GCP_PROJECT_ID=$GCP_PROJECT_ID"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0",
+    "@google-cloud/pubsub": "^4.10.0",
+    "@google-cloud/firestore": "^7.1.0",
+    "firebase-admin": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,20 +1,13 @@
-import { useState } from "react";
-import { Card } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { 
-  TrendingUp, 
-  AlertTriangle, 
-  Clock,
-  Users,
-  Zap,
-  Info,
-  Calendar,
-  CheckCircle
-} from "lucide-react";
-import { Progress } from "../ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { recommendationsData, forecastOutputs } from "../../data/predictive-simulation-data";
+import { useState, useEffect } from 'react';
+import { Card } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { TrendingUp, Clock, Users, Zap, Info, Calendar, CheckCircle } from 'lucide-react';
+import { Progress } from '../ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { recommendationsData } from '../../data/predictive-simulation-data';
+import { useGCPRealtime } from '@/hooks/useGCPRealtime';
+import { toast } from 'sonner';
 
 interface Recommendation {
   id: string;
@@ -22,15 +15,71 @@ interface Recommendation {
   action: string;
   expectedImpact: number;
   confidence: number;
-  drivers: { icon: any; label: string; }[];
+  drivers: { icon: any; label: string }[];
   timeHorizon: string;
   forecast: number[];
 }
 
 export function PredictiveScheduling() {
-  const [recommendations] = useState(recommendationsData);
-
+  const [recommendations, setRecommendations] = useState(recommendationsData);
   const [expandedExplainer, setExpandedExplainer] = useState<string | null>(null);
+  const eventId = 'evt_101'; // Get from context/route params in production
+
+  // GCP real-time predictions for forecasting
+  const { predictions, isConnected } = useGCPRealtime({
+    eventId,
+    enablePredictions: true,
+  });
+
+  // Socket.IO for AI recommendation alerts
+  useEffect(() => {
+    const socket = (window as any).socket;
+    if (!socket) return;
+
+    socket.on('prediction:forecast-ready', (forecast: any) => {
+      toast.success('🔮 New Forecast Available', {
+        description: `${forecast.riskLevel} risk predicted in ${forecast.zone}`,
+      });
+
+      // Auto-generate recommendation from forecast
+      const newRecommendation: Recommendation = {
+        id: `rec_${Date.now()}`,
+        zone: forecast.zone || 'Unknown Zone',
+        action: forecast.recommendation || 'Review crowd density levels',
+        expectedImpact: Math.abs(forecast.expectedImpact || -15),
+        confidence: Math.round((forecast.confidence || 0.75) * 100),
+        drivers: [
+          { icon: Users, label: 'High inflow' },
+          { icon: Clock, label: 'Peak timing' },
+        ],
+        timeHorizon: `+${forecast.timeHorizonMinutes || 15}m`,
+        forecast: forecast.densityForecast || [45, 62, 78, 92, 85, 73],
+      };
+
+      setRecommendations((prev) => [newRecommendation, ...prev]);
+    });
+
+    socket.on('prediction:recommendation', (rec: any) => {
+      toast.info('💡 New AI Recommendation', {
+        description: rec.action,
+      });
+      setRecommendations((prev) => [rec, ...prev]);
+    });
+
+    socket.emit('subscribe:forecasts', eventId);
+    socket.emit('subscribe:recommendations', eventId);
+
+    return () => {
+      socket.off('prediction:forecast-ready');
+      socket.off('prediction:recommendation');
+    };
+  }, [eventId]);
+
+  // Auto-update stats from real-time predictions
+  const avgConfidence =
+    predictions.length > 0
+      ? Math.round((predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length) * 100)
+      : 86;
 
   return (
     <div className="p-8">
@@ -43,6 +92,12 @@ export function PredictiveScheduling() {
               <Zap className="w-3 h-3 mr-1" />
               AI-Powered
             </Badge>
+            {isConnected && (
+              <Badge className="bg-[#16A34A] text-white">
+                <div className="w-2 h-2 bg-white rounded-full mr-1.5 animate-pulse" />
+                Live
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground">
             AI-generated recommendations to optimize operations and prevent incidents
@@ -82,7 +137,7 @@ export function PredictiveScheduling() {
               </div>
               <div>
                 <p className="text-muted-foreground">Avg Confidence</p>
-                <p className="text-foreground">86%</p>
+                <p className="text-foreground">{avgConfidence}%</p>
               </div>
             </div>
           </Card>
@@ -168,9 +223,7 @@ export function PredictiveScheduling() {
                         <div
                           key={i}
                           className={`flex-1 rounded-t transition-all ${
-                            value > 80 ? "bg-[#E02D2D]" :
-                            value > 60 ? "bg-[#F59E0B]" :
-                            "bg-[#16A34A]"
+                            value > 80 ? 'bg-[#E02D2D]' : value > 60 ? 'bg-[#F59E0B]' : 'bg-[#16A34A]'
                           }`}
                           style={{ height: `${value}%` }}
                         />
@@ -245,7 +298,8 @@ export function PredictiveScheduling() {
                         </div>
                       </div>
                       <p className="text-muted-foreground italic">
-                        "The model predicts high density due to concert start time coinciding with peak arrival patterns and warm weather driving indoor food court traffic."
+                        "The model predicts high density due to concert start time coinciding with peak arrival patterns
+                        and warm weather driving indoor food court traffic."
                       </p>
                     </div>
                   )}
@@ -260,15 +314,11 @@ export function PredictiveScheduling() {
                       <Calendar className="w-4 h-4 mr-2" />
                       Schedule
                     </Button>
-                    <Button variant="ghost">
-                      Ignore
-                    </Button>
+                    <Button variant="ghost">Ignore</Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setExpandedExplainer(
-                        expandedExplainer === rec.id ? null : rec.id
-                      )}
+                      onClick={() => setExpandedExplainer(expandedExplainer === rec.id ? null : rec.id)}
                     >
                       <Info className="w-4 h-4" />
                     </Button>
@@ -283,7 +333,7 @@ export function PredictiveScheduling() {
               <div className="space-y-4">
                 <h3>30-Minute Zone Forecasts</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {["Main Stage", "Food Court", "VIP Area", "Gate A", "Gate B", "Parking"].map((zone) => (
+                  {['Main Stage', 'Food Court', 'VIP Area', 'Gate A', 'Gate B', 'Parking'].map((zone) => (
                     <Card key={zone} className="p-4">
                       <h4 className="mb-3">{zone}</h4>
                       <div className="h-24 flex items-end gap-1">
@@ -291,9 +341,7 @@ export function PredictiveScheduling() {
                           <div
                             key={i}
                             className={`flex-1 rounded-t ${
-                              value > 80 ? "bg-[#E02D2D]" :
-                              value > 60 ? "bg-[#F59E0B]" :
-                              "bg-[#16A34A]"
+                              value > 80 ? 'bg-[#E02D2D]' : value > 60 ? 'bg-[#F59E0B]' : 'bg-[#16A34A]'
                             }`}
                             style={{ height: `${value}%` }}
                           />
@@ -315,9 +363,21 @@ export function PredictiveScheduling() {
               <h3 className="mb-4">Recent Actions</h3>
               <div className="space-y-3">
                 {[
-                  { action: "Delayed Main Stage opening by 5 min", result: "✓ Reduced density by 38%", time: "30 min ago" },
-                  { action: "Deployed 2 security teams to Gate A", result: "✓ Cleared congestion in 12 min", time: "1 hour ago" },
-                  { action: "Opened emergency exit E3", result: "✓ Improved evacuation ETA by 3 min", time: "2 hours ago" },
+                  {
+                    action: 'Delayed Main Stage opening by 5 min',
+                    result: '✓ Reduced density by 38%',
+                    time: '30 min ago',
+                  },
+                  {
+                    action: 'Deployed 2 security teams to Gate A',
+                    result: '✓ Cleared congestion in 12 min',
+                    time: '1 hour ago',
+                  },
+                  {
+                    action: 'Opened emergency exit E3',
+                    result: '✓ Improved evacuation ETA by 3 min',
+                    time: '2 hours ago',
+                  },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
                     <div className="space-y-1">

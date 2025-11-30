@@ -1,0 +1,117 @@
+version: "3.8"
+
+services:
+  # ML Inference Service (Replaces Vertex AI - Cost: $10/month vs $100/month)
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: ml-service
+    ports:
+      - "8000:8000"
+    environment:
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcp-key.json
+    volumes:
+      - ./ml-service/models:/app/models
+      - ./gcp-credentials.json:/app/credentials/gcp-key.json:ro
+    restart: unless-stopped
+    networks:
+      - eventsphere-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import requests; requests.get('http://localhost:8000/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Vision Service (Replaces Gemini Vision - Cost: FREE vs $50-200/month)
+  vision-service:
+    build:
+      context: ./vision-service
+      dockerfile: Dockerfile
+    container_name: vision-service
+    ports:
+      - "8001:8001"
+    environment:
+      - MODEL_PATH=/app/models
+    volumes:
+      - ./vision-service/models:/app/models
+    restart: unless-stopped
+    networks:
+      - eventsphere-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import requests; requests.get('http://localhost:8001/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  eventsphere:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+      - ML_SERVICE_ENDPOINT=http://ml-service:8000
+      - VISION_SERVICE_URL=http://vision-service:8001
+    restart: unless-stopped
+    depends_on:
+      - ml-service
+      - vision-service
+    networks:
+      - eventsphere-network
+
+  # Optional: Add backend service
+  # backend:
+  #   image: your-backend-image:latest
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - DATABASE_URL=postgresql://user:pass@db:5432/eventsphere
+  #     - ML_SERVICE_ENDPOINT=http://ml-service:8000
+  #   depends_on:
+  #     - db
+  #     - ml-service
+  #   networks:
+  #     - eventsphere-network
+
+  # Optional: Add database
+  # db:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: eventsphere
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: password
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - eventsphere-network
+
+networks:
+  eventsphere-network:
+    driver: bridge
+# volumes:
+#   postgres-data:

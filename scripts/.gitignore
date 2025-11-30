@@ -1,0 +1,39 @@
+# Add venv to .gitignore (Python virtual environment)
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ML model artifacts (large files)
+models/
+data/
+*.h5
+*.joblib
+*.pkl
+*.npy
+*.npz
+
+# Training logs
+*.log
+logs/
+tensorboard/
+
+# Jupyter notebooks (if added later)
+.ipynb_checkpoints/
+*.ipynb
+
+# Environment variables (should be in root .gitignore too)
+.env
+.env.local
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db

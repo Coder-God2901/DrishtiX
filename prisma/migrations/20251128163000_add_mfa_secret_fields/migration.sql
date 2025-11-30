@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "mfaSecret" TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "backupCodes" TEXT[];

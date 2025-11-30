@@ -1,0 +1,19 @@
+{
+  "name": "alert-triggers",
+  "version": "1.0.0",
+  "description": "Cloud Function for automated alert triggers on proof validation",
+  "main": "index.js",
+  "scripts": {
+    "start": "functions-framework --target=handleAlertTrigger",
+    "deploy": "gcloud functions deploy handleAlertTrigger --runtime nodejs20 --trigger-topic incident-alerts --entry-point handleAlertTrigger --region us-central1 --set-env-vars GCP_PROJECT_ID=$GCP_PROJECT_ID"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0",
+    "@google-cloud/pubsub": "^4.10.0",
+    "@google-cloud/firestore": "^7.1.0",
+    "twilio": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
