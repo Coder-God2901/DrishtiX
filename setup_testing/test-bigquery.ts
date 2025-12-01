@@ -3,9 +3,11 @@
  * Tests BigQuery dataset creation, table schema, data insertion, and query execution
  */
 
-import { testConfig } from './test-config';
-import chalk from 'chalk';
-import { BigQuery } from '@google-cloud/bigquery';
+const { testConfig } = require('./test-config');
+const chalk = require('chalk');
+const { BigQuery } = require('@google-cloud/bigquery');
+
+export { };
 
 interface TestResult {
   name: string;
@@ -15,7 +17,7 @@ interface TestResult {
 }
 
 const results: TestResult[] = [];
-let bigquery: BigQuery;
+let bigquery: any;
 
 async function runTest(name: string, testFn: () => Promise<void>): Promise<void> {
   const startTime = Date.now();
@@ -77,7 +79,7 @@ async function testDatasetAccess(): Promise<void> {
     if (tables.length === 0) {
       console.log(chalk.yellow('   ⚠️  No tables found (expected for new dataset)'));
     } else {
-      tables.slice(0, 10).forEach(table => {
+      tables.slice(0, 10).forEach((table: any) => {
         console.log(chalk.gray(`     - ${table.id}`));
       });
     }

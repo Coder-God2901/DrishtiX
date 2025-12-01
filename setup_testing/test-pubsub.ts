@@ -3,9 +3,11 @@
  * Tests topic creation, message publishing, and subscriptions
  */
 
-import { PubSub } from '@google-cloud/pubsub';
-import { testConfig } from './test-config';
-import chalk from 'chalk';
+const { PubSub } = require('@google-cloud/pubsub');
+const { testConfig } = require('./test-config');
+const chalk = require('chalk');
+
+export { };
 
 const pubsub = new PubSub({
   projectId: testConfig.projectId,
@@ -190,10 +192,10 @@ async function testProductionTopics(): Promise<void> {
 
   await runTest('Verify production topics exist', async () => {
     const [topics] = await pubsub.getTopics();
-    const topicNames = topics.map(t => t.name.split('/').pop());
+    const topicNames = topics.map((t: any) => t.name.split('/').pop());
 
     const missingTopics = testConfig.pubsubTopics.filter(
-      required => !topicNames.includes(required)
+      (required: string) => !topicNames.includes(required)
     );
 
     if (missingTopics.length > 0) {
