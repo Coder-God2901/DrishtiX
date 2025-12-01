@@ -394,11 +394,39 @@ class FirebaseService {
     if (!this.auth) throw new Error('Firebase not initialized');
 
     try {
+      // Remove FCM token if user is logged in
+      const user = this.auth.currentUser;
+      if (user && user.uid) {
+        await this.removeFCMToken(user.uid);
+      }
       await signOut(this.auth);
       console.log('[Firebase] User signed out');
     } catch (error) {
       console.error('[Firebase] Sign out failed:', error);
       throw error;
+    }
+  }
+  /**
+   * Generic OAuth sign-in using OAuthProvider
+   * @param providerId e.g. 'microsoft.com', 'apple.com', etc.
+   * @param useRedirect Whether to use redirect flow
+   */
+  async signInWithOAuth(providerId: string, useRedirect: boolean = false): Promise<User> {
+    if (!this.auth) throw new Error('Firebase not initialized');
+
+    const provider = new OAuthProvider(providerId);
+    try {
+      if (useRedirect) {
+        await signInWithRedirect(this.auth, provider);
+        return null as any;
+      } else {
+        const result = await signInWithPopup(this.auth, provider);
+        console.log(`[Firebase] OAuth (${providerId}) Sign-In successful:`, result.user.uid);
+        return result.user;
+      }
+    } catch (error: any) {
+      console.error(`[Firebase] OAuth (${providerId}) Sign-In failed:`, error);
+      throw this.handleOAuthError(error);
     }
   }
 
@@ -778,6 +806,57 @@ class FirebaseService {
       console.error('[Firebase] Health check failed:', error);
       return false;
     }
+  }
+
+  /**
+   * Register FCM token for push notifications
+   */
+  async registerFCMToken(userId: string, token: string): Promise<void> {
+    if (!this.db) throw new Error('Firebase not initialized');
+
+    try {
+      const userTokenRef = doc(this.db, 'user_fcm_tokens', userId);
+      await setDoc(userTokenRef, {
+        token,
+        userId,
+        updatedAt: Timestamp.now(),
+        platform: this.detectPlatform(),
+      }, { merge: true });
+
+      console.log('[Firebase] FCM token registered for user:', userId);
+    } catch (error) {
+      console.error('[Firebase] Failed to register FCM token:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove FCM token (on logout)
+   */
+  async removeFCMToken(userId: string): Promise<void> {
+    if (!this.db) throw new Error('Firebase not initialized');
+
+    try {
+      const userTokenRef = doc(this.db, 'user_fcm_tokens', userId);
+      await setDoc(userTokenRef, {
+        token: null,
+        updatedAt: Timestamp.now(),
+      }, { merge: true });
+
+      console.log('[Firebase] FCM token removed for user:', userId);
+    } catch (error) {
+      console.error('[Firebase] Failed to remove FCM token:', error);
+    }
+  }
+
+  /**
+   * Detect platform for FCM
+   */
+  private detectPlatform(): string {
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (/android/.test(userAgent)) return 'android';
+    if (/iphone|ipad|ipod/.test(userAgent)) return 'ios';
+    return 'web';
   }
 }
 

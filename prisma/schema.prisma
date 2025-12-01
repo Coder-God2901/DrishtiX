@@ -570,6 +570,10 @@ model User {
   mfaSecret       String?
   backupCodes     String[]
   
+  // Firebase Cloud Messaging
+  fcmToken        String?  // Device token for push notifications
+  fcmTopics       String[] @default([]) // Subscribed topics for role-based notifications
+  
   organizationId  String?
   eventAccess     String[]
   

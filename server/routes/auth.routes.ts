@@ -784,4 +784,109 @@ router.post('/oauth/github', async (req: Request, res: Response) => {
   }
 })
 
+/**
+ * POST /api/auth/fcm-token
+ * Register or update FCM token for push notifications
+ */
+router.post('/fcm-token', authenticate, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user
+    const { fcmToken, platform } = req.body
+
+    if (!fcmToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'FCM token is required',
+      })
+    }
+
+    // Update user's FCM token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        fcmToken,
+        updatedAt: new Date(),
+      },
+    })
+
+    // Subscribe user to their role topic
+    const admin = await import('firebase-admin')
+    const userRecord = await prisma.user.findUnique({ where: { id: user.id } })
+
+    if (userRecord) {
+      // Subscribe to role-based topics
+      const topics = [
+        `user_${user.id}`,
+        `role_${userRecord.role.toLowerCase()}`,
+      ]
+
+      for (const topic of topics) {
+        try {
+          await admin.messaging().subscribeToTopic([fcmToken], topic)
+          console.log(`Subscribed ${user.id} to topic: ${topic}`)
+        } catch (error) {
+          console.error(`Failed to subscribe to topic ${topic}:`, error)
+        }
+      }
+
+      // Update fcmTopics in database
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          fcmTopics: topics,
+        },
+      })
+    }
+
+    // Audit log
+    await auditLoggerService.logFromRequest(
+      req,
+      'FCM_TOKEN_REGISTERED',
+      'User',
+      user.id,
+      { platform }
+    )
+
+    return res.json({
+      success: true,
+      message: 'FCM token registered successfully',
+    })
+  } catch (error: any) {
+    console.error('FCM token registration error:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to register FCM token',
+    })
+  }
+})
+
+/**
+ * DELETE /api/auth/fcm-token
+ * Remove FCM token (on logout)
+ */
+router.delete('/fcm-token', authenticate, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        fcmToken: null,
+        fcmTopics: [],
+      },
+    })
+
+    return res.json({
+      success: true,
+      message: 'FCM token removed successfully',
+    })
+  } catch (error: any) {
+    console.error('FCM token removal error:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to remove FCM token',
+    })
+  }
+})
+
 export default router
