@@ -63,6 +63,8 @@ class VisionInput(BaseModel):
     video_frames: Optional[List[str]] = Field(
         None, description="Array of base64 frames")
     context_data: Optional[Dict[str, Any]] = None
+    frame_sampling_rate: int = Field(
+        default=5, description="Analyze every Nth frame (default: 5 for cost optimization)")
 
 
 class Anomaly(BaseModel):
@@ -412,36 +414,95 @@ def detect_falls(frame: np.ndarray) -> tuple[bool, float, List[str]]:
 async def detect_anomalies(input: VisionInput):
     """
     Detect visual anomalies using YOLO + OpenCV
+    Optimized with frame sampling (analyze every Nth frame)
     """
     start_time = time.time()
 
     try:
-        # Decode image
-        frame = decode_image(input.image_data)
-        frame_history.append(frame)
+        # If video frames provided, apply sampling optimization
+        frames_to_analyze = []
 
+        if input.video_frames:
+            # Sample every Nth frame (default: every 5th frame)
+            sampling_rate = input.frame_sampling_rate
+            sampled_frames = input.video_frames[::sampling_rate]
+            logger.info(
+                f"Frame sampling: {len(input.video_frames)} frames → {len(sampled_frames)} frames (every {sampling_rate}th)")
+
+            # Analyze sampled frames
+            for frame_b64 in sampled_frames:
+                frames_to_analyze.append(decode_image(frame_b64))
+        else:
+            # Single image - no sampling needed
+            frames_to_analyze.append(decode_image(input.image_data))
+
+        # Process all sampled frames and aggregate results
+        all_anomalies = []
+        max_confidences = {
+            'fire': 0.0, 'smoke': 0.0, 'panic': 0.0,
+            'violence': 0.0, 'surge': 0.0, 'fall': 0.0
+        }
+
+        for frame in frames_to_analyze:
+            frame_history.append(frame)
+
+            # Fire detection
+            fire_detected, fire_conf, fire_ind = detect_fire(frame)
+            max_confidences['fire'] = max(max_confidences['fire'], fire_conf)
+
+            # Smoke detection
+            prev_frame = frame_history[-2] if len(frame_history) > 1 else None
+            smoke_detected, smoke_conf, smoke_ind = detect_smoke(
+                frame, prev_frame)
+            max_confidences['smoke'] = max(
+                max_confidences['smoke'], smoke_conf)
+
+            # Panic detection
+            prev_frames = list(frame_history)[-10:]  # Last 10 frames
+            panic_detected, panic_conf, panic_ind = detect_panic(
+                frame, prev_frames)
+            max_confidences['panic'] = max(
+                max_confidences['panic'], panic_conf)
+
+            # Violence detection
+            violence_detected, violence_conf, violence_ind = detect_violence(
+                frame, prev_frames)
+            max_confidences['violence'] = max(
+                max_confidences['violence'], violence_conf)
+
+            # Crowd surge detection
+            surge_detected, surge_conf, surge_ind = detect_crowd_surge(
+                frame, prev_frames)
+            max_confidences['surge'] = max(
+                max_confidences['surge'], surge_conf)
+
+            # Fall detection
+            fall_detected, fall_conf, fall_ind = detect_falls(frame)
+            max_confidences['fall'] = max(max_confidences['fall'], fall_conf)
+
+        # Use the last analyzed frame for final results
+        frame = frames_to_analyze[-1]
         anomalies = []
 
-        # Fire detection
-        fire_detected, fire_conf, fire_ind = detect_fire(frame)
-        if fire_detected:
+        # Fire anomaly
+        if max_confidences['fire'] > 0.05:
+            fire_ind = [f"Fire confidence: {max_confidences['fire']:.2%}"]
             anomalies.append(Anomaly(
                 type="FIRE",
-                confidence=fire_conf,
-                severity="CRITICAL" if fire_conf > 0.7 else "HIGH",
+                confidence=max_confidences['fire'],
+                severity="CRITICAL" if max_confidences['fire'] > 0.7 else "HIGH",
                 description="Fire detected in scene",
                 indicators=fire_ind,
                 timestamp=datetime.now().isoformat()
             ))
 
-        # Smoke detection
-        prev_frame = frame_history[-2] if len(frame_history) > 1 else None
-        smoke_detected, smoke_conf, smoke_ind = detect_smoke(frame, prev_frame)
-        if smoke_detected:
+        # Smoke anomaly
+        if max_confidences['smoke'] > 0.10:
+            smoke_ind = [f"Smoke confidence: {max_confidences['smoke']:.2%}"]
             anomalies.append(Anomaly(
                 type="SMOKE",
-                confidence=smoke_conf,
-                severity="HIGH" if smoke_conf > 0.6 else "MEDIUM",
+                confidence=max_confidences['smoke'],
+                severity="HIGH" if max_confidences['smoke'] > 0.6 else "MEDIUM",
                 description="Smoke detected in scene",
                 indicators=smoke_ind,
                 timestamp=datetime.now().isoformat()

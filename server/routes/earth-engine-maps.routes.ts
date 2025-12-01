@@ -119,11 +119,119 @@ router.get('/status', (req, res) => {
         syntheticDataGeneration: true,
         heatmapOverlay: true,
         venueSuitability: true,
-        satelliteImagery: false, // Not implemented yet
-        terrainAnalysis: false, // Not implemented yet
+        satelliteImagery: googleEarthEngineService.isInitialized(),
+        terrainAnalysis: googleEarthEngineService.isInitialized(),
+        landCoverMapping: googleEarthEngineService.isInitialized(),
       },
     },
   });
+});
+
+/**
+ * POST /api/earth-engine/venue-imagery
+ * Get satellite imagery for venue (Sentinel-2)
+ */
+router.post('/venue-imagery', async (req, res) => {
+  try {
+    const { eventId, venueBounds, resolution = 10, layers = ['rgb'] } = req.body;
+
+    if (!eventId || !venueBounds) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: eventId, venueBounds',
+      });
+    }
+
+    const imageryUrl = await googleEarthEngineService.getVenueImagery({
+      eventId,
+      venueBounds,
+      resolution,
+      layers,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        imageryUrl,
+        source: 'Sentinel-2',
+        resolution: `${resolution}m`,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error getting venue imagery:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/earth-engine/terrain-data
+ * Get SRTM terrain analysis for venue
+ */
+router.post('/terrain-data', async (req, res) => {
+  try {
+    const { venueBounds } = req.body;
+
+    if (!venueBounds) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: venueBounds',
+      });
+    }
+
+    const terrainData = await googleEarthEngineService.getTerrainData(venueBounds);
+
+    res.json({
+      success: true,
+      data: {
+        ...terrainData,
+        source: 'SRTM',
+        resolution: '30m',
+      },
+    });
+  } catch (error: any) {
+    console.error('Error getting terrain data:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/earth-engine/land-cover
+ * Get land cover classification for venue
+ */
+router.post('/land-cover', async (req, res) => {
+  try {
+    const { venueBounds } = req.body;
+
+    if (!venueBounds) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: venueBounds',
+      });
+    }
+
+    const landCoverUrl = await googleEarthEngineService.getLandCover(venueBounds);
+
+    res.json({
+      success: true,
+      data: {
+        landCoverUrl,
+        source: 'ESA WorldCover',
+        resolution: '10m',
+      },
+    });
+  } catch (error: any) {
+    console.error('Error getting land cover:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
 });
 
 // ==================== GOOGLE MAPS ROUTES ====================
@@ -234,6 +342,78 @@ router.post('/venue-pois', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error searching venue POIs:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/maps/discover-venue-pois
+ * Automatically discover all POIs around a venue
+ * Scans for parking, medical, food, security, etc.
+ */
+router.post('/discover-venue-pois', async (req, res) => {
+  try {
+    const { venueBounds } = req.body;
+
+    if (!venueBounds || !venueBounds.north || !venueBounds.south || !venueBounds.east || !venueBounds.west) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required venueBounds (north, south, east, west)',
+      });
+    }
+
+    const discovery = await googleMapsService.discoverVenuePOIs(venueBounds);
+
+    res.json({
+      success: true,
+      data: discovery,
+      summary: {
+        totalFound: discovery.totalFound,
+        categories: discovery.categories,
+        message: `Discovered ${discovery.totalFound} POIs in ${Object.keys(discovery.categories).length} categories`,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error discovering venue POIs:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/maps/search-poi
+ * Search for specific type of POI around venue
+ */
+router.post('/search-poi', async (req, res) => {
+  try {
+    const { venueCenter, radius = 1000, poiType, maxResults = 10 } = req.body;
+
+    if (!venueCenter || !poiType) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required venueCenter or poiType',
+      });
+    }
+
+    const pois = await googleMapsService.searchVenuePOI(
+      venueCenter,
+      radius,
+      poiType,
+      maxResults
+    );
+
+    res.json({
+      success: true,
+      data: pois,
+      count: pois.length,
+    });
+  } catch (error: any) {
+    console.error('Error searching POI:', error);
     res.status(500).json({
       success: false,
       error: error.message,

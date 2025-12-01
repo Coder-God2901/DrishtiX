@@ -138,8 +138,8 @@ router.post('/detect', authenticate, requireRoles(['ADMIN', 'SECURITY']), async 
         panicDetected: detection.detectionMetrics.panicLevel > 0.7,
         surgDetected: detection.detectionMetrics.surgeDetected,
         panicLevel: Math.min(Math.max(detection.detectionMetrics.panicLevel, 0), 1),
-        modelType: 'GeminiVision',
-        modelVersion: 'gemini-1.5-flash',
+        modelType: 'YOLOVision',
+        modelVersion: 'yolov8n-opencv',
       },
     });
 

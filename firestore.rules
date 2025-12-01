@@ -1,0 +1,298 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==================== Helper Functions ====================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'ADMIN';
+    }
+    
+    function isSecurity() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'SECURITY';
+    }
+    
+    function isOrganizer() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'ORGANIZER';
+    }
+    
+    function isAttendee() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'ATTENDEE';
+    }
+    
+    function isAdminOrSecurity() {
+      return isAdmin() || isSecurity();
+    }
+    
+    function isAdminOrOrganizer() {
+      return isAdmin() || isOrganizer();
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isEventOrganizer(eventId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/events/$(eventId)).data.organizerId == request.auth.uid;
+    }
+    
+    // ==================== Users Collection ====================
+    
+    match /users/{userId} {
+      // Read: User can read their own profile, admins can read all
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Create: Only during signup (no existing user)
+      allow create: if isOwner(userId) && 
+                      !exists(/databases/$(database)/documents/users/$(userId));
+      
+      // Update: User can update own profile, admin can update any
+      allow update: if (isOwner(userId) || isAdmin()) &&
+                      // Prevent role escalation (only admin can change roles)
+                      (isAdmin() || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      
+      // Delete: Only admins can delete users
+      allow delete: if isAdmin();
+      
+      // Subcollection: User-specific notifications
+      match /notifications/{notificationId} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) || isAdmin();
+      }
+      
+      // Subcollection: User tracking data (GPS, attendance)
+      match /tracking/{trackingId} {
+        allow read: if isOwner(userId) || isAdminOrSecurity();
+        allow create: if isOwner(userId);
+        allow update, delete: if isAdminOrSecurity();
+      }
+    }
+    
+    // ==================== Events Collection ====================
+    
+    match /events/{eventId} {
+      // Read: Public events are readable by all authenticated users
+      allow read: if isAuthenticated() && 
+                    (resource.data.visibility == 'PUBLIC' || 
+                     isAdminOrOrganizer() || 
+                     isEventOrganizer(eventId));
+      
+      // Create: Only organizers and admins
+      allow create: if isAdminOrOrganizer() && 
+                      request.resource.data.organizerId == request.auth.uid;
+      
+      // Update: Only event organizer or admin
+      allow update: if isEventOrganizer(eventId) || isAdmin();
+      
+      // Delete: Only admin or event organizer
+      allow delete: if isEventOrganizer(eventId) || isAdmin();
+      
+      // Subcollection: Real-time crowd density grids
+      match /live_heatgrid/{gridId} {
+        allow read: if isAuthenticated();
+        allow write: if isAdminOrSecurity();
+      }
+      
+      // Subcollection: Forecasts
+      match /forecasts/{forecastId} {
+        allow read: if isAuthenticated();
+        allow write: if isAdminOrSecurity();
+      }
+      
+      // Subcollection: Event zones
+      match /zones/{zoneId} {
+        allow read: if isAuthenticated();
+        allow write: if isEventOrganizer(eventId) || isAdmin();
+      }
+    }
+    
+    // ==================== Predictions Collection ====================
+    
+    match /predictions/{predictionId} {
+      // Read: All authenticated users can read predictions
+      allow read: if isAuthenticated();
+      
+      // Write: Only system/admin/security can create predictions
+      allow create: if isAdminOrSecurity();
+      allow update: if isAdminOrSecurity();
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Alerts Collection ====================
+    
+    match /alerts/{alertId} {
+      // Read: All authenticated users can read alerts
+      allow read: if isAuthenticated();
+      
+      // Create: System, admin, or security can create alerts
+      allow create: if isAdminOrSecurity();
+      
+      // Update: Admin, security, or alert assignee can update
+      allow update: if isAdminOrSecurity() || 
+                      (isAuthenticated() && 
+                       request.auth.uid in resource.data.assignedTo);
+      
+      // Delete: Only admins can delete alerts
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Incidents Collection ====================
+    
+    match /incidents/{incidentId} {
+      // Read: All authenticated users can read incidents
+      allow read: if isAuthenticated();
+      
+      // Create: Admin, security, or organizer can create incidents
+      allow create: if isAdminOrSecurity() || isOrganizer();
+      
+      // Update: Admin, security, or incident reporter can update
+      allow update: if isAdminOrSecurity() || 
+                      (isAuthenticated() && 
+                       request.auth.uid == resource.data.reportedBy);
+      
+      // Delete: Only admins can delete incidents
+      allow delete: if isAdmin();
+      
+      // Subcollection: Incident updates/comments
+      match /updates/{updateId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isAdmin() || 
+                                 request.auth.uid == resource.data.createdBy;
+      }
+    }
+    
+    // ==================== Dispatch Collection ====================
+    
+    match /dispatch/{dispatchId} {
+      // Read: All authenticated users can read dispatches
+      allow read: if isAuthenticated();
+      
+      // Create: Admin or security can create dispatch orders
+      allow create: if isAdminOrSecurity();
+      
+      // Update: Admin, security, or assigned responder can update
+      allow update: if isAdminOrSecurity() || 
+                      (isAuthenticated() && 
+                       request.auth.uid in resource.data.assignedResponders);
+      
+      // Delete: Only admins can delete dispatch orders
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Venues Collection ====================
+    
+    match /venues/{venueId} {
+      // Read: All authenticated users can read venue layouts
+      allow read: if isAuthenticated();
+      
+      // Create: Only organizers and admins can create venues
+      allow create: if isAdminOrOrganizer();
+      
+      // Update: Only venue creator or admin can update
+      allow update: if isAdmin() || 
+                      (isAuthenticated() && 
+                       request.auth.uid == resource.data.createdBy);
+      
+      // Delete: Only admins can delete venues
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Video Analytics Collection ====================
+    
+    match /video_analytics/{analyticsId} {
+      // Read: Admin and security can read video analytics
+      allow read: if isAdminOrSecurity();
+      
+      // Write: Only system/admin can write video analytics
+      allow create, update: if isAdminOrSecurity();
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Anomaly Detection Results ====================
+    
+    match /anomalies/{anomalyId} {
+      // Read: All authenticated users can read anomalies
+      allow read: if isAuthenticated();
+      
+      // Write: Only system/admin/security can write anomalies
+      allow create: if isAdminOrSecurity();
+      allow update: if isAdminOrSecurity();
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Audit Logs ====================
+    
+    match /audit_logs/{logId} {
+      // Read: Only admins can read audit logs
+      allow read: if isAdmin();
+      
+      // Write: System can create, admins cannot modify
+      allow create: if isAdminOrSecurity();
+      allow update, delete: if false; // Immutable logs
+    }
+    
+    // ==================== System Configuration ====================
+    
+    match /system_config/{configId} {
+      // Read: All authenticated users can read public config
+      allow read: if isAuthenticated();
+      
+      // Write: Only admins can modify system config
+      allow write: if isAdmin();
+    }
+    
+    // ==================== Analytics Cache ====================
+    
+    match /analytics_cache/{cacheId} {
+      // Read: Authenticated users can read cached analytics
+      allow read: if isAuthenticated();
+      
+      // Write: System can update cache, auto-expires after 5 minutes
+      allow create, update: if isAdminOrSecurity();
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Real-time Crowd Density ====================
+    
+    match /crowd_density/{densityId} {
+      // Read: All authenticated users can read crowd density
+      allow read: if isAuthenticated();
+      
+      // Write: Only system/admin/security can write crowd data
+      allow create, update: if isAdminOrSecurity();
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Recommendations ====================
+    
+    match /recommendations/{recommendationId} {
+      // Read: All authenticated users can read recommendations
+      allow read: if isAuthenticated();
+      
+      // Write: System and admins can create recommendations
+      allow create: if isAdminOrSecurity();
+      allow update: if isAdminOrSecurity() || 
+                      (isAuthenticated() && 
+                       request.resource.data.status != resource.data.status); // Allow status updates
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== Default Deny ====================
+    
+    // Deny all other accesses by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -3,19 +3,18 @@
  * Satellite imagery, venue mapping, and synthetic training data generation
  * 
  * Purpose:
- * - Venue map tiles from satellite imagery
+ * - Venue map tiles from satellite imagery (Sentinel-2, Landsat 8)
  * - Environmental features (terrain, land cover, vegetation)
+ * - SRTM elevation data and slope analysis
+ * - Land cover classification (urban, vegetation, water)
  * - Synthetic crowd pattern generation for hardware-free mode
  * - Geospatial analysis for event planning
- * 
- * Note: Earth Engine API has compatibility issues. Using fallback mode for now.
  */
 
-import { gcpConfig } from '../config/gcp.config';
-
-// Earth Engine API - disabled due to type compatibility issues
-// Will use fallback synthetic data generation instead
-const ee: any = null;
+import ee from '@google/earthengine';
+import { gcpConfig, googleAuth } from '../config/gcp.config';
+import fs from 'fs/promises';
+import path from 'path';
 
 interface VenueImagery {
   eventId: string;
@@ -55,29 +54,259 @@ interface TerrainAnalysis {
 
 class GoogleEarthEngineService {
   private initialized: boolean = false;
+  private initializationPromise: Promise<void> | null = null;
 
   constructor() {
-    console.warn('⚠️ Earth Engine service using fallback mode - API compatibility issues');
+    // Lazy initialization - only initialize when needed
+    if (gcpConfig.earthEngine.enabled) {
+      console.log('🌍 Earth Engine service configured - will initialize on first use');
+    } else {
+      console.warn('⚠️ Earth Engine disabled in config - using fallback mode');
+    }
   }
 
+  /**
+   * Initialize Earth Engine with service account authentication
+   */
+  private async initialize(): Promise<void> {
+    if (this.initialized) return;
+    if (this.initializationPromise) return this.initializationPromise;
+
+    this.initializationPromise = (async () => {
+      try {
+        if (!gcpConfig.earthEngine.enabled) {
+          console.warn('⚠️ Earth Engine disabled - skipping initialization');
+          return;
+        }
+
+        // Get service account credentials
+        const client = await googleAuth.getClient();
+        const credentials = await client.getAccessToken();
+
+        if (!credentials.token) {
+          throw new Error('Failed to get access token for Earth Engine');
+        }
+
+        // Read service account key file for private key
+        const keyPath = gcpConfig.credentials;
+        const keyContent = await fs.readFile(keyPath, 'utf8');
+        const serviceAccount = JSON.parse(keyContent);
+
+        // Initialize Earth Engine
+        await new Promise<void>((resolve, reject) => {
+          ee.data.authenticateViaPrivateKey(
+            serviceAccount,
+            () => {
+              ee.initialize(
+                null,
+                null,
+                () => {
+                  console.log('✅ Earth Engine initialized successfully');
+                  this.initialized = true;
+                  resolve();
+                },
+                (error: Error) => {
+                  console.error('❌ Earth Engine initialization failed:', error);
+                  reject(error);
+                }
+              );
+            },
+            (error: Error) => {
+              console.error('❌ Earth Engine authentication failed:', error);
+              reject(error);
+            }
+          );
+        });
+      } catch (error) {
+        console.error('❌ Earth Engine initialization error:', error);
+        this.initialized = false;
+        throw error;
+      }
+    })();
+
+    return this.initializationPromise;
+  }
+
+  /**
+   * Get satellite imagery for venue
+   * Uses Sentinel-2 for high-resolution RGB imagery
+   */
   async getVenueImagery(request: VenueImagery): Promise<string> {
-    console.warn('Earth Engine not available - returning fallback imagery');
-    return '/api/fallback-imagery';
+    try {
+      await this.initialize();
+
+      if (!this.initialized) {
+        console.warn('Earth Engine not initialized - returning fallback');
+        return '/api/fallback-imagery';
+      }
+
+      const { venueBounds, resolution } = request;
+
+      // Create geometry from bounds
+      const geometry = ee.Geometry.Rectangle([
+        venueBounds.west,
+        venueBounds.south,
+        venueBounds.east,
+        venueBounds.north,
+      ]);
+
+      // Get Sentinel-2 imagery (10m resolution, RGB bands)
+      const sentinel = ee.ImageCollection('COPERNICUS/S2_SR')
+        .filterBounds(geometry)
+        .filterDate(ee.Date(Date.now() - 90 * 24 * 60 * 60 * 1000), ee.Date(Date.now())) // Last 90 days
+        .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
+        .select(['B4', 'B3', 'B2']) // Red, Green, Blue
+        .median()
+        .clip(geometry);
+
+      // Generate map tile URL
+      const visParams = {
+        min: 0,
+        max: 3000,
+        bands: ['B4', 'B3', 'B2'],
+      };
+
+      const mapId = await new Promise<any>((resolve, reject) => {
+        sentinel.getMap(visParams, (obj: any, error: Error) => {
+          if (error) reject(error);
+          else resolve(obj);
+        });
+      });
+
+      console.log(`✅ Generated Earth Engine imagery for event ${request.eventId}`);
+      return mapId.urlFormat;
+    } catch (error) {
+      console.error('Earth Engine imagery error:', error);
+      return '/api/fallback-imagery';
+    }
   }
 
+  /**
+   * Get terrain data using SRTM elevation dataset
+   */
   async getTerrainData(bounds: any): Promise<TerrainAnalysis> {
-    console.warn('Earth Engine not available - returning fallback terrain data');
-    return {
-      elevation: [0],
-      slope: [0],
-      aspect: [0],
-      hazardZones: [],
-    };
+    try {
+      await this.initialize();
+
+      if (!this.initialized) {
+        console.warn('Earth Engine not initialized - returning fallback');
+        return {
+          elevation: [0],
+          slope: [0],
+          aspect: [0],
+          hazardZones: [],
+        };
+      }
+
+      const geometry = ee.Geometry.Rectangle([
+        bounds.west,
+        bounds.south,
+        bounds.east,
+        bounds.north,
+      ]);
+
+      // Load SRTM elevation data (30m resolution)
+      const srtm = ee.Image('USGS/SRTMGL1_003').clip(geometry);
+      const elevation = srtm.select('elevation');
+
+      // Calculate slope and aspect
+      const slope = ee.Terrain.slope(elevation);
+      const aspect = ee.Terrain.aspect(elevation);
+
+      // Sample elevation, slope, aspect values
+      const samples = await new Promise<any>((resolve, reject) => {
+        const samplePoints = ee.FeatureCollection.randomPoints(geometry, 100);
+        const sampledData = srtm.addBands(slope).addBands(aspect)
+          .sampleRegions({
+            collection: samplePoints,
+            scale: 30,
+          });
+
+        sampledData.getInfo((data: any, error: Error) => {
+          if (error) reject(error);
+          else resolve(data);
+        });
+      });
+
+      // Extract values
+      const elevationValues = samples.features.map((f: any) => f.properties.elevation || 0);
+      const slopeValues = samples.features.map((f: any) => f.properties.slope || 0);
+      const aspectValues = samples.features.map((f: any) => f.properties.aspect || 0);
+
+      // Identify hazard zones (steep slopes > 30 degrees)
+      const hazardZones = samples.features
+        .filter((f: any) => (f.properties.slope || 0) > 30)
+        .map((f: any) => {
+          const coords = f.geometry.coordinates;
+          return {
+            lat: coords[1],
+            lon: coords[0],
+            type: 'STEEP_SLOPE',
+          };
+        });
+
+      console.log(`✅ Generated terrain analysis with ${hazardZones.length} hazard zones`);
+
+      return {
+        elevation: elevationValues,
+        slope: slopeValues,
+        aspect: aspectValues,
+        hazardZones,
+      };
+    } catch (error) {
+      console.error('Earth Engine terrain error:', error);
+      return {
+        elevation: [0],
+        slope: [0],
+        aspect: [0],
+        hazardZones: [],
+      };
+    }
   }
 
+  /**
+   * Get land cover classification
+   * Uses ESA WorldCover for global land cover data
+   */
   async getLandCover(bounds: any): Promise<any> {
-    console.warn('Earth Engine not available - returning fallback land cover');
-    return '/api/fallback-landcover';
+    try {
+      await this.initialize();
+
+      if (!this.initialized) {
+        console.warn('Earth Engine not initialized - returning fallback');
+        return '/api/fallback-landcover';
+      }
+
+      const geometry = ee.Geometry.Rectangle([
+        bounds.west,
+        bounds.south,
+        bounds.east,
+        bounds.north,
+      ]);
+
+      // Load ESA WorldCover (10m resolution land cover)
+      const landCover = ee.ImageCollection('ESA/WorldCover/v200')
+        .first()
+        .clip(geometry);
+
+      // Generate map tile URL with land cover visualization
+      const visParams = {
+        bands: ['Map'],
+      };
+
+      const mapId = await new Promise<any>((resolve, reject) => {
+        landCover.getMap(visParams, (obj: any, error: Error) => {
+          if (error) reject(error);
+          else resolve(obj);
+        });
+      });
+
+      console.log('✅ Generated land cover map');
+      return mapId.urlFormat;
+    } catch (error) {
+      console.error('Earth Engine land cover error:', error);
+      return '/api/fallback-landcover';
+    }
   }
 
   async generateSyntheticCrowdData(

@@ -531,6 +531,128 @@ class GoogleMapsService {
   }
 
   /**
+   * Automatically discover POIs around a venue
+   * Scans for parking, medical facilities, restrooms, food, security stations
+   */
+  async discoverVenuePOIs(venueBounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  }): Promise<{
+    discovered: VenuePOI[];
+    categories: Record<string, number>;
+    totalFound: number;
+  }> {
+    try {
+      // Calculate venue center
+      const centerLat = (venueBounds.north + venueBounds.south) / 2;
+      const centerLng = (venueBounds.east + venueBounds.west) / 2;
+      const center = { lat: centerLat, lng: centerLng };
+
+      // Calculate radius (diagonal distance)
+      const latDiff = (venueBounds.north - venueBounds.south) * 111000; // meters
+      const lngDiff = (venueBounds.east - venueBounds.west) * 111000 *
+        Math.cos(centerLat * Math.PI / 180);
+      const radius = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) / 2;
+
+      // POI types to discover
+      const poiTypes = [
+        { type: 'parking', category: 'PARKING' as const },
+        { type: 'hospital', category: 'MEDICAL' as const },
+        { type: 'restaurant', category: 'FOOD' as const },
+        { type: 'cafe', category: 'FOOD' as const },
+        { type: 'police', category: 'SECURITY' as const },
+      ];
+
+      const discovered: VenuePOI[] = [];
+      const categories: Record<string, number> = {};
+
+      // Search for each POI type
+      for (const { type, category } of poiTypes) {
+        try {
+          const places = await this.findNearbyPlaces(center, radius, type);
+
+          for (const place of places.slice(0, 5)) { // Limit to top 5 per category
+            const poi: VenuePOI = {
+              id: place.place_id || `poi_${Date.now()}_${Math.random()}`,
+              name: place.name || 'Unknown',
+              type: category,
+              location: {
+                lat: place.geometry?.location?.lat || 0,
+                lng: place.geometry?.location?.lng || 0,
+              },
+              status: 'OPEN',
+              description: place.vicinity,
+            };
+
+            discovered.push(poi);
+            categories[category] = (categories[category] || 0) + 1;
+          }
+        } catch (error) {
+          console.error(`Error discovering ${type} POIs:`, error);
+        }
+      }
+
+      console.log(`✅ Discovered ${discovered.length} POIs near venue`);
+
+      return {
+        discovered,
+        categories,
+        totalFound: discovered.length,
+      };
+    } catch (error) {
+      console.error('Error in automatic POI discovery:', error);
+      return {
+        discovered: [],
+        categories: {},
+        totalFound: 0,
+      };
+    }
+  }
+
+  /**
+   * Search for specific POI type around venue
+   */
+  async searchVenuePOI(
+    venueCenter: LatLng,
+    radius: number,
+    poiType: string,
+    maxResults: number = 10
+  ): Promise<VenuePOI[]> {
+    try {
+      const places = await this.findNearbyPlaces(venueCenter, radius, poiType);
+
+      const pois: VenuePOI[] = places.slice(0, maxResults).map((place) => {
+        // Map Google Places type to VenuePOI type
+        let category: VenuePOI['type'] = 'OTHER';
+        if (poiType.includes('parking')) category = 'PARKING';
+        else if (poiType.includes('hospital') || poiType.includes('clinic')) category = 'MEDICAL';
+        else if (poiType.includes('restaurant') || poiType.includes('food') || poiType.includes('cafe')) category = 'FOOD';
+        else if (poiType.includes('police') || poiType.includes('security')) category = 'SECURITY';
+
+        return {
+          id: place.place_id || `poi_${Date.now()}`,
+          name: place.name || 'Unknown',
+          type: category,
+          location: {
+            lat: place.geometry?.location?.lat || 0,
+            lng: place.geometry?.location?.lng || 0,
+          },
+          status: place.opening_hours?.open_now ? 'OPEN' : 'CLOSED',
+          description: place.vicinity,
+        };
+      });
+
+      console.log(`✅ Found ${pois.length} ${poiType} POIs`);
+      return pois;
+    } catch (error) {
+      console.error('Error searching venue POI:', error);
+      return [];
+    }
+  }
+
+  /**
    * Extract lat from LatLng union type
    */
   private getLatFromLatLng(latlng: LatLng): number {

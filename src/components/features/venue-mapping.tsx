@@ -5,8 +5,8 @@
  * NOW WITH REAL-TIME FIREBASE SYNC FOR MULTI-USER COLLABORATION
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { GoogleMap, LoadScript, DrawingManager } from '@react-google-maps/api';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { GoogleMap, LoadScript, DrawingManager, StreetViewPanorama, TrafficLayer } from '@react-google-maps/api';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -54,6 +54,7 @@ export function VenueMapping({
   const [drawingManager, setDrawingManager] = useState<google.maps.drawing.DrawingManager | null>(null);
   const [boundary, setBoundary] = useState<google.maps.Polygon | null>(null);
   const [boundaryCoords, setBoundaryCoords] = useState<number[][][] | null>(null);
+  const streetViewRef = useRef<google.maps.StreetViewPanorama | null>(null);
 
   // Common state
   const [drawMode, setDrawMode] = useState<'polygon' | 'zone' | 'gate' | 'route' | 'boundary' | null>(null);
@@ -62,6 +63,8 @@ export function VenueMapping({
   const [snapToBuildings, setSnapToBuildings] = useState(true);
   const [validation] = useState<{ valid: boolean; errors: string[] }>({ valid: true, errors: [] });
   const [isSaving, setIsSaving] = useState(false);
+  const [showStreetView, setShowStreetView] = useState(false);
+  const [showTrafficLayer, setShowTrafficLayer] = useState(false);
 
   // Zone form state
   const [zoneName, setZoneName] = useState('');
@@ -601,6 +604,34 @@ export function VenueMapping({
             >
               <Grid3x3 className="w-5 h-5" />
             </Button>
+
+            {useGoogleMaps && (
+              <>
+                <Button
+                  variant={showStreetView ? 'default' : 'ghost'}
+                  size="icon"
+                  className="w-12 h-12"
+                  onClick={() => setShowStreetView(!showStreetView)}
+                  title="Toggle Street View"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                  </svg>
+                </Button>
+
+                <Button
+                  variant={showTrafficLayer ? 'default' : 'ghost'}
+                  size="icon"
+                  className="w-12 h-12"
+                  onClick={() => setShowTrafficLayer(!showTrafficLayer)}
+                  title="Toggle Traffic Layer"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 10h-3V8.86c1.72-.45 3-2 3-3.86h-3V3H7v2H4c0 1.86 1.28 3.41 3 3.86V10H4c0 1.86 1.28 3.41 3 3.86V15H4c0 1.86 1.28 3.41 3 3.86V21h10v-2.14c1.72-.45 3-2 3-3.86h-3v-1.14c1.72-.45 3-2 3-3.86zM9 5h6v1H9V5zm6 14H9v-1h6v1zm0-4H9v-1h6v1zm0-4H9v-1h6v1z" />
+                  </svg>
+                </Button>
+              </>
+            )}
           </>
         )}
       </div>
@@ -617,7 +648,7 @@ export function VenueMapping({
               onLoad={onLoad}
               options={{
                 mapTypeControl: true,
-                streetViewControl: false,
+                streetViewControl: true,
                 fullscreenControl: true,
               }}
             >
@@ -636,6 +667,32 @@ export function VenueMapping({
                   },
                 }}
               />
+
+              {/* Traffic Layer */}
+              {showTrafficLayer && <TrafficLayer />}
+
+              {/* Street View Panorama */}
+              {showStreetView && (
+                <StreetViewPanorama
+                  position={mapCenter}
+                  visible={showStreetView}
+                  onLoad={(panorama) => {
+                    streetViewRef.current = panorama;
+                  }}
+                  options={{
+                    enableCloseButton: true,
+                    addressControl: true,
+                    linksControl: true,
+                    panControl: true,
+                    zoomControl: true,
+                  }}
+                  onVisibleChanged={() => {
+                    if (streetViewRef.current && !streetViewRef.current.getVisible()) {
+                      setShowStreetView(false);
+                    }
+                  }}
+                />
+              )}
             </GoogleMap>
           </LoadScript>
         ) : (
