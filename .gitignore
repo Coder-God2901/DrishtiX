@@ -13,6 +13,13 @@ build/
 .env.local
 .env.*.local
 
+# GCP Service Account Keys & Credentials
+*-service-account.json
+*-credentials.json
+service-account-key.json
+gcp-*.json
+google-credentials.json
+
 # Logs
 *.log
 npm-debug.log*

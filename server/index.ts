@@ -74,6 +74,7 @@ import gcpAnalyticsRoutes from './routes/gcp-analytics.routes';
 import bigQueryRoutes from './routes/bigquery.routes';
 import weatherRoutes from './routes/weather.routes';
 import cameraRoutes from './routes/camera.routes';
+import earthEngineMapsRoutes from './routes/earth-engine-maps.routes';
 
 // DrishtiX Routes
 import anomalyRoutes from './routes/anomaly.routes';
@@ -93,6 +94,8 @@ app.use('/api/gcp', gcpAnalyticsRoutes);
 app.use('/api/bigquery', bigQueryRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/cameras', cameraRoutes);
+app.use('/api/earth-engine', earthEngineMapsRoutes);
+app.use('/api/maps', earthEngineMapsRoutes);
 
 // DrishtiX endpoints
 app.use('/api/anomalies', anomalyRoutes);
