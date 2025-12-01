@@ -3,9 +3,11 @@
  * Tests Maps, Routes, Places, Street View, and Traffic Layer
  */
 
-import { testConfig } from './test-config';
-import chalk from 'chalk';
-import axios from 'axios';
+const { testConfig } = require('./test-config');
+const chalk = require('chalk');
+const axios = require('axios');
+
+export { };
 
 interface TestResult {
   name: string;

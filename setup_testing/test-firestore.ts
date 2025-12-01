@@ -3,10 +3,12 @@
  * Tests Firestore connection, CRUD operations, security rules, and composite indexes
  */
 
-import { testConfig } from './test-config';
-import chalk from 'chalk';
-import admin from 'firebase-admin';
-import { Firestore } from '@google-cloud/firestore';
+const { testConfig } = require('./test-config');
+const chalk = require('chalk');
+const admin = require('firebase-admin');
+const { Firestore } = require('@google-cloud/firestore');
+
+export { };
 
 interface TestResult {
   name: string;
@@ -16,7 +18,7 @@ interface TestResult {
 }
 
 const results: TestResult[] = [];
-let db: Firestore;
+let db: any;
 
 async function runTest(name: string, testFn: () => Promise<void>): Promise<void> {
   const startTime = Date.now();
@@ -74,7 +76,7 @@ async function testConnection(): Promise<void> {
     if (collectionsSnapshot.length === 0) {
       console.log(chalk.yellow('   ⚠️  No collections found (expected for new database)'));
     } else {
-      collectionsSnapshot.slice(0, 5).forEach(col => {
+      collectionsSnapshot.slice(0, 5).forEach((col: any) => {
         console.log(chalk.gray(`     - ${col.id}`));
       });
     }
@@ -138,7 +140,7 @@ async function testCRUDOperations(): Promise<void> {
 
     console.log(chalk.gray(`   Query results: ${querySnap.size} documents`));
 
-    querySnap.forEach(doc => {
+    querySnap.forEach((doc: any) => {
       console.log(chalk.gray(`     - ${doc.id}: ${doc.data().name}`));
     });
   });
@@ -248,7 +250,7 @@ async function testRealtimeListeners(): Promise<void> {
         .where('eventId', '==', testConfig.testEventId)
         .limit(1)
         .onSnapshot(
-          (snapshot) => {
+          (snapshot: any) => {
             clearTimeout(timeout);
             unsubscribe();
 
@@ -256,7 +258,7 @@ async function testRealtimeListeners(): Promise<void> {
             console.log(chalk.gray(`   Real-time listener working correctly`));
             resolve();
           },
-          (error) => {
+          (error: any) => {
             clearTimeout(timeout);
             unsubscribe();
             reject(error);

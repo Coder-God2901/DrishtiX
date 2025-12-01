@@ -3,9 +3,11 @@
  * Tests Firebase Authentication (including MFA) and Firebase Cloud Messaging (FCM)
  */
 
-import { testConfig } from './test-config';
-import chalk from 'chalk';
-import admin from 'firebase-admin';
+const { testConfig } = require('./test-config');
+const chalk = require('chalk');
+const admin = require('firebase-admin');
+
+export { };
 
 interface TestResult {
   name: string;

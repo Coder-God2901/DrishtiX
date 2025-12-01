@@ -3,10 +3,12 @@
  * Orchestrates all integration tests and generates comprehensive reports
  */
 
-import chalk from 'chalk';
-import { spawn } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
+const chalk = require('chalk');
+const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+export { };
 
 interface TestSuite {
   name: string;
@@ -108,19 +110,19 @@ async function runTestSuite(suite: TestSuite): Promise<TestResult> {
       });
     }, suite.timeout);
 
-    testProcess.stdout.on('data', (data) => {
+    testProcess.stdout.on('data', (data: any) => {
       const text = data.toString();
       output += text;
       process.stdout.write(text);
     });
 
-    testProcess.stderr.on('data', (data) => {
+    testProcess.stderr.on('data', (data: any) => {
       const text = data.toString();
       errorOutput += text;
       process.stderr.write(text);
     });
 
-    testProcess.on('close', (code) => {
+    testProcess.on('close', (code: any) => {
       clearTimeout(timeout);
 
       const duration = Date.now() - startTime;
