@@ -16,35 +16,35 @@ export default function Landing() {
 
   const usps = [
     {
-      icon: <TrendingUp className="h-8 w-8 text-blue-600" />,
+      icon: <TrendingUp className="h-8 w-8 text-primary" />,
       title: 'USP 1 — Prediction, not just monitoring',
       description: 'Most systems only show current congestion. We forecast it.',
       detail: 'Predict crowd density 5-30 minutes ahead using ConvLSTM neural networks',
       badge: 'Predictive AI',
     },
     {
-      icon: <Shield className="h-8 w-8 text-purple-600" />,
+      icon: <Shield className="h-8 w-8 text-accent" />,
       title: 'USP 2 — Triple-layer anomaly detection',
       description: 'Rules + Isolation Forest + Autoencoder = safer & smarter detection.',
       detail: 'Multi-model approach catches violence, fire, panic, and crowd surges',
       badge: 'Triple Security',
     },
     {
-      icon: <Users className="h-8 w-8 text-green-600" />,
+      icon: <Users className="h-8 w-8 text-success-green" />,
       title: 'USP 3 — Works even without cameras',
       description: 'We can run just on attendee density → scalable & practical.',
       detail: 'Mobile app GPS tracking, WiFi/Bluetooth sensors, and ticket scanning',
       badge: 'Camera-Free',
     },
     {
-      icon: <Zap className="h-8 w-8 text-orange-600" />,
+      icon: <Zap className="h-8 w-8 text-accent" />,
       title: 'USP 4 — Actions, not just warnings',
       description: 'System suggests routes, deploys staff, and guides crowd movement.',
       detail: 'Auto-dispatch teams, push route changes, broadcast safety messages',
       badge: 'Automated Actions',
     },
     {
-      icon: <Target className="h-8 w-8 text-red-600" />,
+      icon: <Target className="h-8 w-8 text-destructive" />,
       title: 'USP 5 — Multi-model switching based on event type',
       description:
         'Our system automatically switches between Sports Mode / Concert Mode / Rally Mode for better predictions.',
@@ -52,7 +52,7 @@ export default function Landing() {
       badge: 'Smart Switching',
     },
     {
-      icon: <RefreshCw className="h-8 w-8 text-indigo-600" />,
+      icon: <RefreshCw className="h-8 w-8 text-primary" />,
       title: 'USP 6 — Self-learning system that improves after every event',
       description: 'With every event, the system becomes more intelligent, reducing errors over time.',
       detail: 'Just like Google Maps learns traffic patterns — our model learns movement patterns',
@@ -70,15 +70,15 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-bg-light via-white to-surface-muted dark:from-dark-bg dark:via-dark-surface dark:to-gray-900">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <Badge className="mb-4 bg-blue-600 text-white">
+          <Badge className="mb-4 bg-primary text-primary-foreground">
             <Brain className="h-3 w-3 mr-1" />
             Powered by AI & ML
           </Badge>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             EventSphere DrishtiX
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
@@ -98,11 +98,11 @@ export default function Landing() {
         {/* Role Selection Cards */}
         <div className="grid md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
           <Card
-            className="cursor-pointer hover:shadow-xl transition-all border-2 hover:border-blue-500"
+            className="cursor-pointer hover:shadow-xl transition-all border-2 hover:border-primary group"
             onClick={() => handleRoleSelect('organizer')}
           >
             <CardHeader>
-              <Calendar className="h-12 w-12 text-blue-600 mb-4" />
+              <Calendar className="h-12 w-12 text-primary group-hover:scale-110 transition-transform mb-4" />
               <CardTitle className="text-2xl">I'm an Event Organizer</CardTitle>
               <CardDescription className="text-base">
                 Create events, monitor crowds, manage incidents, and ensure safety
@@ -120,11 +120,11 @@ export default function Landing() {
           </Card>
 
           <Card
-            className="cursor-pointer hover:shadow-xl transition-all border-2 hover:border-purple-500"
+            className="cursor-pointer hover:shadow-xl transition-all border-2 hover:border-accent group"
             onClick={() => handleRoleSelect('attendee')}
           >
             <CardHeader>
-              <Users className="h-12 w-12 text-purple-600 mb-4" />
+              <Users className="h-12 w-12 text-accent group-hover:scale-110 transition-transform mb-4" />
               <CardTitle className="text-2xl">I'm an Attendee</CardTitle>
               <CardDescription className="text-base">
                 Join events, navigate venues, get alerts, and stay safe
@@ -169,23 +169,23 @@ export default function Landing() {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-16">
+        <div className="bg-card dark:bg-card rounded-xl shadow-lg p-8 mb-16 border">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">95%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Prediction Accuracy</div>
+              <div className="text-4xl font-bold text-primary mb-2">95%</div>
+              <div className="text-sm text-muted-foreground">Prediction Accuracy</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">&lt;2min</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Alert Response Time</div>
+              <div className="text-4xl font-bold text-accent mb-2">&lt;2min</div>
+              <div className="text-sm text-muted-foreground">Alert Response Time</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">3-Layer</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Anomaly Detection</div>
+              <div className="text-4xl font-bold text-success-green mb-2">3-Layer</div>
+              <div className="text-sm text-muted-foreground">Anomaly Detection</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-orange-600 mb-2">100%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Self-Learning</div>
+              <div className="text-4xl font-bold text-accent mb-2">100%</div>
+              <div className="text-sm text-muted-foreground">Self-Learning</div>
             </div>
           </div>
         </div>
@@ -196,7 +196,7 @@ export default function Landing() {
           <Button
             size="lg"
             onClick={handleGetStarted}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg"
+            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
           >
             Get Started Now
             <ChevronRight className="ml-2 h-5 w-5" />

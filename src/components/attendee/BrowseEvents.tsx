@@ -276,14 +276,12 @@ export default function BrowseEvents() {
                 <CardContent className="space-y-4">
                   {/* Event Details */}
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <MapPin className="h-4 w-4" />
                       <span>{event.venue}</span>
-                      {event.distance && (
-                        <span className="text-xs text-blue-600 dark:text-blue-400">({event.distance} km away)</span>
-                      )}
+                      {event.distance && <span className="text-xs text-primary">({event.distance} km away)</span>}
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       <span>{new Date(event.startDate).toLocaleDateString()}</span>
                       <span className="text-xs">

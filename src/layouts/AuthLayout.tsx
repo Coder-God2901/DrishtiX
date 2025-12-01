@@ -9,13 +9,15 @@ export function AuthLayout() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-bg-light to-surface-muted dark:from-dark-bg dark:to-dark-surface">
       <div className="w-full max-w-md p-6">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">EventSphere</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">Advanced Event Management Platform</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            EventSphere
+          </h1>
+          <p className="mt-2 text-muted-foreground">Advanced Event Management Platform</p>
         </div>
-        <div className="rounded-lg bg-white p-8 shadow-xl dark:bg-gray-800">
+        <div className="rounded-lg bg-card p-8 shadow-xl border">
           <Outlet />
         </div>
       </div>

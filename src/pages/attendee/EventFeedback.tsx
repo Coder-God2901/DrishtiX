@@ -265,7 +265,7 @@ export default function EventFeedback() {
                     <div className="space-y-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
-                          <Icon className="h-6 w-6 text-blue-600 mt-1" />
+                          <Icon className="h-6 w-6 text-primary mt-1" />
                           <div>
                             <h3 className="font-semibold text-lg">{category.label}</h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400">{category.description}</p>
@@ -342,7 +342,7 @@ export default function EventFeedback() {
                     auto-tuning
                   </li>
                 </ul>
-                <div className="mt-3 bg-purple-50 dark:bg-purple-900 p-3 rounded text-xs">
+                <div className="mt-3 bg-accent/10 dark:bg-accent/20 p-3 rounded text-xs">
                   <p className="font-semibold mb-1">Post-Event Learning Process:</p>
                   <p>
                     After submission, your data is anonymized and fed into our ModelPerformance tracking system. The AI
@@ -360,7 +360,7 @@ export default function EventFeedback() {
           <Button variant="outline" onClick={() => navigate(-1)} className="flex-1">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting} className="flex-1 bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="flex-1 bg-primary hover:bg-primary/90">
             {isSubmitting ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />

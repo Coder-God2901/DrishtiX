@@ -37,15 +37,15 @@ export default function AlertsPanel({ eventId, alerts, onRefresh }: AlertsPanelP
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'LOW':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        return 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary';
       case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-warning-amber/10 text-warning-amber dark:bg-warning-amber/20 dark:text-warning-amber';
       case 'HIGH':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+        return 'bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent';
       case 'CRITICAL':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return 'bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -105,8 +105,8 @@ export default function AlertsPanel({ eventId, alerts, onRefresh }: AlertsPanelP
         <CardContent>
           {visibleAlerts.length === 0 ? (
             <div className="text-center py-12">
-              <Shield className="h-12 w-12 mx-auto text-green-600 mb-4" />
-              <p className="text-lg font-medium text-green-900 dark:text-green-100">All Clear</p>
+              <Shield className="h-12 w-12 mx-auto text-success-green mb-4" />
+              <p className="text-lg font-medium text-success-green">All Clear</p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">No active safety alerts at this time</p>
             </div>
           ) : (
@@ -221,28 +221,28 @@ export default function AlertsPanel({ eventId, alerts, onRefresh }: AlertsPanelP
       )}
 
       {/* USP 2 Info Card */}
-      <Card className="border-purple-600">
+      <Card className="border-accent">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
-            <Shield className="h-4 w-4 text-purple-600" />
+            <Shield className="h-4 w-4 text-accent" />
             Triple-Layer Anomaly Detection (USP 2)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-blue-600" />
+            <Shield className="h-4 w-4 text-primary" />
             <span className="font-medium">Layer 1: Rules Engine</span>
-            <span className="text-xs text-gray-500">- Threshold-based detection</span>
+            <span className="text-xs text-muted-foreground">- Threshold-based detection</span>
           </div>
           <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-green-600" />
+            <Activity className="h-4 w-4 text-success-green" />
             <span className="font-medium">Layer 2: Isolation Forest</span>
-            <span className="text-xs text-gray-500">- Statistical outliers</span>
+            <span className="text-xs text-muted-foreground">- Statistical outliers</span>
           </div>
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-purple-600" />
+            <TrendingUp className="h-4 w-4 text-accent" />
             <span className="font-medium">Layer 3: Autoencoder</span>
-            <span className="text-xs text-gray-500">- Deep pattern analysis</span>
+            <span className="text-xs text-muted-foreground">- Deep pattern analysis</span>
           </div>
         </CardContent>
       </Card>

@@ -53,11 +53,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bg-light to-surface-muted dark:from-dark-bg dark:to-dark-surface p-4">
+      <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
-            <Shield className="h-12 w-12 text-blue-600" />
+            <Shield className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold text-center">
             {requiresMfa ? 'Two-Factor Authentication' : 'DrishtiX Login'}

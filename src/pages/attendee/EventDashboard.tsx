@@ -206,13 +206,18 @@ export default function EventDashboard() {
   }, [eventId, loadEventData, loadVenueMap, loadAlerts]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background dark:bg-dark-bg">
       {/* Connection Status Banner */}
       {!isConnected && (
-        <div className="bg-red-600 text-white px-4 py-2 text-center flex items-center justify-center gap-2">
+        <div className="bg-destructive text-white px-4 py-2 text-center flex items-center justify-center gap-2">
           <XCircle className="h-4 w-4" />
           <span>Connection lost. Attempting to reconnect...</span>
-          <Button size="sm" variant="ghost" onClick={handleRefreshAll} className="text-white hover:bg-red-700 ml-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleRefreshAll}
+            className="text-white hover:bg-destructive/90 ml-2"
+          >
             <RefreshCw className="h-3 w-3 mr-1" />
             Retry
           </Button>
@@ -220,14 +225,14 @@ export default function EventDashboard() {
       )}
 
       {isConnected && (
-        <div className="bg-green-600 text-white px-4 py-1 text-center flex items-center justify-center gap-2 text-sm">
+        <div className="bg-success-green text-white px-4 py-1 text-center flex items-center justify-center gap-2 text-sm">
           <CheckCircle className="h-3 h-3" />
           <span>Connected • Real-time updates active</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
+      <div className="bg-card dark:bg-dark-surface border-b border-border sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -239,9 +244,9 @@ export default function EventDashboard() {
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-bold">{event?.name || <Skeleton className="h-6 w-48" />}</h1>
                   {isConnected ? (
-                    <Wifi className="h-4 w-4 text-green-600 animate-pulse" />
+                    <Wifi className="h-4 w-4 text-success-green animate-pulse" />
                   ) : (
-                    <WifiOff className="h-4 w-4 text-red-600" />
+                    <WifiOff className="h-4 w-4 text-destructive" />
                   )}
                 </div>
                 <div className="flex items-center gap-3 mt-1">
@@ -326,7 +331,7 @@ export default function EventDashboard() {
                       )}
                     </div>
                   </div>
-                  <Bell className={`h-8 w-8 text-blue-600 ${alerts.length > 0 ? 'animate-bounce' : ''}`} />
+                  <Bell className={`h-8 w-8 text-primary ${alerts.length > 0 ? 'animate-bounce' : ''}`} />
                 </div>
               )}
             </CardContent>
@@ -343,7 +348,7 @@ export default function EventDashboard() {
                       <p className="text-sm text-gray-600 dark:text-gray-400">Occupancy</p>
                       <p className="text-2xl font-bold">{crowdStatus.percentage}%</p>
                     </div>
-                    <Users className="h-8 w-8 text-purple-600" />
+                    <Users className="h-8 w-8 text-accent" />
                   </div>
                   <p className="text-xs text-gray-500">{attendeeCount.toLocaleString()} people</p>
                 </div>
@@ -361,7 +366,7 @@ export default function EventDashboard() {
                     <p className="text-sm text-gray-600 dark:text-gray-400">Time Left</p>
                     <p className="text-2xl font-bold">{timeRemaining}</p>
                   </div>
-                  <Clock className="h-8 w-8 text-orange-600" />
+                  <Clock className="h-8 w-8 text-warning-amber" />
                 </div>
               )}
             </CardContent>
@@ -457,19 +462,19 @@ export default function EventDashboard() {
                   <h3 className="font-semibold mb-3">Platform Features Active</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex items-center gap-2 text-sm">
-                      <TrendingUp className="h-4 w-4 text-blue-600" />
+                      <TrendingUp className="h-4 w-4 text-primary" />
                       <span>AI Crowd Predictions</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Activity className="h-4 w-4 text-purple-600" />
+                      <Activity className="h-4 w-4 text-accent" />
                       <span>Triple-Layer Detection</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Navigation className="h-4 w-4 text-green-600" />
+                      <Navigation className="h-4 w-4 text-success-green" />
                       <span>Smart Navigation</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
                       <span>Auto-Dispatch SOS</span>
                     </div>
                   </div>
