@@ -1,0 +1,56 @@
+{
+  "timestamp": "2025-12-01T21:56:44.857Z",
+  "platform": "DrishtiX v2.0.0",
+  "summary": {
+    "total": 7,
+    "passed": 0,
+    "failed": 7,
+    "skipped": 0,
+    "successRate": "0.0",
+    "totalDuration": 107093
+  },
+  "results": [
+    {
+      "suite": "Pub/Sub Integration",
+      "status": "FAIL",
+      "duration": 60028,
+      "error": "Test suite exceeded timeout of 60s"
+    },
+    {
+      "suite": "BigQuery Analytics",
+      "status": "FAIL",
+      "duration": 12086,
+      "error": "Exit code: 1"
+    },
+    {
+      "suite": "Firestore Database",
+      "status": "FAIL",
+      "duration": 13119,
+      "error": "Exit code: 1"
+    },
+    {
+      "suite": "Earth Engine API",
+      "status": "FAIL",
+      "duration": 2928,
+      "error": "Exit code: 1"
+    },
+    {
+      "suite": "Maps Platform",
+      "status": "FAIL",
+      "duration": 2985,
+      "error": "Exit code: 1"
+    },
+    {
+      "suite": "Local ML Services",
+      "status": "FAIL",
+      "duration": 2935,
+      "error": "Exit code: 1"
+    },
+    {
+      "suite": "Firebase Auth & FCM",
+      "status": "FAIL",
+      "duration": 13012,
+      "error": "Exit code: 1"
+    }
+  ]
+}
