@@ -1,8 +1,8 @@
-# EventSphere 🎯
+# DrishtiX 🎯
 
-> **Advanced Event Safety & Operations Management Platform**
+> **AI-Powered Crowd Safety Platform**
 
-EventSphere is a comprehensive, enterprise-grade event management platform designed for professional event coordinators, security teams, and safety professionals. Built with React, TypeScript, and modern web technologies to provide real-time situational awareness, predictive analytics, and intelligent coordination tools.
+DrishtiX is a comprehensive, enterprise-grade crowd safety and event management platform designed for professional event coordinators, security teams, and safety professionals. Built with React, TypeScript, and modern web technologies to provide real-time situational awareness, predictive analytics, and intelligent coordination tools.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react)
@@ -67,8 +67,8 @@ EventSphere is a comprehensive, enterprise-grade event management platform desig
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/eventsphere.git
-cd eventsphere
+git clone https://github.com/yourusername/drishtix.git
+cd drishtix
 
 # Install dependencies
 pnpm install
@@ -146,6 +146,62 @@ Documentation of all variables is in `./docs/ENVIRONMENT_VARIABLES.md`.
 - ✅ **Detection Latency:** <2s (fire, panic, violence)
 - ✅ **Dataflow Throughput:** <10s fusion latency, 10K+ events/sec
 - ✅ **Dispatch Speed:** <5 min (CRITICAL incidents)
+
+## 🧪 Testing
+
+### Integration Testing Suite
+
+DrishtiX includes a comprehensive integration testing suite to verify all GCP services and local ML integrations:
+
+```bash
+# Navigate to testing directory
+cd setup_testing
+
+# Install test dependencies
+pnpm install
+
+# Run all tests
+pnpm test:all
+
+# Run individual test suites
+pnpm test:pubsub          # Pub/Sub integration
+pnpm test:bigquery        # BigQuery analytics
+pnpm test:firestore       # Firestore database
+pnpm test:earth-engine    # Earth Engine API
+pnpm test:maps            # Maps Platform
+pnpm test:ml              # Local ML services
+pnpm test:firebase        # Firebase Auth & FCM
+```
+
+### Test Coverage
+
+The test suite verifies:
+
+- **Pub/Sub:** Topic creation, message publishing/receiving, subscriptions (12 topics)
+- **BigQuery:** Dataset access, table schemas, queries, streaming inserts
+- **Firestore:** CRUD operations, security rules, 24 composite indexes, real-time listeners
+- **Earth Engine:** Satellite imagery (Sentinel-2), terrain analysis (SRTM), land cover (ESA WorldCover)
+- **Maps Platform:** Routes API, Places API, POI discovery, geocoding
+- **Local ML:** YOLO vision service (port 8001), ConvLSTM forecasting (port 8000)
+- **Firebase:** Authentication, custom claims, FCM notifications, MFA
+
+### Test Reports
+
+After running tests, reports are generated in `setup_testing/`:
+
+- `test-results.json` - Machine-readable test results
+- `test-results.log` - Detailed text log
+- `test-report.html` - Interactive HTML report with expandable test details
+
+See [setup_testing/README.md](./setup_testing/README.md) for complete testing documentation.
+
+### Cost Optimization
+
+DrishtiX uses a **hybrid architecture** combining local ML services with GCP cloud services:
+
+- **Local ML Services:** YOLO (vision) + ConvLSTM (forecasting) = **$0/month**
+- **GCP Services:** Pub/Sub + BigQuery + Firestore + Earth Engine + Maps = **$90-380/month**
+- **Total Savings:** **85-90% cost reduction** vs full Vertex AI approach ($550-2200/month saved)
 
 ## 📁 Project Structure
 
@@ -335,4 +391,4 @@ For questions or support, please open an issue on GitHub.
 
 ---
 
-**Built with ❤️ for event safety professionals**
+**Built with ❤️ by DrishtiX - AI-Powered Crowd Safety**

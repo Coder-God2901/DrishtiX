@@ -134,7 +134,7 @@ export function EarthEngineVisualizer() {
 
         <Card className="p-4">
           <label className="text-sm font-medium mb-2 block">Grid Size: {gridSize}m</label>
-          <Slider value={[gridSize]} onValueChange={(v) => setGridSize(v[0])} min={25} max={100} step={25} />
+          <Slider value={[gridSize]} onValueChange={(v: number[]) => setGridSize(v[0])} min={25} max={100} step={25} />
           <p className="text-xs text-muted-foreground mt-2">Smaller grids = higher resolution but slower processing</p>
         </Card>
       </div>
@@ -195,7 +195,7 @@ export function EarthEngineVisualizer() {
             <div className="aspect-video bg-muted rounded-lg flex items-center justify-center relative overflow-hidden">
               {/* Simulated heatmap */}
               <div className="absolute inset-0 grid grid-cols-5 gap-1 p-4">
-                {syntheticData.gridCells.slice(0, 20).map((cell, i) => (
+                {syntheticData.gridCells.slice(0, 20).map((cell) => (
                   <div
                     key={cell.gridId}
                     className="rounded transition-all hover:scale-105 cursor-pointer"

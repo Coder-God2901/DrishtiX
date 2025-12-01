@@ -1,0 +1,48 @@
+{
+  "name": "drishtix-gcp-integration-tests",
+  "version": "1.0.0",
+  "description": "Comprehensive GCP integration tests for DrishtiX platform",
+  "main": "index.ts",
+  "scripts": {
+    "test": "ts-node test-runner.ts",
+    "test:core": "ts-node test-gcp-core.ts",
+    "test:pubsub": "ts-node test-pubsub.ts",
+    "test:bigquery": "ts-node test-bigquery.ts",
+    "test:firestore": "ts-node test-firestore.ts",
+    "test:earth-engine": "ts-node test-earth-engine.ts",
+    "test:maps": "ts-node test-maps-platform.ts",
+    "test:ml": "ts-node test-local-ml.ts",
+    "test:firebase": "ts-node test-firebase.ts",
+    "test:e2e": "ts-node test-e2e-workflow.ts",
+    "test:all": "npm run test:core && npm run test:pubsub && npm run test:bigquery && npm run test:firestore && npm run test:earth-engine && npm run test:maps && npm run test:ml && npm run test:firebase && npm run test:e2e"
+  },
+  "keywords": [
+    "drishtix",
+    "gcp",
+    "integration-tests",
+    "pubsub",
+    "bigquery",
+    "firestore",
+    "earth-engine",
+    "maps"
+  ],
+  "author": "DrishtiX Team",
+  "license": "MIT",
+  "dependencies": {
+    "@google-cloud/bigquery": "^7.3.0",
+    "@google-cloud/firestore": "^7.1.0",
+    "@google-cloud/pubsub": "^4.1.1",
+    "@google-cloud/storage": "^7.7.0",
+    "@google/earthengine": "^1.7.1",
+    "@googlemaps/google-maps-services-js": "^3.3.42",
+    "axios": "^1.6.2",
+    "chalk": "^4.1.2",
+    "dotenv": "^16.3.1",
+    "firebase-admin": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
