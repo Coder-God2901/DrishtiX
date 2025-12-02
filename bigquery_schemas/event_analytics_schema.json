@@ -1,0 +1,9 @@
+[
+  {"name": "event_id", "type": "STRING", "mode": "REQUIRED", "description": "Event identifier"},
+  {"name": "date", "type": "DATE", "mode": "REQUIRED", "description": "Analytics date"},
+  {"name": "total_attendees", "type": "INT64", "mode": "REQUIRED", "description": "Total number of attendees"},
+  {"name": "peak_crowd_density", "type": "FLOAT64", "mode": "REQUIRED", "description": "Peak crowd density value"},
+  {"name": "incidents_count", "type": "INT64", "mode": "REQUIRED", "description": "Total number of incidents"},
+  {"name": "avg_dwell_time_minutes", "type": "FLOAT64", "mode": "NULLABLE", "description": "Average dwell time in minutes"},
+  {"name": "zone_analytics", "type": "JSON", "mode": "NULLABLE", "description": "Zone-specific analytics"}
+]

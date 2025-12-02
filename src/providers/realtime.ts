@@ -106,11 +106,10 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }
 
-  return (
-    <RealtimeContext.Provider value= {{ state, socket: socketRef.current, setEvent }
-}>
-  { children }
-  </RealtimeContext.Provider>
+  return React.createElement(
+    RealtimeContext.Provider,
+    { value: { state, socket: socketRef.current, setEvent } },
+    children
   )
 }
 

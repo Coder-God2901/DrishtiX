@@ -344,7 +344,7 @@ async function testStreamingInserts(): Promise<void> {
       prediction_id: `stream-test-${Date.now()}-${i}`,
       event_id: testConfig.testEventId,
       zone_id: `zone-${i + 1}`,
-      timestamp: new Date().toISOString(),
+      timestamp: bigquery.timestamp(new Date()),
       predicted_density: Math.random(),
       confidence: 0.8 + Math.random() * 0.2,
       prediction_horizon_minutes: 15,
@@ -352,10 +352,10 @@ async function testStreamingInserts(): Promise<void> {
     }));
 
     try {
-      await bigquery
+      const response = await bigquery
         .dataset(testConfig.bigQueryDataset)
         .table(tableId)
-        .insert(rows, { raw: true }); // Streaming insert
+        .insert(rows); // Streaming insert (removed raw: true)
 
       console.log(chalk.gray(`   Streamed ${rows.length} rows to ${tableId}`));
       console.log(chalk.gray(`   Streaming inserts available immediately (no batch delay)`));
@@ -364,7 +364,7 @@ async function testStreamingInserts(): Promise<void> {
         console.log(chalk.yellow(`   ⚠️  Skipping: Table ${tableId} not found`));
         return;
       }
-      throw error;
+      throw new Error(error.message || error.name || 'Unknown streaming insert error');
     }
   });
 }

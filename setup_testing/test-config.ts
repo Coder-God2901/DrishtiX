@@ -2,11 +2,15 @@
  * Test Configuration for DrishtiX GCP Integration Tests
  */
 
+// Load environment variables from .env file
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 export const testConfig = {
   // GCP Configuration
-  projectId: process.env.GCP_PROJECT_ID || 'your-project-id',
+  projectId: process.env.GCP_PROJECT_ID || 'drishtix-479606',
   location: process.env.GCP_REGION || 'us-central1',
-  credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS || '../config/gcp-service-account-key.json',
+  credentialsPath: process.env.GCP_SERVICE_ACCOUNT_KEY_PATH || './config/gcp-service-account-key.json',
 
   // Test Timeouts (milliseconds)
   defaultTimeout: 30000,
@@ -64,6 +68,9 @@ export const testConfig = {
   // Google Maps API
   mapsApiKey: process.env.GOOGLE_MAPS_API_KEY || '',
   placesApiKey: process.env.GOOGLE_MAPS_PLACES_API_KEY || '',
+
+  // Firebase Cloud Messaging (FCM)
+  fcmTestToken: process.env.TEST_FCM_TOKEN || '',
 
   // Earth Engine
   earthEngineEnabled: process.env.EARTH_ENGINE_ENABLED === 'true',

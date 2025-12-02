@@ -1,0 +1,15 @@
+[
+  {"name": "incident_id", "type": "STRING", "mode": "REQUIRED", "description": "Unique incident identifier"},
+  {"name": "event_id", "type": "STRING", "mode": "REQUIRED", "description": "Event identifier"},
+  {"name": "timestamp", "type": "TIMESTAMP", "mode": "REQUIRED", "description": "Incident occurrence timestamp"},
+  {"name": "type", "type": "STRING", "mode": "REQUIRED", "description": "Incident type (CROWD_SURGE, FIRE, MEDICAL, etc.)"},
+  {"name": "severity", "type": "STRING", "mode": "REQUIRED", "description": "Severity level (LOW, MEDIUM, HIGH, CRITICAL)"},
+  {"name": "status", "type": "STRING", "mode": "REQUIRED", "description": "Incident status (ACTIVE, RESOLVED, ESCALATED)"},
+  {"name": "location", "type": "RECORD", "mode": "NULLABLE", "description": "Incident location", "fields": [
+    {"name": "lat", "type": "FLOAT64", "mode": "NULLABLE", "description": "Latitude"},
+    {"name": "lng", "type": "FLOAT64", "mode": "NULLABLE", "description": "Longitude"}
+  ]},
+  {"name": "affected_zones", "type": "STRING", "mode": "REPEATED", "description": "List of affected zone IDs"},
+  {"name": "response_time_seconds", "type": "INT64", "mode": "NULLABLE", "description": "Response time in seconds"},
+  {"name": "description", "type": "STRING", "mode": "NULLABLE", "description": "Incident description"}
+]
