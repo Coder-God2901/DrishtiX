@@ -69,6 +69,9 @@ export const testConfig = {
   mapsApiKey: process.env.GOOGLE_MAPS_API_KEY || '',
   placesApiKey: process.env.GOOGLE_MAPS_PLACES_API_KEY || '',
 
+  // Firebase Cloud Messaging (FCM)
+  fcmTestToken: process.env.TEST_FCM_TOKEN || '',
+
   // Earth Engine
   earthEngineEnabled: process.env.EARTH_ENGINE_ENABLED === 'true',
   earthEngineProject: process.env.EARTH_ENGINE_PROJECT || '',

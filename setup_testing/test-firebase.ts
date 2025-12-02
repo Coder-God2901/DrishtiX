@@ -167,8 +167,9 @@ async function testFCM(): Promise<void> {
   console.log(chalk.blue('\\n📱 Testing Firebase Cloud Messaging (FCM)...'));
 
   await runTest('Send test notification (single device)', async () => {
-    // Note: This requires a valid FCM token from a real device
-    const mockToken = 'MOCK_FCM_TOKEN_FOR_TESTING';
+    // Use real token from config if available, otherwise use mock token
+    const token = testConfig.fcmTestToken || 'MOCK_FCM_TOKEN_FOR_TESTING';
+    const isRealToken = testConfig.fcmTestToken && testConfig.fcmTestToken.length > 0;
 
     try {
       const message = {
@@ -182,18 +183,26 @@ async function testFCM(): Promise<void> {
           zone: 'zone-1',
           eventId: testConfig.testEventId,
         },
-        token: mockToken,
+        token: token,
       };
 
-      // This will fail with invalid token, but validates the API is working
       await admin.messaging().send(message);
 
-      console.log(chalk.gray(`   Notification sent successfully`));
+      if (isRealToken) {
+        console.log(chalk.gray(`   ✅ Notification sent successfully to real device`));
+      } else {
+        console.log(chalk.gray(`   Notification sent successfully`));
+      }
     } catch (error: any) {
       if (error.code === 'messaging/invalid-registration-token' ||
-        error.code === 'messaging/registration-token-not-registered') {
-        console.log(chalk.yellow(`   ⚠️  Mock token used (expected failure)`));
-        console.log(chalk.gray(`   FCM API is accessible and working`));
+        error.code === 'messaging/registration-token-not-registered' ||
+        error.message?.includes('not a valid FCM registration token')) {
+        if (!isRealToken) {
+          console.log(chalk.yellow(`   ⚠️  Mock token used (expected failure)`));
+          console.log(chalk.gray(`   FCM API is accessible - add TEST_FCM_TOKEN to .env for real test`));
+          return; // Test passes - this is expected with mock token
+        }
+        throw new Error(`Real FCM token is invalid: ${error.message}`);
       } else {
         throw error;
       }
