@@ -179,11 +179,25 @@ async function testSubscriptions(): Promise<void> {
     if (!received) throw new Error('No messages received');
   });
 
-  // Clean up
+  // Clean up - properly close subscription before deletion
   if (testConfig.cleanupAfterTests) {
     const subscription = pubsub.subscription(subscriptionName);
-    try { await subscription.delete(); } catch { }
-    try { await topic.delete(); } catch { }
+    try {
+      // Close the subscription to stop receiving messages
+      await subscription.close();
+      // Small delay to ensure subscription is fully closed
+      await new Promise(resolve => setTimeout(resolve, 500));
+      // Now delete the subscription
+      await subscription.delete();
+    } catch (e: any) {
+      // Log cleanup errors but don't fail the test
+      console.log(chalk.gray(`   Cleanup warning: ${e.message || 'subscription cleanup failed'}`));
+    }
+    try {
+      await topic.delete();
+    } catch (e: any) {
+      console.log(chalk.gray(`   Cleanup warning: ${e.message || 'topic cleanup failed'}`));
+    }
   }
 }
 
@@ -216,6 +230,9 @@ async function runAllTests(): Promise<void> {
     await testMessagePublishing();
     await testSubscriptions();
     await testProductionTopics();
+
+    // Ensure all async operations complete before summary
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Print summary
     console.log(chalk.bold.cyan('\\n' + '='.repeat(50)));
