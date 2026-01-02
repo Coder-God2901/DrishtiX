@@ -47,3 +47,6 @@ export function requireRoles(roles: string[]) {
     next()
   }
 }
+
+// Alias for backward compatibility
+export const authorize = requireRoles

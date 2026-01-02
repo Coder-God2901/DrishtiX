@@ -826,3 +826,547 @@ model ModelPerformance {
   @@index([predictionAccuracy])
 }
 
+// ==========================================
+// FRONTEND V2 MODELS (Attendee/Organizer Features)
+// ==========================================
+
+// Tickets System
+model Ticket {
+  id              String   @id @default(uuid())
+  eventId         String
+  eventName       String
+  eventDate       String
+  eventTime       String
+  venue           String
+  
+  userId          String   // Purchaser
+  userName        String
+  userEmail       String
+  userPhone       String?
+  
+  quantity        Int
+  ticketType      String   // 'General', 'VIP', 'Student', etc.
+  totalPaid       Float
+  currency        String   @default("INR")
+  
+  purchaseDate    DateTime @default(now())
+  
+  // Entry details
+  entryGate       String?
+  qrCode          String   @unique
+  status          TicketStatus @default(ACTIVE)
+  
+  // Seat information (if applicable)
+  seatSection     String?
+  seatNumbers     String[]
+  
+  // Attendee information
+  attendeeNames   String[]
+  specialRequirements String[]
+  
+  // Usage tracking
+  usedAt          DateTime?
+  validatedBy     String?
+  
+  // Cancellation/Refund
+  cancelledAt     DateTime?
+  cancellationReason String?
+  refundAmount    Float?
+  refundStatus    RefundStatus?
+  refundedAt      DateTime?
+  
+  // Transfer
+  transferredTo   String?
+  transferredAt   DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([eventId, status])
+  @@index([qrCode])
+  @@index([purchaseDate])
+}
+
+enum TicketStatus {
+  ACTIVE
+  USED
+  EXPIRED
+  CANCELLED
+  REFUNDED
+  TRANSFERRED
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+// Payment Transactions
+model PaymentTransaction {
+  id              String   @id @default(uuid())
+  ticketId        String?
+  userId          String
+  
+  amount          Float
+  currency        String   @default("INR")
+  
+  paymentMethod   String   // 'card', 'upi', 'netbanking', 'wallet'
+  paymentGateway  String   // 'stripe', 'razorpay', 'paytm'
+  
+  transactionId   String   @unique
+  status          PaymentStatus
+  
+  metadata        Json?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([ticketId])
+  @@index([status])
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+// Volunteers Management
+model Volunteer {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  name            String
+  email           String
+  phone           String
+  
+  role            String   // 'medical', 'security', 'guide', 'logistics', etc.
+  zone            String
+  
+  status          VolunteerStatus @default(ACTIVE)
+  
+  // Task tracking
+  assignedTasks   Int      @default(0)
+  completedTasks  Int      @default(0)
+  currentTask     String?
+  
+  // Location tracking
+  lastLocation    String?
+  locationCoords  Json?
+  lastLocationUpdate DateTime?
+  
+  // Contact
+  contactNumber   String?
+  emergencyContact String?
+  
+  // Skills and ratings
+  skills          String[]
+  rating          Float?
+  totalRatings    Int      @default(0)
+  
+  // Availability
+  shiftStart      DateTime?
+  shiftEnd        DateTime?
+  isAvailable     Boolean  @default(true)
+  
+  // Check-in/out
+  checkInTime     DateTime?
+  checkOutTime    DateTime?
+  totalHours      Float    @default(0)
+  
+  joinedAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([eventId, status])
+  @@index([zone])
+  @@index([email])
+}
+
+enum VolunteerStatus {
+  ACTIVE
+  BREAK
+  OFFLINE
+  COMPLETED
+  REMOVED
+}
+
+// Volunteer Tasks
+model VolunteerTask {
+  id              String   @id @default(uuid())
+  volunteerId     String
+  eventId         String
+  
+  title           String
+  description     String?
+  zone            String
+  
+  priority        TaskPriority @default(MEDIUM)
+  status          TaskStatus @default(ASSIGNED)
+  
+  assignedAt      DateTime @default(now())
+  dueAt           DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  
+  notes           String?
+  attachments     String[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([volunteerId])
+  @@index([eventId, status])
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Notifications System
+model Notification {
+  id              String   @id @default(uuid())
+  
+  userId          String?  // Null for broadcast notifications
+  eventId         String?
+  
+  type            NotificationType
+  priority        NotificationPriority @default(MEDIUM)
+  
+  title           String
+  message         String
+  
+  // Channels
+  channels        String[] // ['push', 'email', 'sms']
+  
+  // Status
+  isRead          Boolean  @default(false)
+  readAt          DateTime?
+  
+  isSent          Boolean  @default(false)
+  sentAt          DateTime?
+  
+  // Actions
+  actionUrl       String?
+  actionLabel     String?
+  
+  // Metadata
+  data            Json?
+  
+  // Delivery tracking
+  pushDelivered   Boolean  @default(false)
+  emailDelivered  Boolean  @default(false)
+  smsDelivered    Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId, isRead])
+  @@index([eventId])
+  @@index([type, priority])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  ALERT
+  INCIDENT
+  TICKET
+  EVENT_UPDATE
+  VOLUNTEER_TASK
+  HELP_REQUEST
+  EMERGENCY
+  GENERAL
+  PROMOTIONAL
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// Points of Interest (POIs)
+model PointOfInterest {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  name            String
+  type            POIType
+  
+  location        Json     // { lat, lng }
+  coordinates     Json?    // { x, y } for indoor maps
+  
+  zone            String?
+  floor           Int?
+  
+  description     String?
+  amenities       String[]
+  
+  isAccessible    Boolean  @default(false)
+  isEmergencyExit Boolean  @default(false)
+  
+  capacity        Int?
+  currentOccupancy Int?
+  
+  operatingHours  Json?
+  
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([eventId, type])
+  @@index([isEmergencyExit])
+}
+
+enum POIType {
+  ENTRANCE
+  EXIT
+  EMERGENCY_EXIT
+  RESTROOM
+  FOOD
+  MEDICAL
+  INFORMATION
+  ATM
+  PARKING
+  STAGE
+  SEATING
+  VIP_AREA
+  SECURITY
+  FIRST_AID
+  OTHER
+}
+
+// Navigation Routes
+model NavigationRoute {
+  id              String   @id @default(uuid())
+  eventId         String
+  userId          String?
+  
+  startLocation   Json
+  endLocation     Json
+  
+  routeType       RouteType
+  
+  // Route details
+  distance        Float    // in meters
+  estimatedTime   Int      // in seconds
+  
+  waypoints       Json[]
+  instructions    String[]
+  
+  // Preferences
+  isAccessible    Boolean  @default(false)
+  avoidCrowds     Boolean  @default(false)
+  
+  // Crowd-aware routing
+  crowdLevel      String?
+  alternateRoutes Json[]
+  
+  // Usage
+  isActive        Boolean  @default(true)
+  completedAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([eventId, userId])
+  @@index([routeType])
+}
+
+enum RouteType {
+  WALKING
+  ACCESSIBLE
+  EMERGENCY
+  SHORTEST
+  FASTEST
+  CROWD_AWARE
+}
+
+// Help Requests (Find Person, Medical Assistance)
+model HelpRequest {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  requesterId     String
+  requesterName   String
+  requesterPhone  String?
+  requesterLocation Json?
+  
+  type            HelpRequestType
+  priority        HelpPriority @default(MEDIUM)
+  status          HelpRequestStatus @default(PENDING)
+  
+  description     String
+  
+  // For Find Person
+  missingPersonName String?
+  missingPersonDescription String?
+  missingPersonPhoto String?
+  lastSeenLocation String?
+  lastSeenTime    DateTime?
+  
+  // For Medical
+  medicalIssue    String?
+  severity        String?
+  
+  // Assignment
+  assignedTo      String?
+  assignedVolunteer String?
+  assignedAt      DateTime?
+  
+  // Resolution
+  resolvedAt      DateTime?
+  resolutionNotes String?
+  
+  // Communication
+  updates         Json[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([eventId, status])
+  @@index([type, priority])
+  @@index([requesterId])
+}
+
+enum HelpRequestType {
+  FIND_PERSON
+  MEDICAL_ASSISTANCE
+  LOST_ITEM
+  GENERAL_HELP
+  ACCESSIBILITY
+  EMERGENCY
+}
+
+enum HelpPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum HelpRequestStatus {
+  PENDING
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+}
+
+// Incident Updates (Thread-based updates for incidents)
+model IncidentUpdate {
+  id              String   @id @default(uuid())
+  incidentId      String
+  
+  message         String
+  updatedBy       String
+  updatedByName   String?
+  
+  attachments     String[]
+  
+  timestamp       DateTime @default(now())
+  
+  @@index([incidentId, timestamp])
+}
+
+// Live Metrics (Time-series for dashboard)
+model LiveMetric {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  currentAttendees Int
+  checkIns        Int
+  activeVolunteers Int
+  incidentReports Int
+  crowdDensity    Float
+  
+  timestamp       DateTime @default(now())
+  
+  @@index([eventId, timestamp])
+  @@index([timestamp])
+}
+
+// Crowd Heatmap Zones (Real-time density data)
+model CrowdHeatmapZone {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  zoneId          String
+  zoneName        String
+  
+  density         Float    // 0-100
+  waitTime        Int      // in minutes
+  
+  coordinates     Json     // { x, y }
+  
+  timestamp       DateTime @default(now())
+  
+  @@index([eventId, zoneId, timestamp])
+  @@index([timestamp])
+}
+
+// AI Insights (For AI Platform)
+model AIInsight {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  modelName       String
+  modelType       String   // 'crowd_density', 'safety_risk', 'queue_time', 'anomaly'
+  
+  insight         String
+  confidence      Float
+  
+  data            Json?
+  
+  recommendedActions String[]
+  
+  isActioned      Boolean  @default(false)
+  actionedAt      DateTime?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([eventId, modelType])
+  @@index([createdAt])
+}
+
+// Activity Feed (Operations log)
+model ActivityLog {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  action          String
+  description     String
+  
+  userId          String?
+  userName        String?
+  
+  entityType      String?  // 'incident', 'volunteer', 'ticket', etc.
+  entityId        String?
+  
+  metadata        Json?
+  
+  timestamp       DateTime @default(now())
+  
+  @@index([eventId, timestamp])
+  @@index([entityType, entityId])
+}
+

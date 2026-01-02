@@ -94,7 +94,7 @@ class GCPServicesOrchestrator {
   /**
    * Initialize all GCP services
    */
-  private async initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     try {
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🚀 Initializing GCP Services Orchestrator');
