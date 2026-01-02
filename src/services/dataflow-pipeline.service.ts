@@ -409,7 +409,7 @@ export class DataFlowPipelineService {
   /**
    * Monitor pipeline health and performance
    */
-  async getP ipelineMetrics(): Promise<{
+  async getPipelineMetrics(): Promise<{
     subscriptions: { name: string; messageCount: number; oldestMessage: string }[];
     bigqueryTables: { table: string; rowCount: number; sizeGB: number }[];
   }> {

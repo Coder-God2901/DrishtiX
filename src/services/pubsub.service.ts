@@ -100,7 +100,7 @@ export enum PubSubSubscription {
   INCIDENT_ALERTS_BQ = 'incident-alerts-bigquery',
 }
 
-class PubSubService {
+export class PubSubService {
   private pubsub: PubSub | null = null;
   private topics: Map<string, Topic> = new Map();
   private subscriptions: Map<string, Subscription> = new Map();
