@@ -8,7 +8,9 @@ import {
   Activity,
   Bell,
 } from "lucide-react";
+import { notificationService, Notification as APINotification } from "../../services/notification.service";
 
+// UI-specific notification type
 interface Notification {
   id: string;
   type: "warning" | "info" | "success" | "alert";
@@ -21,71 +23,73 @@ interface Notification {
   };
 }
 
-export function RealTimeNotifications() {
+interface RealTimeNotificationsProps {
+  eventId?: string;
+}
+
+// Convert API notification to UI notification
+const convertAPINotification = (apiNotif: APINotification): Notification => {
+  const typeMap: Record<string, Notification['type']> = {
+    'INFO': 'info',
+    'WARNING': 'warning',
+    'ALERT': 'alert',
+    'SUCCESS': 'success',
+    'ERROR': 'alert'
+  };
+
+  return {
+    id: apiNotif.id,
+    type: typeMap[apiNotif.type] || 'info',
+    title: apiNotif.title,
+    message: apiNotif.message,
+    timestamp: typeof apiNotif.createdAt === 'string' 
+      ? new Date(apiNotif.createdAt) 
+      : apiNotif.createdAt || new Date(),
+    action: apiNotif.actionUrl ? {
+      label: apiNotif.actionLabel || 'View',
+      onClick: () => window.location.href = apiNotif.actionUrl!
+    } : undefined
+  };
+};
+
+export function RealTimeNotifications({ eventId = 'default-event' }: RealTimeNotificationsProps) {
   const [currentNotification, setCurrentNotification] =
     useState<Notification | null>(null);
-  const [notificationQueue, setNotificationQueue] = useState<Notification[]>(
-    []
-  );
+  const [notificationQueue, setNotificationQueue] = useState<Notification[]>([]);
   const [isShowing, setIsShowing] = useState(false);
 
-  // Mock notification queue generator
+  // Load initial notifications and subscribe to real-time updates
   useEffect(() => {
-    const mockNotifications: Omit<Notification, "id" | "timestamp">[] = [
-      {
-        type: "warning",
-        title: "Zone C Ahead Congested",
-        message:
-          "High crowd density detected. Redirecting you to safer path via Zone B.",
-      },
-      {
-        type: "info",
-        title: "Gate A Now Open",
-        message: "Estimated wait time: 3 minutes. Crowd level: Medium",
-      },
-      {
-        type: "success",
-        title: "Medical Station Available",
-        message: "First Aid Station 200m ahead on your route. No wait time.",
-      },
-      {
-        type: "alert",
-        title: "Weather Update",
-        message:
-          "Light rain expected in 30 minutes. Covered areas available at Zone D.",
-      },
-      {
-        type: "info",
-        title: "Restroom Queue Update",
-        message:
-          "Restroom Zone B has shorter queue (2 min wait) vs Zone A (8 min wait)",
-      },
-      {
-        type: "warning",
-        title: "Performance Starting Soon",
-        message:
-          "Main Stage performance begins in 15 minutes. Expect increased crowd movement.",
-      },
-    ];
-
-    let currentIndex = 0;
-    const interval = setInterval(() => {
-      if (currentIndex < mockNotifications.length) {
-        const newNotification: Notification = {
-          ...mockNotifications[currentIndex],
-          id: `notif-${Date.now()}-${currentIndex}`,
-          timestamp: new Date(),
-        };
-
-        setNotificationQueue((prev) => [...prev, newNotification]);
-        currentIndex++;
-      } else {
-        currentIndex = 0; // Restart cycle
+    // Load recent notifications
+    const loadNotifications = async () => {
+      try {
+        const response = await notificationService.getNotifications({
+          eventId,
+          unreadOnly: true,
+          limit: 10
+        });
+        
+        if (response.success && response.data) {
+          const convertedNotifications = response.data.map(convertAPINotification);
+          setNotificationQueue(convertedNotifications);
+        }
+      } catch (err) {
+        console.error('Error loading notifications:', err);
       }
-    }, 15000); // Add to queue every 15 seconds
+    };
 
-    return () => clearInterval(interval);
-  }, []);
+    loadNotifications();
+
+    // Subscribe to real-time notifications
+    const unsubscribe = notificationService.subscribeToNotifications(eventId, (apiNotif) => {
+      const newNotification = convertAPINotification(apiNotif);
+      setNotificationQueue((prev) => [newNotification, ...prev]);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [eventId]);
 
   // Professional notification display with 4-second duration and 4-second gaps
   useEffect(() => {

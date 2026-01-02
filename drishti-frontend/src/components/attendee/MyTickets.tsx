@@ -24,14 +24,19 @@ import {
   Eye,
   Printer,
 } from "lucide-react";
-import { mockBackend, Ticket as BackendTicket } from "../../services/mockBackend";
+import { ticketService, Ticket as BackendTicket } from "../../services/ticket.service";
+import { wsService } from "../../services/websocket.service";
 
 interface MyTicketsProps {
   onBack: () => void;
+  userId?: string;
+  eventId?: string;
 }
 
-export function MyTickets({ onBack }: MyTicketsProps) {
+export function MyTickets({ onBack, userId = 'default-user-id', eventId }: MyTicketsProps) {
   const [tickets, setTickets] = useState<BackendTicket[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<BackendTicket | null>(
     null
   );
@@ -55,7 +60,7 @@ export function MyTickets({ onBack }: MyTicketsProps) {
 
   // Filter states
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "active" | "used" | "expired" | "cancelled"
+    "all" | "ACTIVE" | "USED" | "EXPIRED" | "CANCELLED" | "REFUNDED"
   >("all");
   const [sortBy, setSortBy] = useState<"date" | "price" | "name">("date");
   const [isLiveConnected, setIsLiveConnected] = useState(false);
@@ -77,21 +82,26 @@ export function MyTickets({ onBack }: MyTicketsProps) {
     setIsLiveConnected(true);
     loadTickets();
 
-    // Subscribe to ticket updates
-    const unsubscribe = mockBackend.subscribeToTickets((ticket) => {
+    // Subscribe to real-time ticket updates
+    const handleTicketUpdate = (ticket: BackendTicket) => {
       console.log("🎫 Ticket update received:", ticket);
       loadTickets(); // Reload all tickets when one changes
-    });
+    };
+
+    wsService.on('ticket:updated', handleTicketUpdate);
+    wsService.on('ticket:purchased', handleTicketUpdate);
+    wsService.emit('subscribe:tickets', userId);
 
     return () => {
-      unsubscribe();
+      wsService.off('ticket:updated', handleTicketUpdate);
+      wsService.off('ticket:purchased', handleTicketUpdate);
       setIsLiveConnected(false);
     };
-  }, []);
+  }, [userId]);
 
   // Recalculate stats when tickets change
   useEffect(() => {
-    const activeTickets = tickets.filter((t) => t.status === "active");
+    const activeTickets = tickets.filter((t) => t.status === "ACTIVE");
     const totalSpent = tickets.reduce((sum, t) => sum + t.totalPaid, 0);
 
     setStats({
@@ -100,14 +110,29 @@ export function MyTickets({ onBack }: MyTicketsProps) {
       totalSpent,
       favoriteCategory: "Music",
       memberSince: "Jan 2024",
-      reviewsWritten: tickets.filter((t) => t.status === "used").length,
+      reviewsWritten: tickets.filter((t) => t.status === "USED").length,
       averageRating: 4.6,
     });
   }, [tickets]);
 
-  const loadTickets = () => {
-    const allTickets = mockBackend.getAllTickets();
-    setTickets(allTickets);
+  const loadTickets = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await ticketService.getUserTickets(userId, eventId ? { eventId } : undefined);
+      if (response.success && response.data) {
+        setTickets(response.data);
+        console.log(`✅ Loaded ${response.data.length} tickets`);
+      } else {
+        setError(response.error || 'Failed to load tickets');
+        console.error('❌ Failed to load tickets:', response.error);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+      console.error('❌ Error loading tickets:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredTickets = tickets
@@ -128,29 +153,53 @@ export function MyTickets({ onBack }: MyTicketsProps) {
     });
 
   // CRUD Operations
-  const handleCancelTicket = () => {
+  const handleCancelTicket = async () => {
     if (!selectedTicket) return;
 
-    const cancelled = mockBackend.cancelTicket(selectedTicket.id);
-    if (cancelled) {
-      loadTickets();
-      setShowCancelModal(false);
-      setSelectedTicket(null);
+    setIsLoading(true);
+    try {
+      const reason = prompt('Please provide a reason for cancellation (optional):');
+      const response = await ticketService.cancelTicket(selectedTicket.id, reason || undefined);
+      
+      if (response.success) {
+        await loadTickets();
+        setShowCancelModal(false);
+        setSelectedTicket(null);
+        console.log('✅ Ticket cancelled successfully');
+      } else {
+        alert(response.error || 'Failed to cancel ticket');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRefundTicket = () => {
+  const handleRefundTicket = async () => {
     if (!selectedTicket) return;
 
-    const refunded = mockBackend.refundTicket(selectedTicket.id);
-    if (refunded) {
-      loadTickets();
-      setShowCancelModal(false);
-      setSelectedTicket(null);
+    setIsLoading(true);
+    try {
+      const reason = prompt('Please provide a reason for refund (optional):');
+      const response = await ticketService.refundTicket(selectedTicket.id, reason || undefined);
+      
+      if (response.success) {
+        await loadTickets();
+        setShowCancelModal(false);
+        setSelectedTicket(null);
+        console.log('✅ Ticket refunded successfully');
+      } else {
+        alert(response.error || 'Failed to refund ticket');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleUpdateTicket = () => {
+  const handleUpdateTicket = async () => {
     if (!selectedTicket) return;
 
     // Validate attendee names
@@ -160,17 +209,30 @@ export function MyTickets({ onBack }: MyTicketsProps) {
       return;
     }
 
-    const updated = mockBackend.updateTicket(selectedTicket.id, {
-      attendeeNames: validNames,
-      specialRequirements: editSpecialRequirements.filter(
-        (r) => r.trim() !== ""
-      ),
-    });
+    setIsLoading(true);
+    try {
+      const response = await ticketService.updateTicket(selectedTicket.id, {
+        holderName: validNames[0], // First name as primary holder
+        additionalInfo: {
+          attendeeNames: validNames,
+          specialRequirements: editSpecialRequirements.filter(
+            (r) => r.trim() !== ""
+          ),
+        }
+      });
 
-    if (updated) {
-      loadTickets();
-      setShowEditModal(false);
-      setSelectedTicket(null);
+      if (response.success) {
+        await loadTickets();
+        setShowEditModal(false);
+        setSelectedTicket(null);
+        console.log('✅ Ticket updated successfully');
+      } else {
+        alert(response.error || 'Failed to update ticket');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -207,15 +269,15 @@ export function MyTickets({ onBack }: MyTicketsProps) {
 
   const getStatusColor = (status: BackendTicket["status"]) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return "bg-green-100 text-green-700";
-      case "used":
+      case "USED":
         return "bg-slate-100 text-slate-700";
-      case "expired":
+      case "EXPIRED":
         return "bg-red-100 text-red-700";
-      case "cancelled":
+      case "CANCELLED":
         return "bg-orange-100 text-orange-700";
-      case "refunded":
+      case "REFUNDED":
         return "bg-blue-100 text-blue-700";
       default:
         return "bg-slate-100 text-slate-700";
@@ -224,15 +286,15 @@ export function MyTickets({ onBack }: MyTicketsProps) {
 
   const getStatusIcon = (status: BackendTicket["status"]) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return <CheckCircle className="w-4 h-4" />;
-      case "used":
+      case "USED":
         return <Check className="w-4 h-4" />;
-      case "expired":
+      case "EXPIRED":
         return <XCircle className="w-4 h-4" />;
-      case "cancelled":
+      case "CANCELLED":
         return <X className="w-4 h-4" />;
-      case "refunded":
+      case "REFUNDED":
         return <RefreshCw className="w-4 h-4" />;
       default:
         return <AlertCircle className="w-4 h-4" />;
@@ -484,7 +546,7 @@ export function MyTickets({ onBack }: MyTicketsProps) {
                     )}
 
                   {/* QR Code Display */}
-                  {ticket.status === "active" && (
+                  {ticket.status === "ACTIVE" && (
                     <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-4 text-center border-2 border-dashed border-slate-300">
                       <QrCode className="w-16 h-16 mx-auto mb-2 text-slate-700" />
                       <p className="text-xs text-slate-600 mb-1">QR Code</p>
@@ -496,7 +558,7 @@ export function MyTickets({ onBack }: MyTicketsProps) {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-4 border-t border-slate-200">
-                    {ticket.status === "active" && (
+                    {ticket.status === "ACTIVE" && (
                       <>
                         <button
                           onClick={() => {
@@ -527,7 +589,7 @@ export function MyTickets({ onBack }: MyTicketsProps) {
                         </button>
                       </>
                     )}
-                    {ticket.status === "used" && (
+                    {ticket.status === "USED" && (
                       <button
                         onClick={() => {
                           setSelectedTicket(ticket);
@@ -539,8 +601,8 @@ export function MyTickets({ onBack }: MyTicketsProps) {
                         Write Review
                       </button>
                     )}
-                    {(ticket.status === "cancelled" ||
-                      ticket.status === "refunded") && (
+                    {(ticket.status === "CANCELLED" ||
+                      ticket.status === "REFUNDED") && (
                       <div className="flex-1 px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-center text-sm">
                         No actions available
                       </div>
@@ -551,7 +613,7 @@ export function MyTickets({ onBack }: MyTicketsProps) {
                 {/* Purchase Info Footer */}
                 <div className="bg-slate-50 px-6 py-3 border-t border-slate-200">
                   <p className="text-xs text-slate-600">
-                    Purchased on {ticket.purchaseDate} • ID: {ticket.id}
+                    Purchased on {typeof ticket.purchaseDate === 'string' ? ticket.purchaseDate : new Date(ticket.purchaseDate).toLocaleDateString()} • ID: {ticket.id}
                   </p>
                 </div>
               </div>

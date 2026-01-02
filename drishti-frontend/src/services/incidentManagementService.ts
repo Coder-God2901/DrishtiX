@@ -69,59 +69,6 @@ class IncidentManagementService extends EventTarget {
   private incidents: Map<string, Incident> = new Map();
   private listeners: Set<(incidents: Incident[]) => void> = new Set();
 
-  constructor() {
-    super();
-    this.initializeMockIncidents();
-  }
-
-  /**
-   * Initialize with some mock system-generated incidents
-   */
-  private initializeMockIncidents() {
-    const mockIncidents: Incident[] = [
-      {
-        id: this.generateId(),
-        type: 'Crowd Congestion',
-        source: 'system',
-        severity: 'medium',
-        status: 'active',
-        location: 'Main Stage Area',
-        zone: 'Zone A',
-        description: 'Crowd density exceeding safe threshold in main stage area',
-        timestamp: new Date(Date.now() - 3 * 60000), // 3 minutes ago
-        aiAnalysis: 'Density reached 82% of maximum capacity',
-        prediction: 'Risk of escalation to critical in 8-12 minutes',
-        responder: 'Bravo Team',
-        eta: '5 mins',
-        x: 60,
-        y: 30,
-        color: 'amber'
-      },
-      {
-        id: this.generateId(),
-        type: 'Equipment Failure',
-        source: 'system',
-        severity: 'low',
-        status: 'in-progress',
-        location: 'Sound Booth 2',
-        zone: 'Zone D',
-        description: 'Audio equipment malfunction affecting sound quality',
-        timestamp: new Date(Date.now() - 7 * 60000), // 7 minutes ago
-        aiAnalysis: 'Technical issue contained to single booth',
-        prediction: 'Repair estimated in 15 minutes',
-        responder: 'Tech Support',
-        eta: '10 mins',
-        x: 70,
-        y: 55,
-        color: 'blue'
-      }
-    ];
-
-    mockIncidents.forEach(incident => {
-      this.incidents.set(incident.id, incident);
-    });
-  }
-
   /**
    * Generate a unique incident ID
    */

@@ -48,7 +48,7 @@ router.post('/route', authenticate, async (req: Request, res: Response) => {
       });
 
       if (heatmapData.length > 0) {
-        const avgDensity = heatmapData.reduce((sum, z) => sum + z.density, 0) / heatmapData.length;
+        const avgDensity = heatmapData.reduce((sum: number, z: any) => sum + z.density, 0) / heatmapData.length;
         crowdLevel = avgDensity > 70 ? 'high' : avgDensity > 40 ? 'medium' : 'low';
 
         // Generate alternate routes if crowded
@@ -116,7 +116,7 @@ router.get('/event/:eventId/pois', authenticate, async (req: Request, res: Respo
     });
 
     // Group by type
-    const grouped = pois.reduce((acc, poi) => {
+    const grouped = pois.reduce((acc: Record<string, typeof pois>, poi: any) => {
       if (!acc[poi.type]) {
         acc[poi.type] = [];
       }
@@ -160,7 +160,7 @@ router.get('/event/:eventId/emergency-exits', authenticate, async (req: Request,
     // If current location provided, sort by distance
     if (currentLocation && typeof currentLocation === 'string') {
       const coords = JSON.parse(currentLocation);
-      exits.sort((a, b) => {
+      exits.sort((a: any, b: any) => {
         const distA = calculateDistance(coords, a.location as any);
         const distB = calculateDistance(coords, b.location as any);
         return distA - distB;

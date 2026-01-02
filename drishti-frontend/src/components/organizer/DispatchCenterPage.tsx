@@ -18,55 +18,38 @@ import {
   User,
   Navigation,
   ArrowLeft,
-  Send
+  Send,
+  RefreshCw
 } from 'lucide-react';
 import { useIncidents } from '../../services/incidentContext';
 import { Incident } from '../../services/incidentManagementService';
 import { LeafletMap } from '../shared/LeafletMap';
 import { IncidentDrawer } from '../shared/IncidentDrawer';
+import { dispatchService, Team as APITeam } from '../../services/dispatch.service';
+import { volunteerService, Volunteer as APIVolunteer } from '../../services/volunteer.service';
+import { wsService } from '../../services/websocket.service';
 
 // --- Types ---
 
 interface DispatchCenterPageProps {
   onBack?: () => void;
+  eventId?: string;
 }
 
-interface Team {
-  id: string;
-  name: string;
-  type: 'medical' | 'security' | 'operations';
-  status: 'available' | 'busy' | 'unavailable';
-  activeCount: number;
-  idleCount: number;
+// UI-specific types with extended properties for display
+interface Team extends APITeam {
+  activeCount?: number;
+  idleCount?: number;
+  location?: [number, number]; // [lat, lng]
   currentAssignment?: string; // Incident ID
-  location: [number, number]; // [lat, lng]
 }
 
-interface Volunteer {
-  id: string;
-  name: string;
-  role: 'Doctor' | 'Marshal' | 'Helper';
-  status: 'available' | 'busy' | 'offline';
+interface Volunteer extends Omit<APIVolunteer, 'location'> {
   distance?: string;
-  location: [number, number]; // [lat, lng]
+  location?: { lat: number; lng: number } | [number, number]; // Support both formats
 }
 
-// --- Mock Data ---
-
-const MOCK_TEAMS: Team[] = [
-  { id: 't1', name: 'Medical Alpha', type: 'medical', status: 'available', activeCount: 4, idleCount: 2, location: [19.075, 72.876] },
-  { id: 't2', name: 'Medical Bravo', type: 'medical', status: 'busy', activeCount: 6, idleCount: 0, currentAssignment: 'inc-123', location: [19.078, 72.879] },
-  { id: 't3', name: 'Security Delta', type: 'security', status: 'available', activeCount: 8, idleCount: 4, location: [19.077, 72.875] },
-  { id: 't4', name: 'Security Echo', type: 'security', status: 'unavailable', activeCount: 0, idleCount: 0, location: [19.074, 72.880] },
-  { id: 't5', name: 'Ops Team 1', type: 'operations', status: 'available', activeCount: 3, idleCount: 1, location: [19.079, 72.878] },
-];
-
-const MOCK_VOLUNTEERS: Volunteer[] = [
-  { id: 'v1', name: 'Dr. Sarah Smith', role: 'Doctor', status: 'available', distance: '150m', location: [19.076, 72.879] },
-  { id: 'v2', name: 'John Doe', role: 'Marshal', status: 'available', distance: '300m', location: [19.077, 72.876] },
-  { id: 'v3', name: 'Jane Roe', role: 'Helper', status: 'busy', distance: '500m', location: [19.075, 72.878] },
-  { id: 'v4', name: 'Mike Ross', role: 'Marshal', status: 'offline', distance: '1.2km', location: [19.078, 72.881] },
-];
+// --- Real-time dispatch data from backend ---
 
 // --- Helper Functions ---
 
@@ -121,17 +104,72 @@ const percentageToLatLng = (x?: number, y?: number): [number, number] => {
   return [lat, lng];
 };
 
-export function DispatchCenterPage({ onBack }: DispatchCenterPageProps) {
+export function DispatchCenterPage({ onBack, eventId = 'default-event-id' }: DispatchCenterPageProps) {
   const { incidents } = useIncidents();
   
   // State
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
-  const [teams, setTeams] = useState<Team[]>(MOCK_TEAMS);
-  const [volunteers, setVolunteers] = useState<Volunteer[]>(MOCK_VOLUNTEERS);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [showIncidentDrawer, setShowIncidentDrawer] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  // Load real dispatch data
+  const loadDispatchData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Load teams data
+      const teamsResponse = await dispatchService.getTeams(eventId);
+      if (teamsResponse.success && teamsResponse.data) {
+        setTeams(teamsResponse.data);
+      }
+
+      // Load volunteers data
+      const volunteersResponse = await volunteerService.getVolunteers({ eventId });
+      if (volunteersResponse.success && volunteersResponse.data) {
+        setVolunteers(volunteersResponse.data);
+      }
+
+      setLastUpdate(new Date());
+    } catch (err: any) {
+      setError(err.message || 'Failed to load dispatch data');
+      console.error('Error loading dispatch data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // WebSocket: Real-time dispatch updates
+  useEffect(() => {
+    loadDispatchData();
+
+    const handleDispatchUpdate = (data: any) => {
+      console.log('Dispatch update:', data);
+      if (data.teams) setTeams(data.teams);
+      setLastUpdate(new Date());
+    };
+
+    const handleVolunteerUpdate = (data: any) => {
+      console.log('Volunteer update:', data);
+      if (data.volunteers) setVolunteers(data.volunteers);
+      setLastUpdate(new Date());
+    };
+
+    wsService.on('dispatch:update', handleDispatchUpdate);
+    wsService.on('volunteer:status', handleVolunteerUpdate);
+    wsService.emit('subscribe:dispatch', eventId);
+
+    return () => {
+      wsService.off('dispatch:update', handleDispatchUpdate);
+      wsService.off('volunteer:status', handleVolunteerUpdate);
+    };
+  }, [eventId]);
 
   // Derived State
   const selectedIncident = incidents.find(i => i.id === selectedIncidentId);
@@ -174,10 +212,10 @@ export function DispatchCenterPage({ onBack }: DispatchCenterPageProps) {
   };
 
   const confirmDispatch = () => {
-    // Mock dispatch logic
+    // Update teams with dispatched status
     const updatedTeams = teams.map(t => {
       if (selectedResourceIds.includes(t.id)) {
-        return { ...t, status: 'busy' as const, currentAssignment: selectedIncidentId! };
+        return { ...t, status: 'DEPLOYED' as const, currentAssignment: selectedIncidentId! };
       }
       return t;
     });
@@ -185,7 +223,7 @@ export function DispatchCenterPage({ onBack }: DispatchCenterPageProps) {
 
     const updatedVolunteers = volunteers.map(v => {
       if (selectedResourceIds.includes(v.id)) {
-        return { ...v, status: 'busy' as const };
+        return { ...v, status: 'assigned' as const };
       }
       return v;
     });
@@ -216,21 +254,33 @@ export function DispatchCenterPage({ onBack }: DispatchCenterPageProps) {
       color: getSeverityMarkerColor(incident.severity)
     }));
 
-    const teamMarkers = teams.map(team => ({
-      id: team.id,
-      position: team.location as [number, number],
-      label: team.name,
-      color: selectedResourceIds.includes(team.id) ? 'purple' : 
-             team.type === 'medical' ? 'pink' :
-             team.type === 'security' ? 'blue' : 'green'
-    }));
+    const teamMarkers = teams
+      .filter(team => team.location) // Only show teams with locations
+      .map(team => ({
+        id: team.id,
+        position: team.location as [number, number],
+        label: team.name,
+        color: selectedResourceIds.includes(team.id) ? 'purple' : 
+               team.type === 'MEDICAL' ? 'pink' :
+               team.type === 'SECURITY' ? 'blue' : 'green'
+      }));
 
-    const volunteerMarkers = volunteers.map(volunteer => ({
-      id: volunteer.id,
-      position: volunteer.location as [number, number],
-      label: volunteer.name,
-      color: selectedResourceIds.includes(volunteer.id) ? 'purple' : 'teal'
-    }));
+    const volunteerMarkers = volunteers
+      .filter(volunteer => volunteer.location) // Only show volunteers with locations
+      .map(volunteer => {
+        // Convert location to array format if needed
+        const loc = volunteer.location!;
+        const position: [number, number] = Array.isArray(loc)
+          ? loc as [number, number]
+          : [loc.lat, loc.lng];
+        
+        return {
+          id: volunteer.id,
+          position,
+          label: volunteer.name,
+          color: selectedResourceIds.includes(volunteer.id) ? 'purple' : 'teal'
+        };
+      });
 
     return [...incidentMarkers, ...teamMarkers, ...volunteerMarkers];
   }, [incidents, teams, volunteers, selectedResourceIds]);
@@ -407,13 +457,13 @@ export function DispatchCenterPage({ onBack }: DispatchCenterPageProps) {
               {teams.map(team => (
                 <div 
                   key={team.id}
-                  onClick={() => team.status === 'available' && selectedIncidentId && handleResourceToggle(team.id, 'team')}
+                  onClick={() => team.status === 'AVAILABLE' && selectedIncidentId && handleResourceToggle(team.id, 'team')}
                   className={`p-4 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md ${
                     selectedResourceIds.includes(team.id)
                       ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-purple-50 ring-2 ring-indigo-500/50 shadow-lg shadow-indigo-200/50'
                       : 'border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5'
                   } ${
-                    team.status !== 'available' ? 'opacity-60' : 
+                    team.status !== 'AVAILABLE' ? 'opacity-60' : 
                     selectedIncidentId ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'
                   }`}
                 >
@@ -422,27 +472,27 @@ export function DispatchCenterPage({ onBack }: DispatchCenterPageProps) {
                       type="checkbox"
                       checked={selectedResourceIds.includes(team.id)}
                       onChange={() => handleResourceToggle(team.id, 'team')}
-                      disabled={team.status !== 'available' || !selectedIncidentId}
+                      disabled={team.status !== 'AVAILABLE' || !selectedIncidentId}
                       className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2 mb-2">
                         <h4 className="font-bold text-slate-900 text-sm truncate">{team.name}</h4>
                         <span className={`text-[10px] px-2 py-1 rounded-md uppercase font-bold shrink-0 shadow-sm border ${
-                          team.status === 'available' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                          team.status === 'busy' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                          team.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                          team.status === 'DEPLOYED' ? 'bg-amber-100 text-amber-700 border-amber-200' :
                           'bg-slate-100 text-slate-600 border-slate-200'
                         }`}>
                           {team.status}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 px-2 py-1.5 rounded-lg">
-                        {team.type === 'medical' && <Ambulance className="w-3.5 h-3.5 text-red-500" />}
-                        {team.type === 'security' && <Shield className="w-3.5 h-3.5 text-blue-500" />}
-                        {team.type === 'operations' && <HardHat className="w-3.5 h-3.5 text-amber-500" />}
-                        <span className="font-semibold">{team.activeCount} Active</span>
+                        {team.type === 'MEDICAL' && <Ambulance className="w-3.5 h-3.5 text-red-500" />}
+                        {team.type === 'SECURITY' && <Shield className="w-3.5 h-3.5 text-blue-500" />}
+                        {team.type === 'EMERGENCY' && <HardHat className="w-3.5 h-3.5 text-amber-500" />}
+                        <span className="font-semibold">{team.activeCount || team.members?.length || 0} Active</span>
                         <span className="text-slate-400">•</span>
-                        <span className="font-semibold">{team.idleCount} Idle</span>
+                        <span className="font-semibold">{team.idleCount || 0} Idle</span>
                       </div>
                     </div>
                   </div>
@@ -476,7 +526,7 @@ export function DispatchCenterPage({ onBack }: DispatchCenterPageProps) {
                         <h4 className="font-bold text-slate-900 text-sm truncate">{volunteer.name}</h4>
                         <span className={`text-[10px] px-2 py-1 rounded-md uppercase font-bold shrink-0 shadow-sm border ${
                           volunteer.status === 'available' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                          volunteer.status === 'busy' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                          volunteer.status === 'assigned' ? 'bg-amber-100 text-amber-700 border-amber-200' :
                           'bg-slate-100 text-slate-600 border-slate-200'
                         }`}>
                           {volunteer.status}

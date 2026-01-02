@@ -281,7 +281,7 @@ router.post('/sos', authenticate, async (req: Request, res: Response) => {
     });
 
     await Promise.all(
-      responders.map(responder =>
+      responders.map((responder: any) =>
         prisma.notification.create({
           data: {
             userId: responder.email,
@@ -481,15 +481,15 @@ router.get('/event/:eventId/requests', authenticate, authorize(['ORGANIZER', 'SE
 
     const stats = {
       total: requests.length,
-      byStatus: requests.reduce((acc, r) => {
+      byStatus: requests.reduce((acc: Record<string, number>, r: any) => {
         acc[r.status] = (acc[r.status] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
-      byType: requests.reduce((acc, r) => {
+      byType: requests.reduce((acc: Record<string, number>, r: any) => {
         acc[r.type] = (acc[r.type] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
-      byPriority: requests.reduce((acc, r) => {
+      byPriority: requests.reduce((acc: Record<string, number>, r: any) => {
         acc[r.priority] = (acc[r.priority] || 0) + 1;
         return acc;
       }, {} as Record<string, number>)

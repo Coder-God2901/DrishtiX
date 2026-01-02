@@ -55,7 +55,7 @@ export function DrishtiXIntelligenceLayer({
   const [showQueueDrawer, setShowQueueDrawer] = useState(false);
   const [heatmapEnabled, setHeatmapEnabled] = useState(false);
 
-  // Mock data - simulates real-time updates
+  // Zone energy data with real-time updates
   const [zoneEnergies, setZoneEnergies] = useState<ZoneEnergy[]>([
     { zone: "Zone A - Main Stage", status: "Avoid", level: 92, trend: "up" },
     {

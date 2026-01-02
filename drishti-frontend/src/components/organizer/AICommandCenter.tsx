@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Brain, 
@@ -16,11 +16,18 @@ import {
   DoorOpen,
   UserPlus,
   Activity,
-  BarChart3
+  BarChart3,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react';
+import { recommendationService, AIRecommendation } from '../../services/recommendation.service';
+import { predictionService } from '../../services/prediction.service';
+import { wsService } from '../../services/websocket.service';
 
 interface AICommandCenterProps {
   onBack: () => void;
+  eventId?: string;
 }
 
 interface PredictiveInsight {
@@ -33,80 +40,160 @@ interface PredictiveInsight {
   location?: string;
 }
 
-interface AIRecommendation {
-  id: string;
-  type: 'rerouting' | 'gate-control' | 'staffing' | 'security';
-  title: string;
-  description: string;
-  confidence: number;
-  signals: string[];
-  actionRequired: boolean;
-}
-
-// Mock data - reusing existing AI logic patterns
-const MOCK_INSIGHTS: PredictiveInsight[] = [
-  {
-    id: 'ins-1',
-    title: 'Crowd Surge Expected at Main Stage',
-    description: 'Crowd density projected to reach 85% capacity in next 15 minutes based on current movement patterns',
-    likelihood: 'high',
-    timeframe: '10-15 mins',
-    impact: 'high',
-    location: 'Main Stage Area - Zone A'
-  },
-  {
-    id: 'ins-2',
-    title: 'Food Court Congestion Building',
-    description: 'Wait times at food vendors increasing. Overflow to secondary food area predicted',
-    likelihood: 'medium',
-    timeframe: '20-30 mins',
-    impact: 'medium',
-    location: 'Food Court - Zone C'
-  },
-  {
-    id: 'ins-3',
-    title: 'Exit Route Optimization Needed',
-    description: 'Current exit patterns may cause bottleneck at Gate 3 during event conclusion',
-    likelihood: 'medium',
-    timeframe: '2-3 hours',
-    impact: 'high',
-    location: 'Exit Gates'
-  }
-];
-
-const MOCK_RECOMMENDATIONS: AIRecommendation[] = [
-  {
-    id: 'rec-1',
-    type: 'rerouting',
-    title: 'Activate Alternative Pathways',
-    description: 'Open secondary routes to Main Stage to distribute crowd flow more evenly',
-    confidence: 87,
-    signals: ['Crowd density: 78%', 'Movement velocity: Decreasing', 'Historical pattern match: 92%'],
-    actionRequired: true
-  },
-  {
-    id: 'rec-2',
-    type: 'gate-control',
-    title: 'Temporarily Close Gate 2',
-    description: 'Reduce inflow at Gate 2 to prevent overcrowding in adjacent zones',
-    confidence: 75,
-    signals: ['Zone capacity: 82%', 'Entry rate: 15 persons/min', 'Weather: Clear (no rush factor)'],
-    actionRequired: true
-  },
-  {
-    id: 'rec-3',
-    type: 'staffing',
-    title: 'Deploy Additional Medical Team',
-    description: 'Increase medical presence near Main Stage due to high crowd density',
-    confidence: 92,
-    signals: ['Crowd energy index: High', 'Temperature: 32°C', 'Past incident correlation: 88%'],
-    actionRequired: false
-  }
-];
-
-export function AICommandCenter({ onBack }: AICommandCenterProps) {
+export function AICommandCenter({ onBack, eventId = 'default-event-id' }: AICommandCenterProps) {
+  const [recommendations, setRecommendations] = useState<AIRecommendation[]>([]);
+  const [insights, setInsights] = useState<PredictiveInsight[]>([]);
   const [selectedInsight, setSelectedInsight] = useState<string | null>(null);
   const [selectedRecommendation, setSelectedRecommendation] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  useEffect(() => {
+    console.log('🧠 AICommandCenter: Loading for event:', eventId);
+    loadRecommendations();
+    loadPredictiveInsights();
+
+    // Subscribe to real-time recommendation updates
+    wsService.on('recommendation:new', handleNewRecommendation);
+    wsService.on('insight:predictive', handleNewInsight);
+    wsService.emit('subscribe:recommendations', eventId);
+
+    return () => {
+      wsService.off('recommendation:new', handleNewRecommendation);
+      wsService.off('insight:predictive', handleNewInsight);
+    };
+  }, [eventId]);
+
+  const handleNewRecommendation = (recommendation: AIRecommendation) => {
+    console.log('📥 New recommendation received:', recommendation);
+    setRecommendations(prev => [recommendation, ...prev]);
+    setLastUpdate(new Date());
+  };
+
+  const handleNewInsight = (insight: PredictiveInsight) => {
+    console.log('💡 New insight received:', insight);
+    setInsights(prev => [insight, ...prev]);
+    setLastUpdate(new Date());
+  };
+
+  const loadRecommendations = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await recommendationService.getRecommendations(eventId);
+      if (response.success && response.data) {
+        setRecommendations(response.data);
+        console.log(`✅ Loaded ${response.data.length} recommendations`);
+      } else {
+        setError(response.error || 'Failed to load recommendations');
+        console.error('❌ Failed to load recommendations:', response.error);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+      console.error('❌ Error loading recommendations:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadPredictiveInsights = async () => {
+    try {
+      const response = await predictionService.getCrowdDensity(eventId);
+      if (response.success && response.data) {
+        // Transform prediction data to insights
+        const transformedInsights = transformPredictionsToInsights(response.data);
+        setInsights(transformedInsights);
+      }
+    } catch (err: any) {
+      console.error('❌ Error loading insights:', err);
+    }
+  };
+
+  const transformPredictionsToInsights = (predictions: any): PredictiveInsight[] => {
+    // Transform prediction data to insight format
+    if (!predictions || !predictions.riskLevel) return [];
+    
+    return [{
+      id: `insight-${Date.now()}`,
+      title: `${predictions.riskLevel} Risk Level Detected`,
+      description: `Current density: ${predictions.currentDensity}%. Predicted: ${predictions.predictedDensity}%`,
+      likelihood: predictions.confidence > 0.8 ? 'high' : predictions.confidence > 0.5 ? 'medium' : 'low',
+      timeframe: `${predictions.forecastHorizon || 15} mins`,
+      impact: predictions.riskLevel.toLowerCase() as any,
+      location: predictions.zoneId || 'Multiple zones'
+    }];
+  };
+
+  const handleApprove = async (recommendationId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await recommendationService.approveRecommendation(
+        recommendationId,
+        eventId,
+        undefined,
+        'approved_by_operator'
+      );
+
+      if (response.success) {
+        // Update UI to show approved status
+        setRecommendations(prev => 
+          prev.map(r => r.id === recommendationId ? { ...r, status: 'approved' } : r)
+        );
+        console.log('✅ Recommendation approved');
+      } else {
+        alert(response.error || 'Failed to approve recommendation');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReject = async (recommendationId: string) => {
+    const reason = prompt('Please provide a reason for rejection (optional):');
+    
+    setIsLoading(true);
+    try {
+      const response = await recommendationService.rejectRecommendation(
+        recommendationId,
+        eventId,
+        reason || undefined
+      );
+
+      if (response.success) {
+        // Update UI to show rejected status
+        setRecommendations(prev => 
+          prev.map(r => r.id === recommendationId ? { ...r, status: 'rejected' } : r)
+        );
+        console.log('✅ Recommendation rejected');
+      } else {
+        alert(response.error || 'Failed to reject recommendation');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGenerateNew = async () => {
+    setIsLoading(true);
+    try {
+      const response = await recommendationService.generateRecommendations(eventId);
+      if (response.success && response.data) {
+        setRecommendations(response.data);
+        console.log(`✅ Generated ${response.data.length} new recommendations`);
+      } else {
+        alert(response.error || 'Failed to generate recommendations');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getLikelihoodColor = (likelihood: string) => {
     switch (likelihood) {
@@ -169,6 +256,35 @@ export function AICommandCenter({ onBack }: AICommandCenterProps) {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* Loading and Error States */}
+        {isLoading && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex items-center gap-3">
+            <RefreshCw className="w-5 h-5 text-indigo-600 animate-spin" />
+            <span className="text-sm text-indigo-900">Loading AI insights...</span>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <span className="text-sm text-red-900">{error}</span>
+          </div>
+        )}
+
+        {/* Last Update Timestamp */}
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span>Last updated: {lastUpdate.toLocaleTimeString()}</span>
+          <button
+            onClick={() => {
+              loadRecommendations();
+              loadPredictiveInsights();
+            }}
+            className="flex items-center gap-1 text-indigo-600 hover:text-indigo-700 font-medium"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Refresh
+          </button>
+        </div>
+
         {/* Section 1: Predictive Insights */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
@@ -179,7 +295,13 @@ export function AICommandCenter({ onBack }: AICommandCenterProps) {
             </div>
           </div>
           <div className="p-6 space-y-4">
-            {MOCK_INSIGHTS.map(insight => (
+            {insights.length === 0 && !isLoading ? (
+              <div className="text-center py-8 text-slate-500">
+                <Info className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                <p>No insights available yet</p>
+              </div>
+            ) : (
+              insights.map(insight => (
               <div 
                 key={insight.id}
                 onClick={() => setSelectedInsight(insight.id === selectedInsight ? null : insight.id)}
@@ -220,21 +342,42 @@ export function AICommandCenter({ onBack }: AICommandCenterProps) {
                   )}
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 
         {/* Section 2: AI Recommendations */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
+          <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Zap className="w-5 h-5 text-white" />
               <h2 className="text-lg font-bold text-white">AI Recommendations</h2>
               <span className="text-xs text-emerald-100">Suggested actions based on analysis</span>
             </div>
+            <button
+              onClick={handleGenerateNew}
+              disabled={isLoading}
+              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+              Generate New
+            </button>
           </div>
           <div className="p-6 space-y-4">
-            {MOCK_RECOMMENDATIONS.map(rec => {
+            {recommendations.length === 0 && !isLoading ? (
+              <div className="text-center py-8 text-slate-500">
+                <Zap className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                <p>No recommendations available yet</p>
+                <button
+                  onClick={handleGenerateNew}
+                  className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg transition-colors"
+                >
+                  Generate Recommendations
+                </button>
+              </div>
+            ) : (
+              recommendations.map(rec => {
               const Icon = getRecommendationIcon(rec.type);
               return (
                 <div 
@@ -285,18 +428,35 @@ export function AICommandCenter({ onBack }: AICommandCenterProps) {
                         </div>
                       </div>
                       <div className="flex gap-2 pt-2">
-                        <button className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all">
-                          Approve & Execute
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprove(rec.id);
+                          }}
+                          disabled={isLoading || rec.status === 'approved' || rec.status === 'rejected'}
+                          className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          <ThumbsUp className="w-4 h-4" />
+                          {rec.status === 'approved' ? 'Approved' : 'Approve & Execute'}
                         </button>
-                        <button className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-all">
-                          Dismiss
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReject(rec.id);
+                          }}
+                          disabled={isLoading || rec.status === 'approved' || rec.status === 'rejected'}
+                          className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          <ThumbsDown className="w-4 h-4" />
+                          {rec.status === 'rejected' ? 'Rejected' : 'Dismiss'}
                         </button>
                       </div>
                     </div>
                   )}
                 </div>
               );
-            })}
+            })
+            )}
           </div>
         </div>
 

@@ -23,22 +23,26 @@ import {
   Award,
   TrendingUp,
 } from "lucide-react";
-import { mockBackend, Volunteer } from "../../services/mockBackend";
+import { volunteerService, Volunteer } from "../../services/volunteer.service";
+import { wsService } from "../../services/websocket.service";
 
 interface VolunteerManagementProps {
   onBack?: () => void;
+  eventId?: string; // Add eventId prop
 }
 
-export function VolunteerManagement({ onBack }: VolunteerManagementProps) {
+export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: VolunteerManagementProps) {
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "active" | "break" | "offline"
+    "all" | "available" | "assigned" | "break" | "offline"
   >("all");
   const [filterZone, setFilterZone] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"name" | "tasks" | "rating">("name");
   const [isLiveConnected, setIsLiveConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -60,26 +64,72 @@ export function VolunteerManagement({ onBack }: VolunteerManagementProps) {
   const [skillInput, setSkillInput] = useState("");
 
   useEffect(() => {
-    console.log("👥 VolunteerManagement: Loading volunteers");
+    console.log("👥 VolunteerManagement: Loading volunteers for event:", eventId);
     setIsLiveConnected(true);
     loadVolunteers();
 
-    // Subscribe to volunteer updates
-    const unsubscribe = mockBackend.subscribeToVolunteers((volunteer) => {
-      console.log("👥 Volunteer update received:", volunteer);
-      loadVolunteers();
-      setLastUpdate(new Date());
-    });
+    // Subscribe to real-time volunteer updates via WebSocket
+    wsService.on('volunteer:updated', handleVolunteerUpdate);
+    wsService.on('volunteer:location-updated', handleLocationUpdate);
+    wsService.on('volunteer:task-assigned', handleTaskUpdate);
+
+    // Join event room for volunteer updates
+    wsService.emit('subscribe:volunteers', eventId);
 
     return () => {
-      unsubscribe();
+      wsService.off('volunteer:updated', handleVolunteerUpdate);
+      wsService.off('volunteer:location-updated', handleLocationUpdate);
+      wsService.off('volunteer:task-assigned', handleTaskUpdate);
       setIsLiveConnected(false);
     };
-  }, []);
+  }, [eventId]);
 
-  const loadVolunteers = () => {
-    const allVolunteers = mockBackend.getAllVolunteers();
-    setVolunteers(allVolunteers);
+  const handleVolunteerUpdate = (volunteer: Volunteer) => {
+    console.log("👥 Volunteer update received:", volunteer);
+    setVolunteers(prev => {
+      const index = prev.findIndex(v => v.id === volunteer.id);
+      if (index >= 0) {
+        const updated = [...prev];
+        updated[index] = volunteer;
+        return updated;
+      } else {
+        return [...prev, volunteer];
+      }
+    });
+    setLastUpdate(new Date());
+  };
+
+  const handleLocationUpdate = (data: { volunteerId: string; location: any }) => {
+    console.log("📍 Volunteer location update:", data);
+    setVolunteers(prev => prev.map(v => 
+      v.id === data.volunteerId ? { ...v, location: data.location } : v
+    ));
+    setLastUpdate(new Date());
+  };
+
+  const handleTaskUpdate = (data: any) => {
+    console.log("✅ Task update received:", data);
+    loadVolunteers(); // Reload to get updated task info
+  };
+
+  const loadVolunteers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await volunteerService.getVolunteers({ eventId });
+      if (response.success && response.data) {
+        setVolunteers(response.data);
+        console.log(`✅ Loaded ${response.data.length} volunteers`);
+      } else {
+        setError(response.error || 'Failed to load volunteers');
+        console.error('❌ Failed to load volunteers:', response.error);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+      console.error('❌ Error loading volunteers:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const zones = Array.from(new Set(volunteers.map((v) => v.zone)));
@@ -89,23 +139,17 @@ export function VolunteerManagement({ onBack }: VolunteerManagementProps) {
     .filter((volunteer) => {
       const matchesSearch =
         volunteer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        volunteer.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        volunteer.zone.toLowerCase().includes(searchQuery.toLowerCase());
+        volunteer.role.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus =
         filterStatus === "all" || volunteer.status === filterStatus;
-      const matchesZone = filterZone === "all" || volunteer.zone === filterZone;
 
-      return matchesSearch && matchesStatus && matchesZone;
+      return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
       switch (sortBy) {
         case "name":
           return a.name.localeCompare(b.name);
-        case "tasks":
-          return b.completedTasks - a.completedTasks;
-        case "rating":
-          return b.rating - a.rating;
         default:
           return 0;
       }
@@ -113,90 +157,148 @@ export function VolunteerManagement({ onBack }: VolunteerManagementProps) {
 
   const stats = {
     total: volunteers.length,
-    active: volunteers.filter((v) => v.status === "active").length,
+    available: volunteers.filter((v) => v.status === "available").length,
+    assigned: volunteers.filter((v) => v.status === "assigned").length,
     onBreak: volunteers.filter((v) => v.status === "break").length,
     offline: volunteers.filter((v) => v.status === "offline").length,
-    avgRating:
-      volunteers.reduce((sum, v) => sum + v.rating, 0) / volunteers.length || 0,
-    totalTasks: volunteers.reduce((sum, v) => sum + v.completedTasks, 0),
   };
 
-  const handleAddVolunteer = () => {
+  const handleAddVolunteer = async () => {
     if (
       !formData.name ||
       !formData.role ||
-      !formData.zone ||
       !formData.contactNumber
     ) {
       alert("Please fill in all required fields");
       return;
     }
 
-    const newVolunteer = mockBackend.createVolunteer({
-      name: formData.name,
-      role: formData.role,
-      zone: formData.zone,
-      status: "offline",
-      assignedTasks: 0,
-      completedTasks: 0,
-      lastLocation: formData.zone,
-      contactNumber: formData.contactNumber,
-      joinedAt: Date.now(),
-      skills: formData.skills,
-      rating: 0,
-    });
+    setIsLoading(true);
+    try {
+      const response = await volunteerService.createVolunteer({
+        eventId,
+        userId: 'temp-user-' + Date.now(), // TODO: Get from auth context
+        name: formData.name,
+        email: formData.contactNumber + '@event.local', // TODO: Get real email
+        phone: formData.contactNumber,
+        role: formData.role,
+        status: "offline",
+        skills: formData.skills,
+      });
 
-    if (newVolunteer) {
-      loadVolunteers();
-      setShowAddModal(false);
-      resetForm();
+      if (response.success) {
+        await loadVolunteers();
+        setShowAddModal(false);
+        resetForm();
+        console.log('✅ Volunteer created successfully');
+      } else {
+        alert(response.error || 'Failed to create volunteer');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleUpdateVolunteer = () => {
+  const handleUpdateVolunteer = async () => {
     if (!selectedVolunteer) return;
 
-    const updated = mockBackend.updateVolunteer(selectedVolunteer.id, {
-      name: formData.name,
-      role: formData.role,
-      zone: formData.zone,
-      contactNumber: formData.contactNumber,
-      skills: formData.skills,
-    });
+    setIsLoading(true);
+    try {
+      const response = await volunteerService.updateVolunteer(selectedVolunteer.id, {
+        name: formData.name,
+        role: formData.role,
+        phone: formData.contactNumber,
+        skills: formData.skills,
+      });
 
-    if (updated) {
-      loadVolunteers();
-      setShowEditModal(false);
-      resetForm();
-      setSelectedVolunteer(null);
+      if (response.success) {
+        await loadVolunteers();
+        setShowEditModal(false);
+        resetForm();
+        console.log('✅ Volunteer updated successfully');
+      } else {
+        alert(response.error || 'Failed to update volunteer');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDeleteVolunteer = () => {
+  const handleDeleteVolunteer = async () => {
     if (!selectedVolunteer) return;
 
-    const deleted = mockBackend.deleteVolunteer(selectedVolunteer.id);
-    if (deleted) {
-      loadVolunteers();
-      setShowDeleteModal(false);
-      setSelectedVolunteer(null);
+    if (!confirm(`Are you sure you want to delete volunteer "${selectedVolunteer.name}"?`)) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await volunteerService.deleteVolunteer(selectedVolunteer.id);
+      if (response.success) {
+        await loadVolunteers();
+        setShowDeleteModal(false);
+        setSelectedVolunteer(null);
+        console.log('✅ Volunteer deleted successfully');
+      } else {
+        alert(response.error || 'Failed to delete volunteer');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAssignTask = (volunteerId: string) => {
-    const task = prompt("Enter task description:");
-    if (task) {
-      mockBackend.assignVolunteerTask(volunteerId, task);
-      loadVolunteers();
+  const handleAssignTask = async (volunteerId: string) => {
+    const taskDescription = prompt("Enter task description:");
+    if (!taskDescription) return;
+
+    const taskType = prompt("Enter task type (e.g., 'crowd-control', 'first-aid', 'registration'):");
+    if (!taskType) return;
+
+    setIsLoading(true);
+    try {
+      const response = await volunteerService.assignTask(volunteerId, {
+        taskType,
+        description: taskDescription,
+        priority: 'medium',
+      });
+
+      if (response.success) {
+        await loadVolunteers();
+        console.log('✅ Task assigned successfully');
+      } else {
+        alert(response.error || 'Failed to assign task');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleChangeStatus = (
-    volunteerId: string,
-    newStatus: Volunteer["status"]
-  ) => {
-    mockBackend.updateVolunteer(volunteerId, { status: newStatus });
-    loadVolunteers();
+  const handleStatusChange = async (volunteerId: string, newStatus: string) => {
+    setIsLoading(true);
+    try {
+      const response = await volunteerService.updateVolunteer(volunteerId, { 
+        status: newStatus as any 
+      });
+
+      if (response.success) {
+        await loadVolunteers();
+        console.log(`✅ Volunteer status updated to ${newStatus}`);
+      } else {
+        alert(response.error || 'Failed to update status');
+      }
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetForm = () => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   BarChart3, 
@@ -12,11 +12,16 @@ import {
   CheckCircle2,
   Eye,
   Download,
-  Calendar
+  Calendar,
+  RefreshCw
 } from 'lucide-react';
+import { analyticsService, AnalyticsMetrics } from '../../services/analytics.service';
+import { predictionService, CrowdPrediction } from '../../services/prediction.service';
+import { wsService } from '../../services/websocket.service';
 
 interface CrowdIntelligencePageProps {
   onBack: () => void;
+  eventId?: string;
 }
 
 interface CrowdMetric {
@@ -36,76 +41,89 @@ interface HeatmapSnapshot {
   density: number;
 }
 
-// Mock data for crowd intelligence
-const MOCK_METRICS: CrowdMetric[] = [
-  {
-    zone: 'Main Stage Area (Zone A)',
-    energyIndex: 87,
-    stability: 'volatile',
-    peakTime: '20:30 - 21:15',
-    currentCapacity: 82,
-    trend: 'increasing'
-  },
-  {
-    zone: 'Food Court (Zone C)',
-    energyIndex: 65,
-    stability: 'moderate',
-    peakTime: '18:45 - 19:30',
-    currentCapacity: 58,
-    trend: 'stable'
-  },
-  {
-    zone: 'Exhibition Hall (Zone B)',
-    energyIndex: 42,
-    stability: 'stable',
-    peakTime: '17:00 - 18:00',
-    currentCapacity: 45,
-    trend: 'decreasing'
-  },
-  {
-    zone: 'VIP Lounge (Zone D)',
-    energyIndex: 38,
-    stability: 'stable',
-    peakTime: '19:00 - 20:00',
-    currentCapacity: 35,
-    trend: 'stable'
-  }
-];
+// Real-time crowd intelligence data from backend
 
-const MOCK_SNAPSHOTS: HeatmapSnapshot[] = [
-  {
-    id: 'snap-1',
-    timestamp: '20:45',
-    description: 'Peak crowd density at main stage during headliner performance',
-    peakZone: 'Zone A',
-    density: 89
-  },
-  {
-    id: 'snap-2',
-    timestamp: '19:15',
-    description: 'Moderate density across all zones during dinner time',
-    peakZone: 'Zone C',
-    density: 67
-  },
-  {
-    id: 'snap-3',
-    timestamp: '18:00',
-    description: 'Initial crowd buildup at entry gates and registration',
-    peakZone: 'Entry Gates',
-    density: 54
-  },
-  {
-    id: 'snap-4',
-    timestamp: '17:30',
-    description: 'Low crowd density during early event hours',
-    peakZone: 'Zone B',
-    density: 32
-  }
-];
-
-export function CrowdIntelligencePage({ onBack }: CrowdIntelligencePageProps) {
+export function CrowdIntelligencePage({ onBack, eventId = 'default-event-id' }: CrowdIntelligencePageProps) {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [selectedSnapshot, setSelectedSnapshot] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<CrowdMetric[]>([]);
+  const [predictions, setPredictions] = useState<CrowdPrediction[]>([]);
+  const [snapshots, setSnapshots] = useState<HeatmapSnapshot[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  useEffect(() => {
+    console.log('🧠 CrowdIntelligencePage: Loading for event:', eventId);
+    loadData();
+
+    // Subscribe to real-time updates
+    const handleHeatmapUpdate = (data: any) => {
+      console.log('🔥 Heatmap update received:', data);
+      loadData();
+      setLastUpdate(new Date());
+    };
+
+    const handlePredictionUpdate = (prediction: CrowdPrediction) => {
+      console.log('📊 Prediction update received:', prediction);
+      setPredictions(prev => [prediction, ...prev.slice(0, 9)]);
+      setLastUpdate(new Date());
+    };
+
+    wsService.on('heatmap:update', handleHeatmapUpdate);
+    wsService.on('prediction:crowd-density', handlePredictionUpdate);
+    wsService.emit('subscribe:heatmap', eventId);
+    wsService.emit('subscribe:predictions', eventId);
+
+    return () => {
+      wsService.off('heatmap:update', handleHeatmapUpdate);
+      wsService.off('prediction:crowd-density', handlePredictionUpdate);
+    };
+  }, [eventId]);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Load analytics metrics
+      const metricsResponse = await analyticsService.getRealtimeMetrics(eventId);
+      if (metricsResponse.success && metricsResponse.data) {
+        // Transform analytics data to crowd metrics
+        const crowdMetrics = transformMetricsToCrowdData(metricsResponse.data);
+        setMetrics(crowdMetrics);
+      }
+
+      // Load crowd predictions
+      const predictionsResponse = await predictionService.getCrowdDensityPrediction(eventId);
+      if (predictionsResponse.success && predictionsResponse.data) {
+        setPredictions([predictionsResponse.data]);
+      }
+
+      console.log('✅ Loaded crowd intelligence data');
+    } catch (err: any) {
+      setError(err.message || 'Failed to load crowd intelligence data');
+      console.error('❌ Error loading data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const transformMetricsToCrowdData = (analyticsData: AnalyticsMetrics): CrowdMetric[] => {
+    // Transform real analytics data to crowd metrics format
+    const zones = (analyticsData as any).zones || [];
+    if (zones.length === 0) {
+      // Return empty array if no zones available
+      return [];
+    }
+    return zones.map((zone: any) => ({
+      zone: zone.name || 'Unknown Zone',
+      energyIndex: Math.round(zone.density * 100) || 0,
+      stability: zone.density > 0.8 ? 'volatile' : zone.density > 0.6 ? 'moderate' : 'stable',
+      peakTime: zone.peakTime || 'N/A',
+      currentCapacity: Math.round(zone.density * 100) || 0,
+      trend: zone.trend || 'stable'
+    }));
+  };
 
   const getEnergyColor = (index: number) => {
     if (index >= 80) return 'bg-red-500';
@@ -162,15 +180,41 @@ export function CrowdIntelligencePage({ onBack }: CrowdIntelligencePageProps) {
                 </div>
               </div>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold text-sm transition-colors">
-              <Download className="w-4 h-4" />
-              Export Report
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-slate-500">
+                Last updated: {lastUpdate.toLocaleTimeString()}
+              </div>
+              <button 
+                onClick={loadData}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold text-sm transition-colors">
+                <Download className="w-4 h-4" />
+                Export Report
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* Loading and Error States */}
+        {isLoading && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+            <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
+            <span className="text-sm text-blue-900">Loading crowd intelligence data...</span>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <span className="text-sm text-red-900">{error}</span>
+          </div>
+        )}
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
@@ -180,8 +224,12 @@ export function CrowdIntelligencePage({ onBack }: CrowdIntelligencePageProps) {
               </div>
               <span className="text-sm text-slate-600 font-semibold">Total Attendees</span>
             </div>
-            <p className="text-3xl font-bold text-slate-900">12,847</p>
-            <p className="text-xs text-slate-500 mt-1">Peak: 13,200 at 20:45</p>
+            <p className="text-3xl font-bold text-slate-900">
+              {predictions[0]?.predictedDensity ? Math.round(predictions[0].predictedDensity * 150) : 'N/A'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Predicted density based on current trends
+            </p>
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
@@ -228,7 +276,13 @@ export function CrowdIntelligencePage({ onBack }: CrowdIntelligencePageProps) {
             </div>
           </div>
           <div className="p-6 space-y-4">
-            {MOCK_METRICS.map((metric, idx) => (
+            {metrics.length === 0 && !isLoading ? (
+              <div className="text-center py-8 text-slate-500">
+                <Activity className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                <p>No crowd metrics available</p>
+              </div>
+            ) : (
+              metrics.map((metric, idx) => (
               <div 
                 key={idx}
                 onClick={() => setSelectedZone(selectedZone === metric.zone ? null : metric.zone)}
@@ -286,7 +340,8 @@ export function CrowdIntelligencePage({ onBack }: CrowdIntelligencePageProps) {
                   </div>
                 )}
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 
@@ -301,39 +356,52 @@ export function CrowdIntelligencePage({ onBack }: CrowdIntelligencePageProps) {
           </div>
           <div className="p-6">
             <div className="space-y-3">
-              {MOCK_SNAPSHOTS.map(snapshot => (
-                <div 
-                  key={snapshot.id}
-                  onClick={() => setSelectedSnapshot(selectedSnapshot === snapshot.id ? null : snapshot.id)}
-                  className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                    selectedSnapshot === snapshot.id
-                      ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 ring-2 ring-purple-500/30'
-                      : 'border-slate-200 hover:border-purple-300 hover:shadow-md'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Calendar className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-slate-900">{snapshot.timestamp}</span>
-                          <span className="text-xs text-slate-400">•</span>
-                          <span className="text-sm text-slate-600">{snapshot.peakZone}</span>
+              {snapshots.length === 0 && predictions.length === 0 && !isLoading ? (
+                <div className="text-center py-8 text-slate-500">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                  <p>No historical snapshots available</p>
+                </div>
+              ) : predictions.length > 0 ? (
+                predictions.map((prediction, idx) => (
+                  <div 
+                    key={prediction.id || idx}
+                    className="p-4 rounded-xl border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Calendar className="w-5 h-5 text-purple-600" />
                         </div>
-                        <p className="text-sm text-slate-600">{snapshot.description}</p>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-slate-900">
+                              {new Date(prediction.timestamp).toLocaleTimeString()}
+                            </span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-sm text-slate-600">
+                              {prediction.affectedZones?.[0] || 'Multiple zones'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-600">
+                            Risk Level: {prediction.riskLevel} - Confidence: {Math.round(prediction.confidenceLevel * 100)}%
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col items-center bg-slate-50 px-4 py-2 rounded-lg">
-                      <span className={`text-2xl font-bold ${getDensityColor(snapshot.density)}`}>
-                        {snapshot.density}%
-                      </span>
-                      <span className="text-[10px] text-slate-500 uppercase font-bold">Density</span>
+                      <div className="flex flex-col items-center bg-slate-50 px-4 py-2 rounded-lg">
+                        <span className={`text-2xl font-bold ${getDensityColor(prediction.predictedDensity * 100)}`}>
+                          {Math.round(prediction.predictedDensity * 100)}%
+                        </span>
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Predicted</span>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                  <p>No historical snapshots available</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -349,7 +417,13 @@ export function CrowdIntelligencePage({ onBack }: CrowdIntelligencePageProps) {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {MOCK_METRICS.map((metric, idx) => (
+              {metrics.length === 0 && !isLoading ? (
+                <div className="col-span-2 text-center py-8 text-slate-500">
+                  <TrendingUp className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                  <p>No stability data available</p>
+                </div>
+              ) : (
+                metrics.map((metric, idx) => (
                 <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-bold text-slate-900">{metric.zone}</h3>
@@ -372,7 +446,8 @@ export function CrowdIntelligencePage({ onBack }: CrowdIntelligencePageProps) {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
         </div>

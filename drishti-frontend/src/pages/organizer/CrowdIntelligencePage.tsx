@@ -1,5 +1,5 @@
 import { CrowdIntelligencePage as CrowdIntelligenceComponent } from '../../components/organizer/CrowdIntelligencePage';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 /**
  * Organizer Crowd Intelligence Page
@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
  */
 export default function CrowdIntelligencePage() {
   const { eventId } = useParams();
+  const navigate = useNavigate();
 
-  return <CrowdIntelligenceComponent />;
+  return <CrowdIntelligenceComponent onBack={() => navigate(-1)} eventId={eventId} />;
 }

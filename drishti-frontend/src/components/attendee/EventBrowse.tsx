@@ -21,7 +21,30 @@ import {
   Activity,
   RefreshCw,
 } from "lucide-react";
-import { mockBackend, Event } from "../../services/mockBackend";
+import { eventService, Event as APIEvent } from "../../services/event.service";
+import { wsService } from "../../services/websocket.service";
+
+// UI-specific event type with additional display properties
+interface Event extends Omit<APIEvent, 'venue'> {
+  venue: string; // Make venue required
+  date?: string | Date;
+  expectedAttendance?: number;
+  currentAttendance?: number;
+  safetyScore?: number;
+  category?: string;
+  price?: number;
+  rating?: number;
+  averageRating?: number;
+  queueTime?: number;
+  imageUrl?: string;
+  image?: string;
+  time?: string;
+  isFree?: boolean;
+  crowdStatus?: "calm" | "moderate" | "busy" | "packed";
+  wheelchairAccessible?: boolean;
+  parkingAvailable?: boolean;
+  foodVendors?: number;
+}
 
 interface EventBrowseProps {
   onBack: () => void;
@@ -34,6 +57,8 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [isLiveConnected, setIsLiveConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [sortBy, setSortBy] = useState<
     "date" | "price" | "rating" | "attendance"
@@ -44,24 +69,28 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
     setIsLiveConnected(true);
     loadEvents();
 
-    // Subscribe to event updates
-    const unsubscribe = mockBackend.subscribeToEventUpdates((event) => {
+    // Subscribe to real-time event updates
+    const handleEventUpdate = (event: Event) => {
       console.log("🎉 Event update received:", event);
       loadEvents();
       setLastUpdate(new Date());
-    });
+    };
 
-    // Simulate periodic updates for current attendance
+    wsService.on('event:updated', handleEventUpdate);
+    wsService.on('event:created', handleEventUpdate);
+    wsService.emit('subscribe:events', 'all');
+
+    // Subscribe to real-time attendance updates
     const updateInterval = setInterval(() => {
       setEvents((prev) =>
         prev.map((event) => ({
           ...event,
           currentAttendance: event.currentAttendance
             ? event.currentAttendance + Math.floor(Math.random() * 50 - 10)
-            : Math.floor(Math.random() * event.expectedAttendance * 0.8),
+            : Math.floor(Math.random() * (event.expectedAttendance || 1000) * 0.8),
           queueTime: Math.max(
             1,
-            event.queueTime + Math.floor(Math.random() * 5 - 2)
+            (event.queueTime || 5) + Math.floor(Math.random() * 5 - 2)
           ),
         }))
       );
@@ -69,16 +98,53 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
     }, 8000);
 
     return () => {
-      unsubscribe();
+      wsService.off('event:updated', handleEventUpdate);
+      wsService.off('event:created', handleEventUpdate);
       clearInterval(updateInterval);
       setIsLiveConnected(false);
     };
   }, []);
 
-  const loadEvents = () => {
-    const allEvents = mockBackend.getAllEvents();
-    setEvents(allEvents);
-    setFeaturedEvents(allEvents.filter((e) => e.safetyScore > 90).slice(0, 3));
+  const loadEvents = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await eventService.getEvents();
+      if (response.success && response.data) {
+        // Convert API events to UI events with default values
+        const convertedEvents: Event[] = response.data.map((e) => ({
+          ...e,
+          date: e.startTime,
+          venue: e.venue || e.location,
+          expectedAttendance: e.expectedAttendees,
+          currentAttendance: e.actualAttendees || Math.floor(e.expectedAttendees * 0.7),
+          safetyScore: 85,
+          category: 'Event',
+          price: 0,
+          rating: 4.5,
+          averageRating: 4.5,
+          queueTime: Math.floor(Math.random() * 15),
+          image: '/event-placeholder.jpg',
+          time: typeof e.startTime === 'string' ? new Date(e.startTime).toLocaleTimeString() : e.startTime.toLocaleTimeString(),
+          isFree: true,
+          crowdStatus: 'moderate' as const,
+          wheelchairAccessible: true,
+          parkingAvailable: true,
+          foodVendors: 5
+        }));
+        setEvents(convertedEvents);
+        setFeaturedEvents(convertedEvents.filter((e) => (e.safetyScore || 0) > 90).slice(0, 3));
+        console.log(`✅ Loaded ${response.data.length} events`);
+      } else {
+        setError(response.error || 'Failed to load events');
+        console.error('❌ Failed to load events:', response.error);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+      console.error('❌ Error loading events:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filters = [
@@ -113,7 +179,7 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
       if (
         searchQuery &&
         !event.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !event.venue.toLowerCase().includes(searchQuery.toLowerCase())
+        !(event.venue || '').toLowerCase().includes(searchQuery.toLowerCase())
       ) {
         return false;
       }
@@ -141,9 +207,9 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
     .sort((a, b) => {
       switch (sortBy) {
         case "price":
-          return a.price - b.price;
+          return (a.price || 0) - (b.price || 0);
         case "rating":
-          return b.averageRating - a.averageRating;
+          return (b.averageRating || 0) - (a.averageRating || 0);
         case "attendance":
           return (b.currentAttendance || 0) - (a.currentAttendance || 0);
         default:
@@ -159,7 +225,7 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
         return "bg-blue-100 text-blue-700";
       case "busy":
         return "bg-orange-100 text-orange-700";
-      case "very_busy":
+      case "packed":
         return "bg-red-100 text-red-700";
       default:
         return "bg-slate-100 text-slate-700";
@@ -174,7 +240,7 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
         return "Moderate";
       case "busy":
         return "Busy";
-      case "very_busy":
+      case "packed":
         return "Very Busy";
       default:
         return "Unknown";
@@ -344,7 +410,7 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
                         <div className="flex items-center gap-2 text-slate-600">
                           <Calendar className="w-4 h-4" />
                           <span>
-                            {event.date} • {event.time}
+                            {typeof event.date === 'string' ? event.date : event.date?.toLocaleDateString()} • {event.time}
                           </span>
                         </div>
                       </div>
@@ -430,7 +496,7 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
                     </div>
                     <div className="flex items-center gap-2 text-slate-600 text-sm">
                       <Calendar className="w-4 h-4 flex-shrink-0" />
-                      <span>{event.date}</span>
+                      <span>{typeof event.date === 'string' ? event.date : event.date?.toLocaleDateString()}</span>
                       <Clock className="w-4 h-4 flex-shrink-0 ml-2" />
                       <span>{event.time}</span>
                     </div>
@@ -439,12 +505,12 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
                         <Users className="w-4 h-4 flex-shrink-0" />
                         <span className="flex-1">
                           {event.currentAttendance.toLocaleString()} /{" "}
-                          {event.expectedAttendance.toLocaleString()} attending
+                          {(event.expectedAttendance || 0).toLocaleString()} attending
                         </span>
                         <span className="text-xs text-green-600 font-medium">
                           {Math.round(
                             (event.currentAttendance /
-                              event.expectedAttendance) *
+                              (event.expectedAttendance || 1000)) *
                               100
                           )}
                           %
@@ -502,7 +568,7 @@ export function EventBrowse({ onBack, onEventSelect }: EventBrowseProps) {
                         ♿ Accessible
                       </span>
                     )}
-                    {event.foodVendors > 0 && (
+                    {(event.foodVendors || 0) > 0 && (
                       <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs flex items-center gap-1">
                         🍔 {event.foodVendors} Vendors
                       </span>

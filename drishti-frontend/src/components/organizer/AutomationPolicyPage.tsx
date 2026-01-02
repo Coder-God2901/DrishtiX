@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Shield, 
@@ -12,11 +12,15 @@ import {
   Bell,
   Zap,
   Info,
-  Settings
+  Settings,
+  RefreshCw
 } from 'lucide-react';
+import { automationService, AutomationPolicy } from '../../services/automation.service';
+import { wsService } from '../../services/ws.service';
 
 interface AutomationPolicyPageProps {
   onBack: () => void;
+  eventId?: string;
 }
 
 interface PolicyRule {
@@ -33,7 +37,7 @@ interface SeverityAction {
   action: 'auto-dispatch' | 'suggest-only' | 'notify' | 'log-only';
 }
 
-// Mock policy state
+// Initial policy state
 const INITIAL_POLICIES: PolicyRule[] = [
   {
     id: 'pol-1',
@@ -92,11 +96,50 @@ const INITIAL_SEVERITY_ACTIONS: SeverityAction[] = [
   { severity: 'low', action: 'log-only' }
 ];
 
-export function AutomationPolicyPage({ onBack }: AutomationPolicyPageProps) {
-  const [policies, setPolicies] = useState<PolicyRule[]>(INITIAL_POLICIES);
+export function AutomationPolicyPage({ onBack, eventId = 'default-event-id' }: AutomationPolicyPageProps) {
+  const [policies, setPolicies] = useState<AutomationPolicy[]>([]);
   const [severityActions, setSeverityActions] = useState<SeverityAction[]>(INITIAL_SEVERITY_ACTIONS);
   const [hasChanges, setHasChanges] = useState(false);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  // Load real automation policies
+  const loadPolicies = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await automationService.getPolicies(eventId);
+      if (response.success && response.data) {
+        setPolicies(response.data);
+      }
+      setLastUpdate(new Date());
+    } catch (err: any) {
+      setError(err.message || 'Failed to load automation policies');
+      console.error('Error loading policies:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // WebSocket: Real-time policy updates
+  useEffect(() => {
+    loadPolicies();
+
+    const handlePolicyUpdate = (data: any) => {
+      console.log('Policy update:', data);
+      if (data.policies) setPolicies(data.policies);
+      setLastUpdate(new Date());
+    };
+
+    wsService.on('automation:update', handlePolicyUpdate);
+    wsService.emit('subscribe:automation', eventId);
+
+    return () => {
+      wsService.off('automation:update', handlePolicyUpdate);
+    };
+  }, [eventId]);
 
   const handleTogglePolicy = (id: string) => {
     setPolicies(prev => prev.map(p => 

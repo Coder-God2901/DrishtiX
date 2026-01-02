@@ -550,15 +550,15 @@ router.get('/event/:eventId/stats', authenticate, authorize(['ORGANIZER', 'LOGIS
       success: true,
       stats: {
         total,
-        byStatus: byStatus.reduce((acc, s) => {
+        byStatus: byStatus.reduce((acc: Record<string, number>, s: any) => {
           acc[s.status] = s._count;
           return acc;
         }, {} as Record<string, number>),
-        byZone: byZone.reduce((acc, z) => {
+        byZone: byZone.reduce((acc: Record<string, number>, z: any) => {
           acc[z.zone] = z._count;
           return acc;
         }, {} as Record<string, number>),
-        byRole: byRole.reduce((acc, r) => {
+        byRole: byRole.reduce((acc: Record<string, number>, r: any) => {
           acc[r.role] = r._count;
           return acc;
         }, {} as Record<string, number>),

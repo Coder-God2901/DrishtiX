@@ -32,10 +32,14 @@ import {
   Search,
   Layers,
   Info,
+  RefreshCw,
 } from "lucide-react";
+import { gateControlService } from '../../services/gate-control.service';
+import { wsService } from '../../services/ws.service';
 
 interface GateControlPageProps {
   onBack: () => void;
+  eventId?: string;
 }
 
 type GateStatus = "open" | "closed" | "congested";
@@ -67,110 +71,12 @@ interface ToastMessage {
   type: "success" | "warning" | "error" | "info";
 }
 
-export function GateControlPage({ onBack }: GateControlPageProps) {
-  // Gate data (mock)
-  const [gates, setGates] = useState<Gate[]>([
-    {
-      id: "G1",
-      name: "Gate A - Main Entrance",
-      status: "open",
-      connectedZones: ["Zone A", "Zone B"],
-      throughput: 1200,
-      currentCrowd: 450,
-      maxCapacity: 800,
-      position: { x: 20, y: 50 },
-      lastUpdated: new Date(),
-    },
-    {
-      id: "G2",
-      name: "Gate B - North Entrance",
-      status: "open",
-      connectedZones: ["Zone B", "Zone C"],
-      throughput: 800,
-      currentCrowd: 320,
-      maxCapacity: 600,
-      position: { x: 50, y: 20 },
-      lastUpdated: new Date(),
-    },
-    {
-      id: "G3",
-      name: "Gate C - VIP Entrance",
-      status: "congested",
-      connectedZones: ["Zone A", "Zone D"],
-      throughput: 600,
-      currentCrowd: 580,
-      maxCapacity: 600,
-      position: { x: 80, y: 40 },
-      lastUpdated: new Date(),
-    },
-    {
-      id: "G4",
-      name: "Gate D - East Side",
-      status: "open",
-      connectedZones: ["Zone D", "Zone E"],
-      throughput: 900,
-      currentCrowd: 280,
-      maxCapacity: 700,
-      position: { x: 90, y: 70 },
-      lastUpdated: new Date(),
-    },
-    {
-      id: "G5",
-      name: "Gate E - South Exit",
-      status: "closed",
-      connectedZones: ["Zone E"],
-      throughput: 500,
-      currentCrowd: 0,
-      maxCapacity: 500,
-      position: { x: 60, y: 90 },
-      lastUpdated: new Date(),
-    },
-  ]);
-
-  // Zone data (mock)
-  const [zones, setZones] = useState<Zone[]>([
-    {
-      id: "Z1",
-      name: "Zone A",
-      gates: ["G1", "G3"],
-      isAccessible: true,
-      color: "#10b981",
-      position: { x: 15, y: 30, width: 30, height: 35 },
-    },
-    {
-      id: "Z2",
-      name: "Zone B",
-      gates: ["G1", "G2"],
-      isAccessible: true,
-      color: "#3b82f6",
-      position: { x: 35, y: 15, width: 25, height: 30 },
-    },
-    {
-      id: "Z3",
-      name: "Zone C",
-      gates: ["G2"],
-      isAccessible: true,
-      color: "#8b5cf6",
-      position: { x: 55, y: 10, width: 20, height: 25 },
-    },
-    {
-      id: "Z4",
-      name: "Zone D",
-      gates: ["G3", "G4"],
-      isAccessible: true,
-      color: "#f59e0b",
-      position: { x: 75, y: 45, width: 20, height: 30 },
-    },
-    {
-      id: "Z5",
-      name: "Zone E",
-      gates: ["G4", "G5"],
-      isAccessible: true,
-      color: "#ec4899",
-      position: { x: 55, y: 70, width: 25, height: 25 },
-    },
-  ]);
-
+export function GateControlPage({ onBack, eventId = 'default-event' }: GateControlPageProps) {
+  // State
+  const [gates, setGates] = useState<Gate[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [selectedGate, setSelectedGate] = useState<Gate | null>(null);
   const [hoveredGate, setHoveredGate] = useState<string | null>(null);
@@ -179,6 +85,66 @@ export function GateControlPage({ onBack }: GateControlPageProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [gateToDelete, setGateToDelete] = useState<Gate | null>(null);
   const [impactedZones, setImpactedZones] = useState<string[]>([]);
+
+  // Load gates and zones from backend
+  useEffect(() => {
+    const loadGateData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Load gates
+        const gatesResponse = await gateControlService.getGates(eventId);
+        if (gatesResponse.success && gatesResponse.data) {
+          // Convert API gates to UI format
+          const convertedGates: Gate[] = gatesResponse.data.map(g => ({
+            id: g.id,
+            name: g.name,
+            status: g.status.toLowerCase() as GateStatus,
+            connectedZones: g.zones || [],
+            throughput: g.capacity || 1000,
+            currentCrowd: g.currentCount || 0,
+            maxCapacity: g.maxCapacity || g.capacity || 1000,
+            position: g.location ? { x: g.location.x * 100, y: g.location.y * 100 } : { x: 50, y: 50 },
+            lastUpdated: typeof g.lastUpdated === 'string' ? new Date(g.lastUpdated) : g.lastUpdated || new Date()
+          }));
+          setGates(convertedGates);
+        }
+
+        // Load zones
+        const zonesResponse = await gateControlService.getZones(eventId);
+        if (zonesResponse.success && zonesResponse.data) {
+          const convertedZones: Zone[] = zonesResponse.data.map((z, idx) => ({
+            id: z.id,
+            name: z.name,
+            gates: z.gates || [],
+            isAccessible: z.status === 'ACCESSIBLE',
+            color: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899'][idx % 5],
+            position: { x: 20 + idx * 15, y: 20 + idx * 10, width: 25, height: 30 }
+          }));
+          setZones(convertedZones);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load gate data');
+        console.error('Error loading gate data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadGateData();
+
+    // Subscribe to real-time gate updates
+    wsService.on('gate:update', (data: any) => {
+      setGates(prev => prev.map(g => 
+        g.id === data.id ? { ...g, ...data, lastUpdated: new Date() } : g
+      ));
+    });
+
+    return () => {
+      wsService.off('gate:update', () => {});
+    };
+  }, [eventId]);
 
   // Calculate zone accessibility whenever gates change
   useEffect(() => {
@@ -210,35 +176,50 @@ export function GateControlPage({ onBack }: GateControlPageProps) {
   };
 
   // Toggle gate status
-  const toggleGateStatus = (gateId: string) => {
-    setGates((prev) =>
-      prev.map((gate) => {
-        if (gate.id === gateId) {
-          const newStatus = gate.status === "open" ? "closed" : "open";
-          const updatedGate = {
-            ...gate,
-            status: newStatus as GateStatus,
-            currentCrowd: newStatus === "closed" ? 0 : gate.currentCrowd,
-            lastUpdated: new Date(),
-          };
+  const toggleGateStatus = async (gateId: string) => {
+    const gate = gates.find(g => g.id === gateId);
+    if (!gate) return;
 
-          // Check impacted zones
-          const affected = zones.filter((z) => z.gates.includes(gateId));
-          setImpactedZones(affected.map((z) => z.name));
+    const newStatus = gate.status === "open" ? "closed" : "open";
+    
+    try {
+      // Update backend
+      const response = await gateControlService.updateGateStatus(gateId, newStatus.toUpperCase() as any);
+      
+      if (response.success) {
+        // Update local state
+        setGates((prev) =>
+          prev.map((g) => {
+            if (g.id === gateId) {
+              const updatedGate = {
+                ...g,
+                status: newStatus as GateStatus,
+                currentCrowd: newStatus === "closed" ? 0 : g.currentCrowd,
+                lastUpdated: new Date(),
+              };
 
-          // Show toast
-          showToast(
-            `${gate.name} ${
-              newStatus === "open" ? "opened" : "closed"
-            } successfully`,
-            newStatus === "closed" ? "warning" : "success"
-          );
+              // Check impacted zones
+              const affected = zones.filter((z) => z.gates.includes(gateId));
+              setImpactedZones(affected.map((z) => z.name));
 
-          return updatedGate;
-        }
-        return gate;
-      })
-    );
+              // Show toast
+              showToast(
+                `${g.name} ${newStatus === "open" ? "opened" : "closed"} successfully`,
+                newStatus === "closed" ? "warning" : "success"
+              );
+
+              return updatedGate;
+            }
+            return g;
+          })
+        );
+      } else {
+        showToast(`Failed to update ${gate.name}`, "error");
+      }
+    } catch (err) {
+      console.error('Error updating gate status:', err);
+      showToast(`Error updating ${gate.name}`, "error");
+    }
   };
 
   // Delete gate (with confirmation)
@@ -247,10 +228,21 @@ export function GateControlPage({ onBack }: GateControlPageProps) {
     setShowDeleteModal(true);
   };
 
-  const deleteGate = () => {
-    if (gateToDelete) {
-      setGates((prev) => prev.filter((g) => g.id !== gateToDelete.id));
-      showToast(`${gateToDelete.name} deleted`, "error");
+  const deleteGate = async () => {
+    if (!gateToDelete) return;
+
+    try {
+      const response = await gateControlService.deleteGate(gateToDelete.id);
+      if (response.success) {
+        setGates((prev) => prev.filter((g) => g.id !== gateToDelete.id));
+        showToast(`${gateToDelete.name} deleted`, "error");
+      } else {
+        showToast(`Failed to delete ${gateToDelete.name}`, "error");
+      }
+    } catch (err) {
+      console.error('Error deleting gate:', err);
+      showToast(`Error deleting ${gateToDelete.name}`, "error");
+    } finally {
       setShowDeleteModal(false);
       setGateToDelete(null);
     }

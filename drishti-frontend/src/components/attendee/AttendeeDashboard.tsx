@@ -30,20 +30,31 @@ import { AccessibleNavigationSystem } from "./AccessibleNavigationSystem";
 import { FindAndHelpSystem, Tab } from "./FindAndHelpSystem";
 import { MedicalAssistanceSystem } from "./MedicalAssistanceSystem";
 import { AttendeeEventHub } from "./AttendeeEventHub";
-import {
-  mockBackend,
-  LiveMetrics,
-  Notification as BackendNotification,
-} from "../../services/mockBackend";
+import { analyticsService, AnalyticsMetrics } from "../../services/analytics.service";
+import { wsService } from "../../services/websocket.service";
+import { alertService } from "../../services/alert.service";
+
+interface Notification {
+  id: string;
+  type: 'info' | 'warning' | 'success' | 'alert';
+  title: string;
+  message: string;
+  timestamp: number;
+  read: boolean;
+}
 
 interface AttendeeDashboardProps {
   onSwitchToOrganizer: () => void;
   onLogout: () => void;
+  eventId?: string;
+  userId?: string;
 }
 
 export function AttendeeDashboard({
   onSwitchToOrganizer,
   onLogout,
+  eventId = 'default-event-id',
+  userId = 'default-user-id',
 }: AttendeeDashboardProps) {
   const [showNavigation, setShowNavigation] = useState(false);
   const [showAccessibleNav, setShowAccessibleNav] = useState(false);
@@ -55,8 +66,10 @@ export function AttendeeDashboard({
   const [isAccessibleMode, setIsAccessibleMode] = useState(false);
 
   // Real-time data states
-  const [liveMetrics, setLiveMetrics] = useState<LiveMetrics | null>(null);
-  const [notifications, setNotifications] = useState<BackendNotification[]>([]);
+  const [liveMetrics, setLiveMetrics] = useState<AnalyticsMetrics | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [activityFeed, setActivityFeed] = useState<
     Array<{ icon: string; text: string; time: string }>
   >([]);
@@ -67,26 +80,36 @@ export function AttendeeDashboard({
   useEffect(() => {
     console.log("🔴 AttendeeDashboard: Subscribing to real-time updates");
     setIsLiveConnected(true);
+    loadMetrics();
+    loadNotifications();
 
-    // Subscribe to live metrics
-    const unsubMetrics = mockBackend.subscribeToMetrics((metrics) => {
+    // Subscribe to real-time metrics
+    const handleMetricsUpdate = (metrics: AnalyticsMetrics) => {
       setLiveMetrics(metrics);
       setLastUpdateTime(new Date());
-    });
+    };
 
-    // Subscribe to notifications
-    const unsubNotifications = mockBackend.subscribeToNotifications(
-      (notification) => {
-        setNotifications((prev) => {
-          const exists = prev.find((n) => n.id === notification.id);
-          if (exists) return prev;
-          return [notification, ...prev].slice(0, 10);
-        });
-      }
-    );
+    // Subscribe to real-time alerts/notifications
+    const handleAlertUpdate = (alert: any) => {
+      const notification: Notification = {
+        id: alert.id,
+        type: alert.severity === 'critical' ? 'alert' : alert.severity === 'high' ? 'warning' : 'info',
+        title: alert.type,
+        message: alert.message,
+        timestamp: Date.now(),
+        read: false
+      };
+      setNotifications((prev) => {
+        const exists = prev.find((n) => n.id === notification.id);
+        if (exists) return prev;
+        return [notification, ...prev].slice(0, 10);
+      });
+    };
 
-    // Load initial notifications
-    setNotifications(mockBackend.getAllNotifications());
+    wsService.on('metrics:realtime', handleMetricsUpdate);
+    wsService.on('alert:new', handleAlertUpdate);
+    wsService.emit('subscribe:metrics', eventId);
+    wsService.emit('subscribe:alerts', eventId);
 
     // Initialize activity feed
     const initialActivity = [
@@ -128,12 +151,50 @@ export function AttendeeDashboard({
     }, 15000);
 
     return () => {
-      unsubMetrics();
-      unsubNotifications();
+      wsService.off('metrics:realtime', handleMetricsUpdate);
+      wsService.off('alert:new', handleAlertUpdate);
       clearInterval(activityInterval);
       setIsLiveConnected(false);
     };
-  }, []);
+  }, [eventId]);
+
+  const loadMetrics = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await analyticsService.getRealtimeMetrics(eventId);
+      if (response.success && response.data) {
+        setLiveMetrics(response.data);
+        console.log('✅ Loaded real-time metrics');
+      } else {
+        setError(response.error || 'Failed to load metrics');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+      console.error('❌ Error loading metrics:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const response = await alertService.getAlerts({ eventId, limit: 10 });
+      if (response.success && response.data) {
+        const notifs: Notification[] = response.data.map((alert: any) => ({
+          id: alert.id,
+          type: alert.severity === 'critical' ? 'alert' : alert.severity === 'high' ? 'warning' : 'info',
+          title: alert.type,
+          message: alert.message,
+          timestamp: new Date(alert.timestamp).getTime(),
+          read: false
+        }));
+        setNotifications(notifs);
+      }
+    } catch (err: any) {
+      console.error('❌ Error loading notifications:', err);
+    }
+  };
 
   const handleNavigateToSafeRoute = (route: any) => {
     setShowNavigation(true);
@@ -153,11 +214,17 @@ export function AttendeeDashboard({
   };
 
   // Handle notification click
-  const handleNotificationClick = (notificationId: string) => {
-    mockBackend.markNotificationAsRead(notificationId);
+  const handleNotificationClick = async (notificationId: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
     );
+    // Could also call API to mark as read if backend supports it
+    try {
+      await alertService.acknowledgeAlert(notificationId, userId);
+      console.log('✅ Notification marked as read');
+    } catch (err) {
+      console.error('❌ Error marking notification as read:', err);
+    }
   };
 
   if (showEventHub) {

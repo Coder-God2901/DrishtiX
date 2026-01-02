@@ -264,7 +264,7 @@ router.post('/bulk', authenticate, authorize(['ORGANIZER', 'ADMIN']), async (req
 
     // Emit via WebSocket
     const { io } = require('../index');
-    notifications.forEach(notification => {
+    notifications.forEach((notification: any) => {
       io.to(`user:${notification.userId}`).emit('notification:new', notification);
     });
 

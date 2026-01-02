@@ -465,8 +465,8 @@ router.get('/event/:eventId/stats', authenticate, authorize(['ORGANIZER', 'ADMIN
       }
     });
 
-    const totalRevenue = stats.reduce((sum, s) => sum + (s._sum.totalPaid || 0), 0);
-    const totalTickets = stats.reduce((sum, s) => sum + (s._sum.quantity || 0), 0);
+    const totalRevenue = stats.reduce((sum: number, s: any) => sum + (s._sum.totalPaid || 0), 0);
+    const totalTickets = stats.reduce((sum: number, s: any) => sum + (s._sum.quantity || 0), 0);
 
     res.json({
       success: true,
@@ -474,7 +474,7 @@ router.get('/event/:eventId/stats', authenticate, authorize(['ORGANIZER', 'ADMIN
       summary: {
         totalRevenue,
         totalTickets,
-        byStatus: stats.reduce((acc, s) => {
+        byStatus: stats.reduce((acc: Record<string, number>, s: any) => {
           acc[s.status] = s._count;
           return acc;
         }, {} as Record<string, number>)

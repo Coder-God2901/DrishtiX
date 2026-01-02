@@ -58,67 +58,108 @@ interface TeamMarker {
   type: 'medical' | 'security' | 'operations';
 }
 
-// Mock hook for live monitoring data
-function useLiveMonitoringMock() {
+// Real-time data hook using actual backend services
+function useLiveMonitoring(eventId: string) {
   const [kpis, setKpis] = useState<LiveKPI>({
-    criticalIncidents: 3,
-    warnings: 7,
-    safeZones: 12,
-    currentAttendance: 12847,
-    activeTeams: 8
+    criticalIncidents: 0,
+    warnings: 0,
+    safeZones: 0,
+    currentAttendance: 0,
+    activeTeams: 0
   });
 
-  const [attendanceFlow, setAttendanceFlow] = useState({ inflow: 142, outflow: -87 });
-  const [gateStatus] = useState({ closed: 1, congested: 2, normal: 5 });
-  const [teamBreakdown] = useState({
-    medical: { active: 5, idle: 2 },
-    security: { active: 8, idle: 1 },
-    volunteers: { active: 12, idle: 0 }
+  const [attendanceFlow, setAttendanceFlow] = useState({ inflow: 0, outflow: 0 });
+  const [gateStatus] = useState({ closed: 0, congested: 0, normal: 0 });
+  const [teamBreakdown, setTeamBreakdown] = useState({
+    medical: { active: 0, idle: 0 },
+    security: { active: 0, idle: 0 },
+    volunteers: { active: 0, idle: 0 }
   });
-  const [weather] = useState({
-    condition: 'Partly cloudy',
-    temperature: 72,
-    rainProbability: 20
+  const [weather, setWeather] = useState({
+    condition: 'Loading...',
+    temperature: 0,
+    rainProbability: 0
   });
 
-  const [teams, setTeams] = useState<TeamMarker[]>([
-    { id: 't1', name: 'Medical Alpha', position: [19.075, 72.876], status: 'active', type: 'medical' },
-    { id: 't2', name: 'Security Delta', position: [19.077, 72.875], status: 'active', type: 'security' },
-    { id: 't3', name: 'Ops Team 1', position: [19.079, 72.878], status: 'idle', type: 'operations' }
-  ]);
+  const [teams, setTeams] = useState<TeamMarker[]>([]);
 
-  // Simulate KPI updates every 10 seconds
+  // Load real-time data
   useEffect(() => {
-    const interval = setInterval(() => {
-      const inflowChange = Math.floor(Math.random() * 30 + 120);
-      const outflowChange = Math.floor(Math.random() * 30 + 70);
-      setAttendanceFlow({ inflow: inflowChange, outflow: -outflowChange });
-      
-      setKpis(prev => ({
-        ...prev,
-        criticalIncidents: Math.max(0, prev.criticalIncidents + (Math.random() > 0.7 ? 1 : -1)),
-        warnings: Math.max(0, prev.warnings + (Math.random() > 0.5 ? 1 : -1)),
-        currentAttendance: Math.max(10000, prev.currentAttendance + inflowChange - outflowChange)
-      }));
-    }, 10000);
+    const loadData = async () => {
+      try {
+        // Load analytics metrics
+        const metricsResponse = await analyticsService.getRealtimeMetrics(eventId);
+        if (metricsResponse.success && metricsResponse.data) {
+          const data = metricsResponse.data;
+          setKpis({
+            criticalIncidents: (data as any).criticalIncidents || 0,
+            warnings: (data as any).warnings || 0,
+            safeZones: (data as any).safeZones || 0,
+            currentAttendance: (data as any).currentAttendance || 0,
+            activeTeams: (data as any).activeTeams || 0
+          });
+        }
 
-    return () => clearInterval(interval);
-  }, []);
+        // Load teams
+        const teamsResponse = await dispatchService.getTeams(eventId);
+        if (teamsResponse.success && teamsResponse.data) {
+          setTeams(teamsResponse.data.map(t => ({
+            id: t.id,
+            name: t.name,
+            position: t.location,
+            status: t.status === 'available' ? 'idle' : 'active',
+            type: t.type
+          })));
+          
+          const medical = teamsResponse.data.filter(t => t.type === 'medical');
+          const security = teamsResponse.data.filter(t => t.type === 'security');
+          setTeamBreakdown({
+            medical: { active: medical.filter(t => t.status !== 'available').length, idle: medical.filter(t => t.status === 'available').length },
+            security: { active: security.filter(t => t.status !== 'available').length, idle: security.filter(t => t.status === 'available').length },
+            volunteers: { active: 0, idle: 0 }
+          });
+        }
 
-  // Simulate team movement every 5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTeams(prev => prev.map(team => ({
-        ...team,
-        position: [
-          team.position[0] + (Math.random() - 0.5) * 0.0005,
-          team.position[1] + (Math.random() - 0.5) * 0.0005
-        ] as [number, number]
-      })));
-    }, 5000);
+        // Load weather
+        const weatherResponse = await weatherService.getCurrentWeather(eventId);
+        if (weatherResponse.success && weatherResponse.data) {
+          const w = weatherResponse.data;
+          setWeather({
+            condition: w.conditionDescription,
+            temperature: Math.round(w.temperature),
+            rainProbability: 0
+          });
+        }
+      } catch (err) {
+        console.error('Error loading live monitoring data:', err);
+      }
+    };
 
-    return () => clearInterval(interval);
-  }, []);
+    loadData();
+
+    // WebSocket real-time updates
+    const handleMetricsUpdate = (data: any) => {
+      if (data.kpis) setKpis(data.kpis);
+      if (data.attendanceFlow) setAttendanceFlow(data.attendanceFlow);
+    };
+
+    const handleTeamsUpdate = (data: any) => {
+      if (data.teams) setTeams(data.teams);
+    };
+
+    wsService.on('metrics:update', handleMetricsUpdate);
+    wsService.on('teams:update', handleTeamsUpdate);
+    wsService.emit('subscribe:live-monitoring', eventId);
+
+    // Refresh data every 30 seconds
+    const interval = setInterval(loadData, 30000);
+
+    return () => {
+      clearInterval(interval);
+      wsService.off('metrics:update', handleMetricsUpdate);
+      wsService.off('teams:update', handleTeamsUpdate);
+    };
+  }, [eventId]);
 
   return { kpis, teams, attendanceFlow, gateStatus, teamBreakdown, weather };
 }
@@ -140,9 +181,9 @@ const percentageToLatLng = (x?: number, y?: number): [number, number] => {
   return [lat, lng];
 };
 
-export function LiveMonitoring({ onBack, setCurrentView }: LiveMonitoringProps) {
+export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-event-id' }: LiveMonitoringProps) {
   const { incidents } = useIncidents();
-  const { kpis, teams, attendanceFlow, gateStatus, teamBreakdown, weather } = useLiveMonitoringMock();
+  const { kpis, teams, attendanceFlow, gateStatus, teamBreakdown, weather } = useLiveMonitoring(eventId);
   
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);

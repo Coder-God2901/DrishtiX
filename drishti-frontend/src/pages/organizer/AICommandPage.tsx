@@ -1,5 +1,5 @@
 import { AICommandCenter } from '../../components/organizer/AICommandCenter';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 /**
  * Organizer AI Command Page
@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
  */
 export default function AICommandPage() {
   const { eventId } = useParams();
+  const navigate = useNavigate();
 
-  return <AICommandCenter />;
+  return <AICommandCenter onBack={() => navigate('/organizer/dashboard')} />;
 }

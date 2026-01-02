@@ -24,6 +24,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { IncidentDrawer } from "../shared/IncidentDrawer";
+import { incidentService, Incident as APIIncident } from "../../services/incident.service";
+import { wsService } from "../../services/websocket.service";
 
 // Incident Types
 type IncidentType =
@@ -52,25 +54,33 @@ interface ActionLog {
   performedBy: string;
 }
 
+// Map API types to UI types for compatibility
 interface Incident {
   id: string;
-  type: IncidentType;
-  severity: SeverityLevel;
-  zone: string;
+  type: string; // Flexible to handle both API and local types
+  severity: string;
+  zone?: string;
   gate?: string;
   location: { lat: number; lng: number };
-  timestamp: Date;
-  status: IncidentStatus;
+  timestamp: Date | string;
+  status: string;
   description: string;
-  aiAnalysis: string;
-  prediction: string;
+  aiAnalysis?: string;
+  aiSummary?: string; // From API
+  prediction?: string;
+  confidence?: number; // From API
   actionsTaken: string[];
   activityLog: ActionLog[];
   color: string;
+  eventId?: string;
+  coordinates?: { lat: number; lng: number }; // From API
+  assignedTo?: string[];
+  responders?: any[];
 }
 
 interface AlertsIncidentCenterProps {
   onBack: () => void;
+  eventId?: string;
 }
 
 // AI Recommendation Engine (Rule-based)
@@ -148,220 +158,71 @@ const getAIRecommendations = (incident: Incident): string[] => {
   return recommendations;
 };
 
-// Mock Incidents Data
-const generateMockIncidents = (): Incident[] => {
-  return [
-    {
-      id: "INC-001",
-      type: "Fire",
-      severity: "Critical",
-      zone: "Zone A - Main Stage",
-      gate: "Gate 3",
-      location: { lat: 28.6139, lng: 77.209 },
-      timestamp: new Date(Date.now() - 5 * 60000),
-      status: "New",
-      description: "Small fire detected near electrical equipment backstage",
-      aiAnalysis:
-        "Fire detected with high confidence. Immediate action required.",
-      prediction: "95% - Requires immediate fire suppression",
-      actionsTaken: [],
-      activityLog: [
-        {
-          id: "log-1",
-          timestamp: new Date(Date.now() - 5 * 60000),
-          action: "AI detected incident",
-          performedBy: "DrishtiX AI",
-        },
-      ],
-      color: "red",
-    },
-    {
-      id: "INC-002",
-      type: "Medical Emergency",
-      severity: "Critical",
-      zone: "Zone C - Food Court",
-      location: { lat: 28.6145, lng: 77.2105 },
-      timestamp: new Date(Date.now() - 12 * 60000),
-      status: "Teams En Route",
-      description: "Attendee collapsed, suspected heat stroke",
-      aiAnalysis:
-        "Medical emergency requiring immediate response. Vital signs critical.",
-      prediction: "Emergency medical intervention required within 5 minutes",
-      actionsTaken: ["Dispatch Medical Team", "Clear Access Route"],
-      activityLog: [
-        {
-          id: "log-1",
-          timestamp: new Date(Date.now() - 12 * 60000),
-          action: "AI detected incident",
-          performedBy: "DrishtiX AI",
-        },
-        {
-          id: "log-2",
-          timestamp: new Date(Date.now() - 10 * 60000),
-          action: "Dispatched Medical Team",
-          performedBy: "Organizer - Raj Kumar",
-        },
-        {
-          id: "log-3",
-          timestamp: new Date(Date.now() - 8 * 60000),
-          action: "Cleared access route",
-          performedBy: "Security Team Alpha",
-        },
-      ],
-      color: "red",
-    },
-    {
-      id: "INC-003",
-      type: "Crowd Congestion",
-      severity: "High",
-      zone: "Zone B - East Entrance",
-      gate: "Gate 1",
-      location: { lat: 28.6142, lng: 77.2115 },
-      timestamp: new Date(Date.now() - 20 * 60000),
-      status: "In Progress",
-      description: "Severe crowd buildup at entry checkpoint",
-      aiAnalysis:
-        "Crowd density exceeding safe levels. Risk of stampede if not addressed.",
-      prediction: "85% - Requires crowd control measures",
-      actionsTaken: [
-        "Reroute Attendees",
-        "Open Alternate Gate",
-        "Dispatch Crowd Control Team",
-      ],
-      activityLog: [
-        {
-          id: "log-1",
-          timestamp: new Date(Date.now() - 20 * 60000),
-          action: "AI detected incident",
-          performedBy: "DrishtiX AI",
-        },
-        {
-          id: "log-2",
-          timestamp: new Date(Date.now() - 18 * 60000),
-          action: "Dispatched Crowd Control Team",
-          performedBy: "Organizer - Priya Sharma",
-        },
-        {
-          id: "log-3",
-          timestamp: new Date(Date.now() - 15 * 60000),
-          action: "Opened Gate 2 as alternate",
-          performedBy: "Gate Controller",
-        },
-      ],
-      color: "amber",
-    },
-    {
-      id: "INC-004",
-      type: "Equipment Failure",
-      severity: "Medium",
-      zone: "Zone A - Main Stage",
-      location: { lat: 28.614, lng: 77.209 },
-      timestamp: new Date(Date.now() - 35 * 60000),
-      status: "In Progress",
-      description: "Sound system malfunction during performance",
-      aiAnalysis: "Technical failure detected. Backup systems recommended.",
-      prediction: "70% - Requires technical team intervention",
-      actionsTaken: ["Dispatch Technical Team", "Setup Backup System"],
-      activityLog: [
-        {
-          id: "log-1",
-          timestamp: new Date(Date.now() - 35 * 60000),
-          action: "AI detected incident",
-          performedBy: "DrishtiX AI",
-        },
-        {
-          id: "log-2",
-          timestamp: new Date(Date.now() - 30 * 60000),
-          action: "Dispatched Technical Team",
-          performedBy: "Stage Manager",
-        },
-      ],
-      color: "yellow",
-    },
-    {
-      id: "INC-005",
-      type: "Lost Person",
-      severity: "Low",
-      zone: "Zone D - Parking Area",
-      location: { lat: 28.6148, lng: 77.2095 },
-      timestamp: new Date(Date.now() - 45 * 60000),
-      status: "Action Taken",
-      description: "Child separated from parent, age 6",
-      aiAnalysis:
-        "Missing person report. Low urgency but requires volunteer assistance.",
-      prediction: "Person likely within venue perimeter",
-      actionsTaken: ["Notify Volunteers", "Broadcast Description"],
-      activityLog: [
-        {
-          id: "log-1",
-          timestamp: new Date(Date.now() - 45 * 60000),
-          action: "Report received",
-          performedBy: "Volunteer - Gate 4",
-        },
-        {
-          id: "log-2",
-          timestamp: new Date(Date.now() - 40 * 60000),
-          action: "Broadcasted description to all volunteers",
-          performedBy: "Volunteer Coordinator",
-        },
-      ],
-      color: "yellow",
-    },
-    {
-      id: "INC-006",
-      type: "Security Threat",
-      severity: "High",
-      zone: "Zone B - VIP Section",
-      gate: "Gate 5",
-      location: { lat: 28.6143, lng: 77.2108 },
-      timestamp: new Date(Date.now() - 60 * 60000),
-      status: "Resolved",
-      description: "Unauthorized access attempt detected",
-      aiAnalysis: "Security breach detected and neutralized. Suspect detained.",
-      prediction: "Threat neutralized",
-      actionsTaken: [
-        "Dispatch Security",
-        "Alert Law Enforcement",
-        "Close Nearby Gates",
-      ],
-      activityLog: [
-        {
-          id: "log-1",
-          timestamp: new Date(Date.now() - 60 * 60000),
-          action: "AI detected incident",
-          performedBy: "DrishtiX AI",
-        },
-        {
-          id: "log-2",
-          timestamp: new Date(Date.now() - 58 * 60000),
-          action: "Dispatched Security Team",
-          performedBy: "Security Chief",
-        },
-        {
-          id: "log-3",
-          timestamp: new Date(Date.now() - 50 * 60000),
-          action: "Suspect detained",
-          performedBy: "Security Team Bravo",
-        },
-        {
-          id: "log-4",
-          timestamp: new Date(Date.now() - 45 * 60000),
-          action: "Incident resolved",
-          performedBy: "Security Chief",
-        },
-      ],
-      color: "green",
-    },
-  ];
+// Convert API incident to UI incident format
+const convertAPIIncident = (apiIncident: APIIncident): Incident => {
+  // Map severity
+  const severityMap: Record<string, string> = {
+    'CRITICAL': 'Critical',
+    'HIGH': 'High',
+    'MEDIUM': 'Medium',
+    'LOW': 'Low'
+  };
+
+  // Map status
+  const statusMap: Record<string, string> = {
+    'ACTIVE': 'New',
+    'IN_PROGRESS': 'In Progress',
+    'RESOLVED': 'Resolved',
+    'CLOSED': 'Resolved'
+  };
+
+  // Get color based on severity
+  const getColorBySeverity = (severity: string): string => {
+    switch (severity.toUpperCase()) {
+      case 'CRITICAL': return 'red';
+      case 'HIGH': return 'amber';
+      case 'MEDIUM': return 'yellow';
+      case 'LOW': return 'blue';
+      default: return 'gray';
+    }
+  };
+
+  return {
+    id: apiIncident.id,
+    type: apiIncident.type,
+    severity: severityMap[apiIncident.severity] || apiIncident.severity,
+    zone: apiIncident.location,
+    location: apiIncident.coordinates || { lat: 0, lng: 0 },
+    timestamp: typeof apiIncident.createdAt === 'string' 
+      ? new Date(apiIncident.createdAt) 
+      : apiIncident.createdAt || new Date(),
+    status: statusMap[apiIncident.status] || apiIncident.status,
+    description: apiIncident.description,
+    aiAnalysis: apiIncident.aiSummary || '',
+    prediction: apiIncident.confidence ? `${apiIncident.confidence}% confidence` : '',
+    actionsTaken: apiIncident.responders?.map(r => `Assigned ${r}`) || [],
+    activityLog: [
+      {
+        id: '1',
+        timestamp: typeof apiIncident.createdAt === 'string' 
+          ? new Date(apiIncident.createdAt) 
+          : apiIncident.createdAt || new Date(),
+        action: 'Incident created',
+        performedBy: apiIncident.detectedBy || apiIncident.reportedBy || 'System'
+      }
+    ],
+    color: getColorBySeverity(apiIncident.severity),
+    eventId: apiIncident.eventId,
+    assignedTo: apiIncident.assignedTo,
+    responders: apiIncident.responders
+  };
 };
 
-export function AlertsIncidentCenter({ onBack }: AlertsIncidentCenterProps) {
-  const [incidents, setIncidents] = useState<Incident[]>(
-    generateMockIncidents()
-  );
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(
-    null
-  );
+export function AlertsIncidentCenter({ onBack, eventId = 'default-event' }: AlertsIncidentCenterProps) {
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filterSeverity, setFilterSeverity] = useState<string>("All");
   const [showResolved, setShowResolved] = useState(false);
@@ -369,6 +230,51 @@ export function AlertsIncidentCenter({ onBack }: AlertsIncidentCenterProps) {
     incident: Incident;
     action: string;
   } | null>(null);
+
+  // Load incidents from backend
+  useEffect(() => {
+    const loadIncidents = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await incidentService.getEventIncidents(eventId);
+        if (response.success && response.data) {
+          const convertedIncidents = response.data.map(convertAPIIncident);
+          setIncidents(convertedIncidents);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load incidents');
+        console.error('Error loading incidents:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadIncidents();
+  }, [eventId]);
+
+  // Subscribe to real-time incident updates via WebSocket
+  useEffect(() => {
+    const unsubscribe = incidentService.subscribeToIncidents(eventId, (apiIncident) => {
+      const newIncident = convertAPIIncident(apiIncident);
+      setIncidents(prev => {
+        const existingIndex = prev.findIndex(inc => inc.id === newIncident.id);
+        if (existingIndex >= 0) {
+          // Update existing incident
+          const updated = [...prev];
+          updated[existingIndex] = newIncident;
+          return updated;
+        } else {
+          // Add new incident
+          return [newIncident, ...prev];
+        }
+      });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [eventId]);
 
   // Sort incidents by severity
   const sortedIncidents = [...incidents].sort((a, b) => {

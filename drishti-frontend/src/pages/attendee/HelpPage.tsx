@@ -2,6 +2,7 @@ import { FindAndHelpSystem } from '../../components/attendee/FindAndHelpSystem';
 import { MedicalAssistanceSystem } from '../../components/attendee/MedicalAssistanceSystem';
 import { FAQChatbot } from '../../components/shared/FAQChatbot';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HelpCircle, Heart, MessageCircle } from 'lucide-react';
 
 /**
@@ -9,6 +10,7 @@ import { HelpCircle, Heart, MessageCircle } from 'lucide-react';
  * Help, support, and assistance services
  */
 export default function HelpPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'find' | 'medical' | 'faq'>('find');
 
   const tabs = [
