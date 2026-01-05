@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { dispatchService } from "../../services/dispatch.service";
+import { gateControlService } from "../../services/gate-control.service";
 import {
   Plus,
   Edit,
@@ -45,59 +47,52 @@ export function OrganizerCRUDPanel({ onBack }: OrganizerCRUDPanelProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for different categories
-  const [teamsData, setTeamsData] = useState<CRUDItem[]>([
-    {
-      id: "1",
-      name: "Security Team Alpha",
-      type: "Security",
-      status: "Active",
-      details: { members: 12, location: "Main Stage", shift: "Day" },
-      createdAt: "2025-01-10",
-      updatedAt: "2025-01-15",
-    },
-    {
-      id: "2",
-      name: "Medical Response Unit 1",
-      type: "Medical",
-      status: "Active",
-      details: { members: 6, location: "Food Court", shift: "Day" },
-      createdAt: "2025-01-11",
-      updatedAt: "2025-01-15",
-    },
-    {
-      id: "3",
-      name: "Volunteer Coordinators",
-      type: "Volunteer",
-      status: "On Break",
-      details: { members: 8, location: "VIP Area", shift: "Night" },
-      createdAt: "2025-01-12",
-      updatedAt: "2025-01-14",
-    },
-  ]);
+  // Load data from API
+  const [teamsData, setTeamsData] = useState<CRUDItem[]>([]);
+  const [zonesData, setZonesData] = useState<CRUDItem[]>([]);
 
-  const [zonesData, setZonesData] = useState<CRUDItem[]>([
-    {
-      id: "1",
-      name: "Main Stage Area",
-      type: "Zone",
-      status: "Critical",
-      details: { capacity: 10000, currentOccupancy: 8500, safetyScore: 76 },
-      createdAt: "2025-01-10",
-      updatedAt: "2025-01-15",
-    },
-    {
-      id: "2",
-      name: "Food Court Zone",
-      type: "Zone",
-      status: "Normal",
-      details: { capacity: 3500, currentOccupancy: 2100, safetyScore: 92 },
-      createdAt: "2025-01-10",
-      updatedAt: "2025-01-15",
-    },
-    {
-      id: "3",
+  useEffect(() => {
+    if (eventId) {
+      loadData();
+    }
+  }, [eventId]);
+
+  const loadData = async () => {
+    if (!eventId) return;
+    try {
+      setLoading(true);
+      const [teams, zones] = await Promise.all([
+        dispatchService.getTeams(eventId),
+        gateControlService.getZones(eventId)
+      ]);
+      
+      setTeamsData((teams.data || []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        type: t.type,
+        status: t.status,
+        details: { members: t.members?.length || 0, location: t.location, shift: 'Day' },
+        createdAt: new Date(t.createdAt).toISOString().split('T')[0],
+        updatedAt: new Date(t.updatedAt).toISOString().split('T')[0]
+      })));
+      
+      setZonesData((zones.data || []).map((z: any) => ({
+        id: z.id,
+        name: z.name,
+        type: 'Zone',
+        status: z.density > 70 ? 'Critical' : 'Normal',
+        details: { capacity: z.capacity, currentOccupancy: z.currentOccupancy, safetyScore: z.safetyScore || 85 },
+        createdAt: new Date(z.createdAt || Date.now()).toISOString().split('T')[0],
+        updatedAt: new Date(z.updatedAt || Date.now()).toISOString().split('T')[0]
+      })));
+    } catch (error) {
+      console.error('Failed to load CRUD data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
       name: "VIP Lounge",
       type: "Zone",
       status: "Normal",

@@ -415,6 +415,12 @@ class VideoAnalyticsService {
     mat: any
   ): Promise<VideoAnomaly[]> {
     try {
+      // Fetch event data for accurate context
+      const event = await prisma.event.findUnique({
+        where: { id: input.eventId },
+        select: { type: true, expectedAttendees: true }
+      });
+
       // Encode frame as base64 for YOLO Vision
       const jpegBuffer = cv.imencode('.jpg', mat);
       const base64Image = jpegBuffer.toString('base64');
@@ -424,8 +430,8 @@ class VideoAnalyticsService {
         eventId: input.eventId,
         imageData: base64Image,
         contextData: {
-          eventType: 'concert', // TODO: Get from event data
-          expectedCrowd: 10000, // TODO: Get from event data
+          eventType: event?.type || 'concert',
+          expectedCrowd: event?.expectedAttendees || 10000,
           currentCrowd: 0, // Will be filled by people count
           timeOfDay: new Date().getHours() >= 18 ? 'evening' : 'day',
           location: `${input.location.lat},${input.location.lon}`,

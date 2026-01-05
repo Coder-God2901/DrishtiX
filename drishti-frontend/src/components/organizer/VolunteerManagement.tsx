@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   Users,
   Plus,
@@ -22,9 +22,9 @@ import {
   MessageSquare,
   Award,
   TrendingUp,
-} from "lucide-react";
-import { volunteerService, Volunteer } from "../../services/volunteer.service";
-import { wsService } from "../../services/websocket.service";
+} from 'lucide-react';
+import { volunteerService, Volunteer } from '../../services/volunteer.service';
+import { wsService } from '../../services/websocket.service';
 
 interface VolunteerManagementProps {
   onBack?: () => void;
@@ -33,12 +33,10 @@ interface VolunteerManagementProps {
 
 export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: VolunteerManagementProps) {
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<
-    "all" | "available" | "assigned" | "break" | "offline"
-  >("all");
-  const [filterZone, setFilterZone] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"name" | "tasks" | "rating">("name");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'assigned' | 'break' | 'offline'>('all');
+  const [filterZone, setFilterZone] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'name' | 'tasks' | 'rating'>('name');
   const [isLiveConnected, setIsLiveConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
@@ -49,22 +47,20 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(
-    null
-  );
+  const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(null);
 
   // Form states
   const [formData, setFormData] = useState({
-    name: "",
-    role: "",
-    zone: "",
-    contactNumber: "",
+    name: '',
+    role: '',
+    zone: '',
+    contactNumber: '',
     skills: [] as string[],
   });
-  const [skillInput, setSkillInput] = useState("");
+  const [skillInput, setSkillInput] = useState('');
 
   useEffect(() => {
-    console.log("👥 VolunteerManagement: Loading volunteers for event:", eventId);
+    console.log('👥 VolunteerManagement: Loading volunteers for event:', eventId);
     setIsLiveConnected(true);
     loadVolunteers();
 
@@ -85,9 +81,9 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
   }, [eventId]);
 
   const handleVolunteerUpdate = (volunteer: Volunteer) => {
-    console.log("👥 Volunteer update received:", volunteer);
-    setVolunteers(prev => {
-      const index = prev.findIndex(v => v.id === volunteer.id);
+    console.log('👥 Volunteer update received:', volunteer);
+    setVolunteers((prev) => {
+      const index = prev.findIndex((v) => v.id === volunteer.id);
       if (index >= 0) {
         const updated = [...prev];
         updated[index] = volunteer;
@@ -100,15 +96,13 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
   };
 
   const handleLocationUpdate = (data: { volunteerId: string; location: any }) => {
-    console.log("📍 Volunteer location update:", data);
-    setVolunteers(prev => prev.map(v => 
-      v.id === data.volunteerId ? { ...v, location: data.location } : v
-    ));
+    console.log('📍 Volunteer location update:', data);
+    setVolunteers((prev) => prev.map((v) => (v.id === data.volunteerId ? { ...v, location: data.location } : v)));
     setLastUpdate(new Date());
   };
 
   const handleTaskUpdate = (data: any) => {
-    console.log("✅ Task update received:", data);
+    console.log('✅ Task update received:', data);
     loadVolunteers(); // Reload to get updated task info
   };
 
@@ -141,14 +135,13 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
         volunteer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         volunteer.role.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus =
-        filterStatus === "all" || volunteer.status === filterStatus;
+      const matchesStatus = filterStatus === 'all' || volunteer.status === filterStatus;
 
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case "name":
+        case 'name':
           return a.name.localeCompare(b.name);
         default:
           return 0;
@@ -157,19 +150,15 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
 
   const stats = {
     total: volunteers.length,
-    available: volunteers.filter((v) => v.status === "available").length,
-    assigned: volunteers.filter((v) => v.status === "assigned").length,
-    onBreak: volunteers.filter((v) => v.status === "break").length,
-    offline: volunteers.filter((v) => v.status === "offline").length,
+    available: volunteers.filter((v) => v.status === 'available').length,
+    assigned: volunteers.filter((v) => v.status === 'assigned').length,
+    onBreak: volunteers.filter((v) => v.status === 'break').length,
+    offline: volunteers.filter((v) => v.status === 'offline').length,
   };
 
   const handleAddVolunteer = async () => {
-    if (
-      !formData.name ||
-      !formData.role ||
-      !formData.contactNumber
-    ) {
-      alert("Please fill in all required fields");
+    if (!formData.name || !formData.role || !formData.contactNumber) {
+      alert('Please fill in all required fields');
       return;
     }
 
@@ -177,12 +166,12 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
     try {
       const response = await volunteerService.createVolunteer({
         eventId,
-        userId: 'temp-user-' + Date.now(), // TODO: Get from auth context
+        userId: (window as any).__user?.id || `user-${Date.now()}`,
         name: formData.name,
-        email: formData.contactNumber + '@event.local', // TODO: Get real email
+        email: formData.email || formData.contactNumber + '@event.local',
         phone: formData.contactNumber,
         role: formData.role,
-        status: "offline",
+        status: 'offline',
         skills: formData.skills,
       });
 
@@ -254,7 +243,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
   };
 
   const handleAssignTask = async (volunteerId: string) => {
-    const taskDescription = prompt("Enter task description:");
+    const taskDescription = prompt('Enter task description:');
     if (!taskDescription) return;
 
     const taskType = prompt("Enter task type (e.g., 'crowd-control', 'first-aid', 'registration'):");
@@ -284,8 +273,8 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
   const handleStatusChange = async (volunteerId: string, newStatus: string) => {
     setIsLoading(true);
     try {
-      const response = await volunteerService.updateVolunteer(volunteerId, { 
-        status: newStatus as any 
+      const response = await volunteerService.updateVolunteer(volunteerId, {
+        status: newStatus as any,
       });
 
       if (response.success) {
@@ -303,13 +292,13 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      role: "",
-      zone: "",
-      contactNumber: "",
+      name: '',
+      role: '',
+      zone: '',
+      contactNumber: '',
       skills: [],
     });
-    setSkillInput("");
+    setSkillInput('');
   };
 
   const openEditModal = (volunteer: Volunteer) => {
@@ -330,7 +319,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
         ...formData,
         skills: [...formData.skills, skillInput.trim()],
       });
-      setSkillInput("");
+      setSkillInput('');
     }
   };
 
@@ -341,26 +330,26 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
     });
   };
 
-  const getStatusColor = (status: Volunteer["status"]) => {
+  const getStatusColor = (status: Volunteer['status']) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-700";
-      case "break":
-        return "bg-yellow-100 text-yellow-700";
-      case "offline":
-        return "bg-slate-100 text-slate-700";
+      case 'active':
+        return 'bg-green-100 text-green-700';
+      case 'break':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'offline':
+        return 'bg-slate-100 text-slate-700';
       default:
-        return "bg-slate-100 text-slate-700";
+        return 'bg-slate-100 text-slate-700';
     }
   };
 
-  const getStatusIcon = (status: Volunteer["status"]) => {
+  const getStatusIcon = (status: Volunteer['status']) => {
     switch (status) {
-      case "active":
+      case 'active':
         return <CheckCircle className="w-4 h-4" />;
-      case "break":
+      case 'break':
         return <Clock className="w-4 h-4" />;
-      case "offline":
+      case 'offline':
         return <XCircle className="w-4 h-4" />;
       default:
         return <AlertCircle className="w-4 h-4" />;
@@ -385,15 +374,11 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                 )}
               </h1>
               <p className="text-slate-600 text-sm">
-                Manage your volunteer workforce • Updated{" "}
-                {lastUpdate.toLocaleTimeString()}
+                Manage your volunteer workforce • Updated {lastUpdate.toLocaleTimeString()}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={loadVolunteers}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-all"
-              >
+              <button onClick={loadVolunteers} className="p-2 hover:bg-slate-100 rounded-lg transition-all">
                 <RefreshCw className="w-5 h-5 text-slate-700" />
               </button>
               <button
@@ -430,9 +415,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
               <Clock className="w-5 h-5 text-yellow-600" />
               <p className="text-slate-600 text-sm">On Break</p>
             </div>
-            <p className="text-2xl font-bold text-yellow-700">
-              {stats.onBreak}
-            </p>
+            <p className="text-2xl font-bold text-yellow-700">{stats.onBreak}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-all">
             <div className="flex items-center gap-2 mb-2">
@@ -446,18 +429,14 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
               <p className="text-slate-600 text-sm">Avg Rating</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">
-              {stats.avgRating.toFixed(1)}
-            </p>
+            <p className="text-2xl font-bold text-slate-900">{stats.avgRating.toFixed(1)}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-all">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="w-5 h-5 text-green-600" />
               <p className="text-slate-600 text-sm">Tasks Done</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">
-              {stats.totalTasks}
-            </p>
+            <p className="text-2xl font-bold text-slate-900">{stats.totalTasks}</p>
           </div>
         </div>
 
@@ -514,40 +493,21 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Volunteer
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Role
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Zone
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Tasks
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Rating
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Actions
-                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Volunteer</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Role</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Zone</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Status</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Tasks</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Rating</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {filteredVolunteers.map((volunteer) => (
-                  <tr
-                    key={volunteer.id}
-                    className="hover:bg-slate-50 transition-colors"
-                  >
+                  <tr key={volunteer.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          {volunteer.name}
-                        </p>
+                        <p className="text-sm font-medium text-slate-900">{volunteer.name}</p>
                         <div className="flex items-center gap-1 text-xs text-slate-600 mt-1">
                           <Phone className="w-3 h-3" />
                           {volunteer.contactNumber}
@@ -555,9 +515,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-slate-700">
-                        {volunteer.role}
-                      </span>
+                      <span className="text-sm text-slate-700">{volunteer.role}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1 text-sm text-slate-700">
@@ -588,9 +546,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="text-sm font-medium text-slate-900">
-                          {volunteer.rating.toFixed(1)}
-                        </span>
+                        <span className="text-sm font-medium text-slate-900">{volunteer.rating.toFixed(1)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -637,9 +593,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="p-6 border-b border-slate-200">
-              <h2 className="text-2xl text-slate-900">
-                {showAddModal ? "Add New Volunteer" : "Edit Volunteer"}
-              </h2>
+              <h2 className="text-2xl text-slate-900">{showAddModal ? 'Add New Volunteer' : 'Edit Volunteer'}</h2>
             </div>
             <div className="p-6 space-y-4">
               <div>
@@ -647,9 +601,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter volunteer name"
                 />
@@ -659,9 +611,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                 <input
                   type="text"
                   value={formData.role}
-                  onChange={(e) =>
-                    setFormData({ ...formData, role: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Crowd Management, Medical Support"
                 />
@@ -671,23 +621,17 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                 <input
                   type="text"
                   value={formData.zone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, zone: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Section A, Main Entrance"
                 />
               </div>
               <div>
-                <label className="block text-slate-700 mb-2">
-                  Contact Number *
-                </label>
+                <label className="block text-slate-700 mb-2">Contact Number *</label>
                 <input
                   type="tel"
                   value={formData.contactNumber}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contactNumber: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="+91 98765 43210"
                 />
@@ -699,7 +643,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                     type="text"
                     value={skillInput}
                     onChange={(e) => setSkillInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && addSkill()}
+                    onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                     className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Add a skill"
                   />
@@ -717,10 +661,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                       className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm flex items-center gap-2"
                     >
                       {skill}
-                      <button
-                        onClick={() => removeSkill(skill)}
-                        className="hover:text-blue-900"
-                      >
+                      <button onClick={() => removeSkill(skill)} className="hover:text-blue-900">
                         ×
                       </button>
                     </span>
@@ -731,9 +672,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
             <div className="p-6 border-t border-slate-200 flex gap-3">
               <button
                 onClick={() => {
-                  showAddModal
-                    ? setShowAddModal(false)
-                    : setShowEditModal(false);
+                  showAddModal ? setShowAddModal(false) : setShowEditModal(false);
                   resetForm();
                 }}
                 className="flex-1 px-6 py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all"
@@ -741,12 +680,10 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                 Cancel
               </button>
               <button
-                onClick={
-                  showAddModal ? handleAddVolunteer : handleUpdateVolunteer
-                }
+                onClick={showAddModal ? handleAddVolunteer : handleUpdateVolunteer}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg transition-all"
               >
-                {showAddModal ? "Add Volunteer" : "Save Changes"}
+                {showAddModal ? 'Add Volunteer' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -761,15 +698,11 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="w-6 h-6 text-red-600" />
               </div>
-              <h2 className="text-2xl text-slate-900 text-center">
-                Remove Volunteer?
-              </h2>
+              <h2 className="text-2xl text-slate-900 text-center">Remove Volunteer?</h2>
             </div>
             <div className="p-6">
               <p className="text-slate-700 text-center">
-                Are you sure you want to remove{" "}
-                <strong>{selectedVolunteer.name}</strong> from the volunteer
-                list?
+                Are you sure you want to remove <strong>{selectedVolunteer.name}</strong> from the volunteer list?
               </p>
             </div>
             <div className="p-6 border-t border-slate-200 flex gap-3">
@@ -803,9 +736,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                   {selectedVolunteer.name.charAt(0)}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-slate-900">
-                    {selectedVolunteer.name}
-                  </h3>
+                  <h3 className="text-xl font-bold text-slate-900">{selectedVolunteer.name}</h3>
                   <p className="text-slate-600">{selectedVolunteer.role}</p>
                   <div
                     className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm mt-2 ${getStatusColor(
@@ -821,45 +752,31 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <p className="text-xs text-blue-600 mb-1">Zone</p>
-                  <p className="text-lg font-bold text-slate-900">
-                    {selectedVolunteer.zone}
-                  </p>
+                  <p className="text-lg font-bold text-slate-900">{selectedVolunteer.zone}</p>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4">
                   <p className="text-xs text-green-600 mb-1">Rating</p>
-                  <p className="text-lg font-bold text-slate-900">
-                    {selectedVolunteer.rating.toFixed(1)} ⭐
-                  </p>
+                  <p className="text-lg font-bold text-slate-900">{selectedVolunteer.rating.toFixed(1)} ⭐</p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-4">
                   <p className="text-xs text-purple-600 mb-1">Tasks Assigned</p>
-                  <p className="text-lg font-bold text-slate-900">
-                    {selectedVolunteer.assignedTasks}
-                  </p>
+                  <p className="text-lg font-bold text-slate-900">{selectedVolunteer.assignedTasks}</p>
                 </div>
                 <div className="bg-amber-50 rounded-lg p-4">
                   <p className="text-xs text-amber-600 mb-1">Tasks Completed</p>
-                  <p className="text-lg font-bold text-slate-900">
-                    {selectedVolunteer.completedTasks}
-                  </p>
+                  <p className="text-lg font-bold text-slate-900">{selectedVolunteer.completedTasks}</p>
                 </div>
               </div>
 
               <div>
                 <p className="text-slate-700 font-medium mb-2">Contact</p>
-                <p className="text-slate-600">
-                  {selectedVolunteer.contactNumber}
-                </p>
+                <p className="text-slate-600">{selectedVolunteer.contactNumber}</p>
               </div>
 
               {selectedVolunteer.currentTask && (
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <p className="text-slate-700 font-medium mb-2">
-                    Current Task
-                  </p>
-                  <p className="text-slate-600">
-                    {selectedVolunteer.currentTask}
-                  </p>
+                  <p className="text-slate-700 font-medium mb-2">Current Task</p>
+                  <p className="text-slate-600">{selectedVolunteer.currentTask}</p>
                 </div>
               )}
 
@@ -867,10 +784,7 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                 <p className="text-slate-700 font-medium mb-2">Skills</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedVolunteer.skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
-                    >
+                    <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                       {skill}
                     </span>
                   ))}
@@ -886,16 +800,11 @@ export function VolunteerManagement({ onBack, eventId = 'default-event-id' }: Vo
                 </button>
                 <button
                   onClick={() =>
-                    handleChangeStatus(
-                      selectedVolunteer.id,
-                      selectedVolunteer.status === "active" ? "break" : "active"
-                    )
+                    handleChangeStatus(selectedVolunteer.id, selectedVolunteer.status === 'active' ? 'break' : 'active')
                   }
                   className="flex-1 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-all"
                 >
-                  {selectedVolunteer.status === "active"
-                    ? "Set Break"
-                    : "Set Active"}
+                  {selectedVolunteer.status === 'active' ? 'Set Break' : 'Set Active'}
                 </button>
               </div>
             </div>

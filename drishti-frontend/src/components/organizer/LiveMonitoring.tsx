@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  ArrowLeft, 
-  Activity, 
-  AlertTriangle, 
-  Shield, 
-  Users, 
+import {
+  ArrowLeft,
+  Activity,
+  AlertTriangle,
+  Shield,
+  Users,
   Ambulance,
   Clock,
   Radio,
@@ -22,16 +22,21 @@ import {
   CloudRain,
   ArrowUp,
   ArrowDown,
-  UserCheck
+  UserCheck,
 } from 'lucide-react';
 import { useIncidents } from '../../services/incidentContext';
 import { LeafletMap } from '../shared/LeafletMap';
 import { IncidentDrawer } from '../shared/IncidentDrawer';
 import { Incident } from '../../services/incidentManagementService';
+import { analyticsService } from '../../services/analytics.service';
+import { dispatchService } from '../../services/dispatch.service';
+import { weatherService } from '../../services/weather.service';
+import { wsService } from '../../services/ws.service';
 
 interface LiveMonitoringProps {
   onBack: () => void;
   setCurrentView?: (view: string) => void;
+  eventId?: string;
 }
 
 interface LiveKPI {
@@ -65,7 +70,7 @@ function useLiveMonitoring(eventId: string) {
     warnings: 0,
     safeZones: 0,
     currentAttendance: 0,
-    activeTeams: 0
+    activeTeams: 0,
   });
 
   const [attendanceFlow, setAttendanceFlow] = useState({ inflow: 0, outflow: 0 });
@@ -73,12 +78,12 @@ function useLiveMonitoring(eventId: string) {
   const [teamBreakdown, setTeamBreakdown] = useState({
     medical: { active: 0, idle: 0 },
     security: { active: 0, idle: 0 },
-    volunteers: { active: 0, idle: 0 }
+    volunteers: { active: 0, idle: 0 },
   });
   const [weather, setWeather] = useState({
     condition: 'Loading...',
     temperature: 0,
-    rainProbability: 0
+    rainProbability: 0,
   });
 
   const [teams, setTeams] = useState<TeamMarker[]>([]);
@@ -96,27 +101,35 @@ function useLiveMonitoring(eventId: string) {
             warnings: (data as any).warnings || 0,
             safeZones: (data as any).safeZones || 0,
             currentAttendance: (data as any).currentAttendance || 0,
-            activeTeams: (data as any).activeTeams || 0
+            activeTeams: (data as any).activeTeams || 0,
           });
         }
 
         // Load teams
         const teamsResponse = await dispatchService.getTeams(eventId);
         if (teamsResponse.success && teamsResponse.data) {
-          setTeams(teamsResponse.data.map(t => ({
-            id: t.id,
-            name: t.name,
-            position: t.location,
-            status: t.status === 'available' ? 'idle' : 'active',
-            type: t.type
-          })));
-          
-          const medical = teamsResponse.data.filter(t => t.type === 'medical');
-          const security = teamsResponse.data.filter(t => t.type === 'security');
+          setTeams(
+            teamsResponse.data.map((t: any) => ({
+              id: t.id,
+              name: t.name,
+              position: t.zone || 'Main Area',
+              status: t.status === 'AVAILABLE' ? 'idle' : 'active',
+              type: t.type.toLowerCase() as 'medical' | 'security' | 'operations',
+            }))
+          );
+
+          const medical = teamsResponse.data.filter((t: any) => t.type === 'MEDICAL');
+          const security = teamsResponse.data.filter((t: any) => t.type === 'SECURITY');
           setTeamBreakdown({
-            medical: { active: medical.filter(t => t.status !== 'available').length, idle: medical.filter(t => t.status === 'available').length },
-            security: { active: security.filter(t => t.status !== 'available').length, idle: security.filter(t => t.status === 'available').length },
-            volunteers: { active: 0, idle: 0 }
+            medical: {
+              active: medical.filter((t: any) => t.status !== 'AVAILABLE').length,
+              idle: medical.filter((t: any) => t.status === 'AVAILABLE').length,
+            },
+            security: {
+              active: security.filter((t: any) => t.status !== 'AVAILABLE').length,
+              idle: security.filter((t: any) => t.status === 'AVAILABLE').length,
+            },
+            volunteers: { active: 0, idle: 0 },
           });
         }
 
@@ -127,7 +140,7 @@ function useLiveMonitoring(eventId: string) {
           setWeather({
             condition: w.conditionDescription,
             temperature: Math.round(w.temperature),
-            rainProbability: 0
+            rainProbability: 0,
           });
         }
       } catch (err) {
@@ -170,21 +183,21 @@ const percentageToLatLng = (x?: number, y?: number): [number, number] => {
   const baseLng = 72.8777;
   const latRange = 0.009;
   const lngRange = 0.009;
-  
+
   if (x === undefined || y === undefined) {
     return [baseLat, baseLng];
   }
-  
-  const lat = baseLat + (y / 100) * latRange - (latRange / 2);
-  const lng = baseLng + (x / 100) * lngRange - (lngRange / 2);
-  
+
+  const lat = baseLat + (y / 100) * latRange - latRange / 2;
+  const lng = baseLng + (x / 100) * lngRange - lngRange / 2;
+
   return [lat, lng];
 };
 
 export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-event-id' }: LiveMonitoringProps) {
   const { incidents } = useIncidents();
   const { kpis, teams, attendanceFlow, gateStatus, teamBreakdown, weather } = useLiveMonitoring(eventId);
-  
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [showIncidentDrawer, setShowIncidentDrawer] = useState(false);
@@ -194,15 +207,15 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
       type: 'incident',
       message: 'Critical incident reported at Main Stage Area',
       timestamp: new Date(Date.now() - 120000),
-      icon: AlertTriangle
+      icon: AlertTriangle,
     },
     {
       id: 'log-2',
       type: 'team-dispatch',
       message: 'Medical Alpha dispatched to Zone A',
       timestamp: new Date(Date.now() - 60000),
-      icon: Ambulance
-    }
+      icon: Ambulance,
+    },
   ]);
 
   // Update time every second
@@ -214,32 +227,34 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
     return () => clearInterval(interval);
   }, []);
 
-  // Simulate new incidents every 30-60 seconds
-  // TODO: Replace with WebSocket subscription to /ws/live-events
+  // Real-time incident updates via WebSocket
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.5 && incidents.length > 0) {
-        const randomIncident = incidents[Math.floor(Math.random() * incidents.length)];
-        const newEntry: ActivityLogEntry = {
-          id: `log-${Date.now()}`,
-          type: 'incident',
-          message: `New ${randomIncident.severity} incident: ${randomIncident.type}`,
-          timestamp: new Date(),
-          icon: AlertTriangle
-        };
-        setActivityLog(prev => [newEntry, ...prev].slice(0, 10));
-      }
-    }, 40000);
+    if (!eventId) return;
 
-    return () => clearInterval(interval);
-  }, [incidents]);
+    const handleIncidentCreated = (incident: any) => {
+      const newEntry: ActivityLogEntry = {
+        id: `log-${Date.now()}`,
+        type: 'incident',
+        message: `New ${incident.severity} incident: ${incident.type}`,
+        timestamp: new Date(),
+        icon: AlertTriangle,
+      };
+      setActivityLog((prev) => [newEntry, ...prev].slice(0, 10));
+    };
 
-  const selectedIncident = incidents.find(i => i.id === selectedIncidentId);
+    wsService.on('incident:created', handleIncidentCreated);
+
+    return () => {
+      wsService.off('incident:created', handleIncidentCreated);
+    };
+  }, [eventId]);
+
+  const selectedIncident = incidents.find((i) => i.id === selectedIncidentId);
 
   // Sort incidents by severity
   const sortedIncidents = useMemo(() => {
     return [...incidents]
-      .filter(i => i.status !== 'resolved')
+      .filter((i) => i.status !== 'resolved')
       .sort((a, b) => {
         const severityOrder = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
         return severityOrder[a.severity] - severityOrder[b.severity];
@@ -249,43 +264,47 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
   // Map markers
   const mapMarkers = useMemo(() => {
     const incidentMarkers = incidents
-      .filter(i => i.status !== 'resolved')
-      .map(incident => ({
+      .filter((i) => i.status !== 'resolved')
+      .map((incident) => ({
         id: incident.id,
         position: percentageToLatLng(incident.x, incident.y),
         label: incident.type,
-        color: incident.severity === 'critical' ? 'red' :
-               incident.severity === 'high' ? 'orange' :
-               incident.severity === 'medium' ? 'yellow' : 'blue'
+        color:
+          incident.severity === 'critical'
+            ? 'red'
+            : incident.severity === 'high'
+              ? 'orange'
+              : incident.severity === 'medium'
+                ? 'yellow'
+                : 'blue',
       }));
 
-    const teamMarkers = teams.map(team => ({
+    const teamMarkers = teams.map((team) => ({
       id: team.id,
       position: team.position,
       label: team.name,
-      color: team.type === 'medical' ? 'pink' :
-             team.type === 'security' ? 'blue' : 'green'
+      color: team.type === 'medical' ? 'pink' : team.type === 'security' ? 'blue' : 'green',
     }));
 
     return [...incidentMarkers, ...teamMarkers];
   }, [incidents, teams]);
 
   const handleIncidentClick = (incidentId: string) => {
-    const incident = incidents.find(i => i.id === incidentId);
+    const incident = incidents.find((i) => i.id === incidentId);
     if (incident) {
       // Navigate to Alerts Center to view full incident details
       if (setCurrentView) {
         setCurrentView('alerts');
       }
-      
+
       const newEntry: ActivityLogEntry = {
         id: `log-${Date.now()}`,
         type: 'incident',
         message: `Navigated to Alerts: ${incident.type} at ${incident.location}`,
         timestamp: new Date(),
-        icon: Navigation
+        icon: Navigation,
       };
-      setActivityLog(prev => [newEntry, ...prev].slice(0, 10));
+      setActivityLog((prev) => [newEntry, ...prev].slice(0, 10));
     }
   };
 
@@ -294,24 +313,29 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
     if (setCurrentView) {
       setCurrentView(route as any);
     }
-    
+
     const newEntry: ActivityLogEntry = {
       id: `log-${Date.now()}`,
       type: 'alert',
       message: `Navigated to ${action}`,
       timestamp: new Date(),
-      icon: Navigation
+      icon: Navigation,
     };
-    setActivityLog(prev => [newEntry, ...prev].slice(0, 10));
+    setActivityLog((prev) => [newEntry, ...prev].slice(0, 10));
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-700 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'low': return 'bg-blue-100 text-blue-700 border-blue-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'critical':
+        return 'bg-red-100 text-red-700 border-red-200';
+      case 'high':
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'low':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -322,10 +346,7 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={onBack}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-              >
+              <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                 <ArrowLeft className="w-6 h-6 text-slate-600" />
               </button>
               <div className="flex items-center gap-4">
@@ -340,7 +361,9 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
                       LIVE
                     </span>
                   </div>
-                  <p className="text-sm text-slate-500">Observe live conditions, incidents, and teams. Take action via dedicated control modules.</p>
+                  <p className="text-sm text-slate-500">
+                    Observe live conditions, incidents, and teams. Take action via dedicated control modules.
+                  </p>
                 </div>
               </div>
             </div>
@@ -351,9 +374,7 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-100 px-4 py-2 rounded-lg">
                 <Clock className="w-4 h-4" />
-                <span className="font-mono font-semibold">
-                  {currentTime.toLocaleTimeString()}
-                </span>
+                <span className="font-mono font-semibold">{currentTime.toLocaleTimeString()}</span>
               </div>
             </div>
           </div>
@@ -404,7 +425,10 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
             <p className="text-xs text-slate-500 mt-1">Live count • updates every 5s</p>
           </div>
 
-          <div className="bg-white rounded-xl border-2 border-purple-200 p-4 shadow-sm hover:shadow-md transition-all" title="Teams currently deployed or on standby">
+          <div
+            className="bg-white rounded-xl border-2 border-purple-200 p-4 shadow-sm hover:shadow-md transition-all"
+            title="Teams currently deployed or on standby"
+          >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Ambulance className="w-5 h-5 text-purple-600" />
@@ -436,12 +460,7 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
                 </div>
               </div>
               <div className="h-[500px]">
-                <LeafletMap 
-                  markers={mapMarkers}
-                  zoom={15}
-                  onMarkerClick={handleIncidentClick}
-                  height="500px"
-                />
+                <LeafletMap markers={mapMarkers} zoom={15} onMarkerClick={handleIncidentClick} height="500px" />
               </div>
             </div>
 
@@ -623,7 +642,8 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
           </div>
 
           {/* Right Column: Incident Feed + Weather + Activity Log */}
-          <div className="space-y-6">{/* 4️⃣ Live Incident Feed */}
+          <div className="space-y-6">
+            {/* 4️⃣ Live Incident Feed */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="bg-gradient-to-r from-red-600 to-orange-600 px-6 py-3 flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -646,10 +666,15 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
                   // Add severity group headers
                   const prevIncident = sortedIncidents[idx - 1];
                   const showGroupHeader = !prevIncident || prevIncident.severity !== incident.severity;
-                  const groupLabel = incident.severity === 'critical' ? '🔴 Critical Incidents' :
-                                     incident.severity === 'high' ? '🟠 High Priority' :
-                                     incident.severity === 'medium' ? '🟡 Medium Priority' : '🟢 Low Priority';
-                  
+                  const groupLabel =
+                    incident.severity === 'critical'
+                      ? '🔴 Critical Incidents'
+                      : incident.severity === 'high'
+                        ? '🟠 High Priority'
+                        : incident.severity === 'medium'
+                          ? '🟡 Medium Priority'
+                          : '🟢 Low Priority';
+
                   return (
                     <React.Fragment key={incident.id}>
                       {showGroupHeader && (
@@ -657,40 +682,49 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
                           <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">{groupLabel}</h4>
                         </div>
                       )}
-                      <div 
+                      <div
                         onClick={() => handleIncidentClick(incident.id)}
-                    className={`p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md ${
-                      selectedIncidentId === incident.id
-                        ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500/30'
-                        : 'border-slate-200 hover:border-indigo-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-[10px] px-2 py-1 rounded-md border font-bold uppercase ${getSeverityColor(incident.severity)}`}>
-                            {incident.severity}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {new Date(incident.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                          </span>
+                        className={`p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md ${
+                          selectedIncidentId === incident.id
+                            ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500/30'
+                            : 'border-slate-200 hover:border-indigo-300'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span
+                                className={`text-[10px] px-2 py-1 rounded-md border font-bold uppercase ${getSeverityColor(incident.severity)}`}
+                              >
+                                {incident.severity}
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                {new Date(incident.timestamp).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-sm text-slate-900">{incident.type}</h4>
+                            <div className="flex items-center gap-1 text-xs text-slate-600 mt-1">
+                              <MapPin className="w-3 h-3" />
+                              <span>{incident.location}</span>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-slate-400" />
                         </div>
-                        <h4 className="font-bold text-sm text-slate-900">{incident.type}</h4>
-                        <div className="flex items-center gap-1 text-xs text-slate-600 mt-1">
-                          <MapPin className="w-3 h-3" />
-                          <span>{incident.location}</span>
-                        </div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            incident.status === 'active'
+                              ? 'bg-red-100 text-red-700'
+                              : incident.status === 'in-progress'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-emerald-100 text-emerald-700'
+                          }`}
+                        >
+                          {incident.status.replace('-', ' ')}
+                        </span>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      incident.status === 'active' ? 'bg-red-100 text-red-700' :
-                      incident.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
-                      'bg-emerald-100 text-emerald-700'
-                    }`}>
-                      {incident.status.replace('-', ' ')}
-                    </span>
-                  </div>
                     </React.Fragment>
                   );
                 })}
@@ -728,10 +762,10 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
                 </h2>
               </div>
               <div className="h-[300px] overflow-y-auto p-4 space-y-2">
-                {activityLog.map(entry => {
+                {activityLog.map((entry) => {
                   const Icon = entry.icon;
                   return (
-                    <div 
+                    <div
                       key={entry.id}
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors"
                     >
@@ -740,9 +774,7 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-slate-700">{entry.message}</p>
-                        <p className="text-xs text-slate-500">
-                          {entry.timestamp.toLocaleTimeString()}
-                        </p>
+                        <p className="text-xs text-slate-500">{entry.timestamp.toLocaleTimeString()}</p>
                       </div>
                     </div>
                   );
@@ -755,16 +787,22 @@ export function LiveMonitoring({ onBack, setCurrentView, eventId = 'default-even
 
       {/* Incident Drawer */}
       {showIncidentDrawer && selectedIncident && (
-        <IncidentDrawer 
+        <IncidentDrawer
           incident={{
             ...selectedIncident,
-            time: new Date(selectedIncident.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-            status: selectedIncident.severity === 'critical' ? 'Critical' : 
-                    selectedIncident.severity === 'high' ? 'Critical' :
-                    selectedIncident.severity === 'medium' ? 'Warning' : 
-                    selectedIncident.status === 'resolved' ? 'Resolved' : 'In Progress'
-          }} 
-          onClose={() => setShowIncidentDrawer(false)} 
+            time: new Date(selectedIncident.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status:
+              selectedIncident.severity === 'critical'
+                ? 'Critical'
+                : selectedIncident.severity === 'high'
+                  ? 'Critical'
+                  : selectedIncident.severity === 'medium'
+                    ? 'Warning'
+                    : selectedIncident.status === 'resolved'
+                      ? 'Resolved'
+                      : 'In Progress',
+          }}
+          onClose={() => setShowIncidentDrawer(false)}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { eventService } from '../../services/event.service';
 import {
   ArrowLeft,
   Calendar,
@@ -21,7 +22,7 @@ import {
   Layers,
   Navigation,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 
 interface EventOverviewProps {
@@ -54,16 +55,46 @@ interface ActivityLog {
   icon: React.ElementType;
 }
 
-// Mock data
-function useEventOverviewData() {
-  const [eventData] = useState({
-    name: 'Mumbai Music Festival 2025',
-    status: 'scheduled' as 'draft' | 'scheduled' | 'live',
-    date: 'January 15, 2025',
-    time: '6:00 PM - 11:00 PM',
-    venue: 'MMRDA Grounds, BKC',
-    city: 'Mumbai, India'
+// API data
+function useEventOverviewData(eventId?: string) {
+  const [loading, setLoading] = useState(true);
+  const [eventData, setEventData] = useState({
+    name: '',
+    status: 'draft' as 'draft' | 'scheduled' | 'live',
+    date: '',
+    time: '',
+    venue: '',
+    city: '',
   });
+
+  useEffect(() => {
+    if (eventId) {
+      loadEventData();
+    }
+  }, [eventId]);
+
+  const loadEventData = async () => {
+    if (!eventId) return;
+    try {
+      setLoading(true);
+      const response = await eventService.getEvent(eventId);
+      const e = response.data;
+      const startDate = new Date(e.startTime);
+      const endDate = new Date(e.endTime);
+      setEventData({
+        name: e.name,
+        status: e.status === 'ACTIVE' ? 'live' : e.status === 'SCHEDULED' ? 'scheduled' : 'draft',
+        date: startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        time: `${startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`,
+        venue: e.venue || '',
+        city: e.location || '',
+      });
+    } catch (error) {
+      console.error('Failed to load event:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [kpis] = useState<KPICard[]>([
     {
@@ -71,43 +102,43 @@ function useEventOverviewData() {
       label: 'Total Registered',
       value: '12,847',
       status: 'healthy',
-      icon: Users
+      icon: Users,
     },
     {
       id: 'peak',
       label: 'Expected Peak',
       value: '15,000',
       status: 'healthy',
-      icon: TrendingUp
+      icon: TrendingUp,
     },
     {
       id: 'zones',
       label: 'Zones Configured',
       value: '15',
       status: 'healthy',
-      icon: Grid3x3
+      icon: Grid3x3,
     },
     {
       id: 'gates',
       label: 'Gates Setup',
       value: '8',
       status: 'healthy',
-      icon: DoorOpen
+      icon: DoorOpen,
     },
     {
       id: 'teams',
       label: 'Teams Assigned',
       value: '12',
       status: 'healthy',
-      icon: Shield
+      icon: Shield,
     },
     {
       id: 'volunteers',
       label: 'Volunteers Active',
       value: '45',
       status: 'warning',
-      icon: UserCheck
-    }
+      icon: UserCheck,
+    },
   ]);
 
   const [readinessChecklist] = useState<ReadinessItem[]>([
@@ -116,43 +147,43 @@ function useEventOverviewData() {
       label: 'Venue Mapped',
       status: 'complete',
       route: 'venue-mapping',
-      description: 'Venue layout and zones configured'
+      description: 'Venue layout and zones configured',
     },
     {
       id: 'teams',
       label: 'Teams Assigned',
       status: 'complete',
       route: 'teams-setup',
-      description: 'Security, medical, and support teams deployed'
+      description: 'Security, medical, and support teams deployed',
     },
     {
       id: 'volunteers',
       label: 'Volunteers Approved',
       status: 'incomplete',
       route: 'volunteer-management',
-      description: '5 volunteers pending approval'
+      description: '5 volunteers pending approval',
     },
     {
       id: 'routes',
       label: 'Emergency Routes Defined',
       status: 'complete',
       route: 'venue-mapping',
-      description: 'Evacuation paths and exits marked'
+      description: 'Evacuation paths and exits marked',
     },
     {
       id: 'digital-twin',
       label: 'Digital Twin Configured',
       status: 'incomplete',
       route: 'digital-twin',
-      description: 'Digital twin simulation not yet set up'
+      description: 'Digital twin simulation not yet set up',
     },
     {
       id: 'analytics',
       label: 'Analytics Setup',
       status: 'complete',
       route: 'analytics-setup',
-      description: 'Crowd analytics and monitoring configured'
-    }
+      description: 'Crowd analytics and monitoring configured',
+    },
   ]);
 
   const [activityLog] = useState<ActivityLog[]>([
@@ -161,36 +192,36 @@ function useEventOverviewData() {
       timestamp: new Date(Date.now() - 1000 * 60 * 15),
       message: 'Updated venue capacity to 20,000',
       type: 'edit',
-      icon: MapPin
+      icon: MapPin,
     },
     {
       id: '2',
       timestamp: new Date(Date.now() - 1000 * 60 * 45),
       message: 'Assigned 3 medical teams to Zone A',
       type: 'assignment',
-      icon: Ambulance
+      icon: Ambulance,
     },
     {
       id: '3',
       timestamp: new Date(Date.now() - 1000 * 60 * 120),
       message: 'Schedule updated: Gates open at 5:00 PM',
       type: 'schedule',
-      icon: Clock
+      icon: Clock,
     },
     {
       id: '4',
       timestamp: new Date(Date.now() - 1000 * 60 * 180),
       message: 'Approved 12 volunteers for food zone',
       type: 'approval',
-      icon: CheckCircle2
+      icon: CheckCircle2,
     },
     {
       id: '5',
       timestamp: new Date(Date.now() - 1000 * 60 * 240),
       message: 'Added emergency exit route via Gate D',
       type: 'edit',
-      icon: Navigation
-    }
+      icon: Navigation,
+    },
   ]);
 
   return { eventData, kpis, readinessChecklist, activityLog };
@@ -201,29 +232,38 @@ export function EventOverview({ onBack, onNavigate }: EventOverviewProps) {
 
   const getStatusColor = (status: 'draft' | 'scheduled' | 'live') => {
     switch (status) {
-      case 'live': return 'bg-red-500 text-white';
-      case 'scheduled': return 'bg-blue-500 text-white';
-      case 'draft': return 'bg-slate-400 text-white';
+      case 'live':
+        return 'bg-red-500 text-white';
+      case 'scheduled':
+        return 'bg-blue-500 text-white';
+      case 'draft':
+        return 'bg-slate-400 text-white';
     }
   };
 
   const getKPIColor = (status: 'healthy' | 'warning' | 'critical') => {
     switch (status) {
-      case 'healthy': return 'border-emerald-200 bg-emerald-50';
-      case 'warning': return 'border-amber-200 bg-amber-50';
-      case 'critical': return 'border-red-200 bg-red-50';
+      case 'healthy':
+        return 'border-emerald-200 bg-emerald-50';
+      case 'warning':
+        return 'border-amber-200 bg-amber-50';
+      case 'critical':
+        return 'border-red-200 bg-red-50';
     }
   };
 
   const getKPIIconColor = (status: 'healthy' | 'warning' | 'critical') => {
     switch (status) {
-      case 'healthy': return 'bg-emerald-100 text-emerald-600';
-      case 'warning': return 'bg-amber-100 text-amber-600';
-      case 'critical': return 'bg-red-100 text-red-600';
+      case 'healthy':
+        return 'bg-emerald-100 text-emerald-600';
+      case 'warning':
+        return 'bg-amber-100 text-amber-600';
+      case 'critical':
+        return 'bg-red-100 text-red-600';
     }
   };
 
-  const incompleteItems = readinessChecklist.filter(item => item.status === 'incomplete').length;
+  const incompleteItems = readinessChecklist.filter((item) => item.status === 'incomplete').length;
   const isReadyToLaunch = incompleteItems === 0;
 
   const handleGoLive = () => {
@@ -237,16 +277,15 @@ export function EventOverview({ onBack, onNavigate }: EventOverviewProps) {
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1"
-              >
+              <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1">
                 <ArrowLeft className="w-5 h-5 text-slate-600" />
               </button>
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-2xl font-semibold text-slate-900">{eventData.name}</h1>
-                  <span className={`text-xs px-3 py-1 rounded-full font-semibold uppercase ${getStatusColor(eventData.status)}`}>
+                  <span
+                    className={`text-xs px-3 py-1 rounded-full font-semibold uppercase ${getStatusColor(eventData.status)}`}
+                  >
                     {eventData.status}
                   </span>
                 </div>
@@ -272,18 +311,18 @@ export function EventOverview({ onBack, onNavigate }: EventOverviewProps) {
               onClick={handleGoLive}
               disabled={eventData.status === 'live'}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
-                eventData.status === 'live' 
-                  ? 'bg-slate-300 cursor-not-allowed text-slate-500' 
+                eventData.status === 'live'
+                  ? 'bg-slate-300 cursor-not-allowed text-slate-500'
                   : !isReadyToLaunch
-                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm hover:shadow-md'
-                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md'
+                    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm hover:shadow-md'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md'
               }`}
               title={
-                eventData.status === 'live' 
-                  ? 'Event already live' 
+                eventData.status === 'live'
+                  ? 'Event already live'
                   : !isReadyToLaunch
-                  ? `Warning: ${incompleteItems} checklist item${incompleteItems > 1 ? 's' : ''} incomplete`
-                  : 'Start live monitoring & operations'
+                    ? `Warning: ${incompleteItems} checklist item${incompleteItems > 1 ? 's' : ''} incomplete`
+                    : 'Start live monitoring & operations'
               }
             >
               <Radio className="w-5 h-5" />
@@ -298,7 +337,7 @@ export function EventOverview({ onBack, onNavigate }: EventOverviewProps) {
         <div>
           <h2 className="text-sm font-medium text-slate-600 uppercase tracking-wide mb-3">Key Metrics</h2>
           <div className="grid grid-cols-3 gap-4">
-            {kpis.map(kpi => {
+            {kpis.map((kpi) => {
               const Icon = kpi.icon;
               const isWarning = kpi.status === 'warning';
               return (
@@ -308,12 +347,8 @@ export function EventOverview({ onBack, onNavigate }: EventOverviewProps) {
                   onClick={kpi.onClick}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <div className={`p-2.5 rounded-lg ${
-                      isWarning ? 'bg-amber-50' : 'bg-slate-50'
-                    }`}>
-                      <Icon className={`w-5 h-5 ${
-                        isWarning ? 'text-amber-600' : 'text-slate-600'
-                      }`} />
+                    <div className={`p-2.5 rounded-lg ${isWarning ? 'bg-amber-50' : 'bg-slate-50'}`}>
+                      <Icon className={`w-5 h-5 ${isWarning ? 'text-amber-600' : 'text-slate-600'}`} />
                     </div>
                     {isWarning && (
                       <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
@@ -335,23 +370,22 @@ export function EventOverview({ onBack, onNavigate }: EventOverviewProps) {
             <h2 className="text-sm font-medium text-slate-600 uppercase tracking-wide">Event Readiness</h2>
             <div className="flex items-center gap-2">
               <div className="h-2 w-32 bg-slate-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
-                  style={{ width: `${(readinessChecklist.filter(i => i.status === 'complete').length / readinessChecklist.length) * 100}%` }}
+                  style={{
+                    width: `${(readinessChecklist.filter((i) => i.status === 'complete').length / readinessChecklist.length) * 100}%`,
+                  }}
                 />
               </div>
               <span className="text-sm font-medium text-slate-700">
-                {readinessChecklist.filter(i => i.status === 'complete').length} / {readinessChecklist.length}
+                {readinessChecklist.filter((i) => i.status === 'complete').length} / {readinessChecklist.length}
               </span>
             </div>
           </div>
           <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
             <div className="divide-y divide-slate-100">
-              {readinessChecklist.map(item => (
-                <div
-                  key={item.id}
-                  className="p-4 hover:bg-slate-50 transition-colors"
-                >
+              {readinessChecklist.map((item) => (
+                <div key={item.id} className="p-4 hover:bg-slate-50 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1">
                       {item.status === 'complete' ? (
@@ -434,13 +468,10 @@ export function EventOverview({ onBack, onNavigate }: EventOverviewProps) {
                 </h3>
               </div>
               <div className="h-[340px] overflow-y-auto divide-y divide-slate-100">
-                {activityLog.map(log => {
+                {activityLog.map((log) => {
                   const Icon = log.icon;
                   return (
-                    <div
-                      key={log.id}
-                      className="p-4 hover:bg-slate-50 transition-colors"
-                    >
+                    <div key={log.id} className="p-4 hover:bg-slate-50 transition-colors">
                       <div className="flex items-start gap-3">
                         <div className="p-1.5 bg-slate-100 rounded-md mt-0.5 flex-shrink-0">
                           <Icon className="w-4 h-4 text-slate-500" />
@@ -448,12 +479,14 @@ export function EventOverview({ onBack, onNavigate }: EventOverviewProps) {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-slate-900 leading-snug">{log.message}</p>
                           <p className="text-xs text-slate-400 mt-1">
-                            {log.timestamp.toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })} • {log.timestamp.toLocaleDateString([], {
+                            {log.timestamp.toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}{' '}
+                            •{' '}
+                            {log.timestamp.toLocaleDateString([], {
                               month: 'short',
-                              day: 'numeric'
+                              day: 'numeric',
                             })}
                           </p>
                         </div>
