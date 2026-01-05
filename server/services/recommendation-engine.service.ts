@@ -333,7 +333,8 @@ class RecommendationEngineService {
       densityChange: number;
       timeToEffect: number;
       success: boolean;
-    }
+    },
+    userId?: string
   ): Promise<void> {
     const feedbackData = {
       eventId,
@@ -346,7 +347,7 @@ class RecommendationEngineService {
     // Store in audit log
     await prisma.auditLog.create({
       data: {
-        userId: 'system', // TODO: Get actual user ID from context
+        userId: userId || 'system',
         action: `RECOMMENDATION_${decision}`,
         resource: 'RECOMMENDATION',
         resourceId: actionId,

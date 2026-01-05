@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { eventService } from '../../services/event.service';
+import { useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Calendar,
@@ -20,7 +22,7 @@ import {
   EyeOff,
   UserCog,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
 } from 'lucide-react';
 
 interface EventDetailsProps {
@@ -71,24 +73,53 @@ interface AccessPermission {
   emergencyOverride: boolean;
 }
 
-// Mock data hook
-function useEventDetailsData() {
+// API data hook
+function useEventDetailsData(eventId?: string) {
+  const [loading, setLoading] = useState(true);
   const [metadata, setMetadata] = useState<EventMetadata>({
-    name: 'Mumbai Music Festival 2025',
-    description: 'A grand music festival featuring international and local artists, food stalls, and entertainment zones.',
+    name: '',
+    description: '',
     type: 'Festival',
-    organizer: 'DrishtiX Events Pvt. Ltd.',
-    email: 'contact@drishti-events.com',
-    phone: '+91 22 1234 5678',
-    visibility: 'public'
+    organizer: '',
+    email: '',
+    phone: '',
+    visibility: 'public',
   });
+
+  useEffect(() => {
+    if (eventId) {
+      loadEventData();
+    }
+  }, [eventId]);
+
+  const loadEventData = async () => {
+    if (!eventId) return;
+    try {
+      setLoading(true);
+      const response = await eventService.getEvent(eventId);
+      const e = response.data;
+      setMetadata({
+        name: e.name || '',
+        description: e.description || '',
+        type: 'Festival',
+        organizer: e.organizerId || '',
+        email: 'contact@event.com',
+        phone: '+1 234 567 8900',
+        visibility: 'public',
+      });
+    } catch (error) {
+      console.error('Failed to load event:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [dateTime, setDateTime] = useState<DateTimeConfig>({
     startDate: '2025-01-15',
     startTime: '18:00',
     endDate: '2025-01-15',
     endTime: '23:00',
-    timezone: 'Asia/Kolkata (IST)'
+    timezone: 'Asia/Kolkata (IST)',
   });
 
   const [location, setLocation] = useState<LocationDetails>({
@@ -97,7 +128,7 @@ function useEventDetailsData() {
     country: 'India',
     indoor: false,
     capacity: 20000,
-    weatherSensitive: true
+    weatherSensitive: true,
   });
 
   const [operations, setOperations] = useState<OperationalSettings>({
@@ -105,7 +136,7 @@ function useEventDetailsData() {
     incidentDetection: true,
     attendeeNavigation: true,
     volunteerSystem: true,
-    digitalTwin: false
+    digitalTwin: false,
   });
 
   const [permissions] = useState<AccessPermission[]>([
@@ -114,29 +145,29 @@ function useEventDetailsData() {
       name: 'Rajesh Kumar',
       role: 'Event Manager',
       canGoLive: true,
-      emergencyOverride: true
+      emergencyOverride: true,
     },
     {
       id: '2',
       name: 'Priya Sharma',
       role: 'Operations Lead',
       canGoLive: true,
-      emergencyOverride: false
+      emergencyOverride: false,
     },
     {
       id: '3',
       name: 'Amit Patel',
       role: 'Safety Coordinator',
       canGoLive: false,
-      emergencyOverride: true
+      emergencyOverride: true,
     },
     {
       id: '4',
       name: 'Sarah Johnson',
       role: 'Viewer',
       canGoLive: false,
-      emergencyOverride: false
-    }
+      emergencyOverride: false,
+    },
   ]);
 
   return {
@@ -148,7 +179,7 @@ function useEventDetailsData() {
     setLocation,
     operations,
     setOperations,
-    permissions
+    permissions,
   };
 }
 
@@ -162,7 +193,7 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
     setLocation,
     operations,
     setOperations,
-    permissions
+    permissions,
   } = useEventDetailsData();
 
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
@@ -203,24 +234,24 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
   const operationDescriptions = {
     crowdForecasting: {
       description: 'Predict crowd density and flow patterns using AI',
-      impact: 'Enables proactive crowd management'
+      impact: 'Enables proactive crowd management',
     },
     incidentDetection: {
       description: 'Automatic detection of safety incidents and anomalies',
-      impact: 'Reduces response time for emergencies'
+      impact: 'Reduces response time for emergencies',
     },
     attendeeNavigation: {
       description: 'Provide real-time navigation to attendees via app',
-      impact: 'Improves attendee experience and reduces congestion'
+      impact: 'Improves attendee experience and reduces congestion',
     },
     volunteerSystem: {
       description: 'Manage volunteer assignments and communications',
-      impact: 'Streamlines volunteer coordination'
+      impact: 'Streamlines volunteer coordination',
     },
     digitalTwin: {
       description: 'Create virtual replica for simulations and planning',
-      impact: 'Allows scenario testing before event'
-    }
+      impact: 'Allows scenario testing before event',
+    },
   };
 
   return (
@@ -229,17 +260,12 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-8 py-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            >
+            <button onClick={onBack} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
               <h1 className="text-3xl font-bold mb-1">Event Details</h1>
-              <p className="text-purple-100 text-sm">
-                Configure event metadata, settings, and permissions
-              </p>
+              <p className="text-purple-100 text-sm">Configure event metadata, settings, and permissions</p>
             </div>
           </div>
 
@@ -291,11 +317,7 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
               onClick={() => setIsEditingMetadata(!isEditingMetadata)}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              {isEditingMetadata ? (
-                <X className="w-4 h-4 text-white" />
-              ) : (
-                <Edit3 className="w-4 h-4 text-white" />
-              )}
+              {isEditingMetadata ? <X className="w-4 h-4 text-white" /> : <Edit3 className="w-4 h-4 text-white" />}
             </button>
           </div>
           <div className="p-6 grid grid-cols-2 gap-6">
@@ -392,9 +414,13 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
               ) : (
                 <p className="text-slate-900 font-medium flex items-center gap-2">
                   {metadata.visibility === 'public' ? (
-                    <><Eye className="w-4 h-4 text-emerald-600" /> Public</>
+                    <>
+                      <Eye className="w-4 h-4 text-emerald-600" /> Public
+                    </>
                   ) : (
-                    <><EyeOff className="w-4 h-4 text-amber-600" /> Private</>
+                    <>
+                      <EyeOff className="w-4 h-4 text-amber-600" /> Private
+                    </>
                   )}
                 </p>
               )}
@@ -453,11 +479,7 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
               onClick={() => setIsEditingDateTime(!isEditingDateTime)}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              {isEditingDateTime ? (
-                <X className="w-4 h-4 text-white" />
-              ) : (
-                <Edit3 className="w-4 h-4 text-white" />
-              )}
+              {isEditingDateTime ? <X className="w-4 h-4 text-white" /> : <Edit3 className="w-4 h-4 text-white" />}
             </button>
           </div>
           <div className="p-6 grid grid-cols-3 gap-6">
@@ -576,11 +598,7 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
               onClick={() => setIsEditingLocation(!isEditingLocation)}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              {isEditingLocation ? (
-                <X className="w-4 h-4 text-white" />
-              ) : (
-                <Edit3 className="w-4 h-4 text-white" />
-              )}
+              {isEditingLocation ? <X className="w-4 h-4 text-white" /> : <Edit3 className="w-4 h-4 text-white" />}
             </button>
           </div>
           <div className="p-6 grid grid-cols-3 gap-6">
@@ -691,9 +709,13 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
               ) : (
                 <p className="text-slate-900 font-medium flex items-center gap-2">
                   {location.weatherSensitive ? (
-                    <><CloudRain className="w-4 h-4 text-amber-600" /> Yes</>
+                    <>
+                      <CloudRain className="w-4 h-4 text-amber-600" /> Yes
+                    </>
                   ) : (
-                    <><CheckCircle2 className="w-4 h-4 text-emerald-600" /> No</>
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" /> No
+                    </>
                   )}
                 </p>
               )}
@@ -731,9 +753,7 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
                         />
                         <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                       </label>
-                      <h3 className="font-bold text-slate-900 capitalize">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                      </h3>
+                      <h3 className="font-bold text-slate-900 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
                     </div>
                     <p className="text-sm text-slate-600 mb-1">{info.description}</p>
                     <p className="text-xs text-slate-500 flex items-center gap-1">
@@ -762,11 +782,13 @@ export function EventDetails({ onBack, onNavigate }: EventDetailsProps) {
                   <th className="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase">Role</th>
                   <th className="px-6 py-3 text-center text-xs font-bold text-slate-600 uppercase">Can Go Live</th>
-                  <th className="px-6 py-3 text-center text-xs font-bold text-slate-600 uppercase">Emergency Override</th>
+                  <th className="px-6 py-3 text-center text-xs font-bold text-slate-600 uppercase">
+                    Emergency Override
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {permissions.map(person => (
+                {permissions.map((person) => (
                   <tr key={person.id} className="hover:bg-slate-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">

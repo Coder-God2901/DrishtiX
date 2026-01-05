@@ -1370,3 +1370,168 @@ model ActivityLog {
   @@index([entityType, entityId])
 }
 
+// ==========================================
+// NEW MODELS FOR FRONTEND V2 COMPLETION
+// ==========================================
+
+// Automation Policies
+model AutomationPolicy {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  name            String
+  description     String?
+  
+  triggerType     AutomationTriggerType
+  triggerConditions Json  // Conditions that trigger this policy
+  
+  actions         Json[]  // Actions to execute
+  
+  priority        AutomationPriority @default(MEDIUM)
+  isActive        Boolean  @default(true)
+  
+  // Execution tracking
+  executionCount  Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+  lastExecutedAt  DateTime?
+  
+  // Relations
+  executions      AutomationExecution[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([eventId, isActive])
+  @@index([triggerType])
+}
+
+enum AutomationTriggerType {
+  CROWD_DENSITY
+  INCIDENT_CREATED
+  ALERT_LEVEL
+  TIME_BASED
+  WEATHER_CONDITION
+  GATE_CAPACITY
+  CUSTOM
+}
+
+enum AutomationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// Automation Execution History
+model AutomationExecution {
+  id              String   @id @default(uuid())
+  policyId        String
+  policy          AutomationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  
+  executedAt      DateTime
+  completedAt     DateTime?
+  
+  triggerSource   String  // What triggered this execution
+  context         Json?   // Execution context/data
+  
+  status          ExecutionStatus
+  result          Json?   // Execution result
+  error           String?
+  
+  actionsExecuted Int      @default(0)
+  
+  @@index([policyId, executedAt])
+  @@index([status])
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+// Gate Control
+model GateControl {
+  id              String   @id @default(uuid())
+  eventId         String
+  
+  name            String
+  type            GateType
+  location        Json     // { lat, lng }
+  zone            String?
+  
+  capacity        Int      @default(0)
+  status          GateStatus @default(OPEN)
+  
+  // Access control
+  accessLevel     AccessLevel @default(PUBLIC)
+  allowedTicketTypes String[]
+  
+  // Statistics
+  currentOccupancy Int     @default(0)
+  totalEntries    Int      @default(0)
+  totalExits      Int      @default(0)
+  averageWaitTime Float    @default(0) // in seconds
+  
+  // Relations
+  entries         GateEntry[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([eventId, status])
+  @@index([type])
+}
+
+enum GateType {
+  ENTRY
+  EXIT
+  ENTRY_EXIT
+  VIP
+  EMERGENCY
+}
+
+enum GateStatus {
+  OPEN
+  CLOSED
+  LOCKED
+  EMERGENCY
+  MAINTENANCE
+}
+
+enum AccessLevel {
+  PUBLIC
+  VIP
+  STAFF
+  RESTRICTED
+}
+
+// Gate Entry Logs
+model GateEntry {
+  id              String   @id @default(uuid())
+  gateId          String
+  gate            GateControl @relation(fields: [gateId], references: [id], onDelete: Cascade)
+  eventId         String
+  
+  userId          String?
+  ticketId        String?
+  
+  entryType       EntryType
+  entryTime       DateTime
+  
+  metadata        Json?    // Additional data
+  
+  @@index([gateId, entryTime])
+  @@index([eventId, entryTime])
+  @@index([userId])
+}
+
+enum EntryType {
+  ENTRY
+  EXIT
+  RE_ENTRY
+}
+

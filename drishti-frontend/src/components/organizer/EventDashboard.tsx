@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   Calendar,
   MapPin,
@@ -27,13 +27,12 @@ import {
   ArrowRight,
   Map,
   AlertOctagon,
-} from "lucide-react";
-import { IncidentDrawer } from "../shared/IncidentDrawer";
-import {
-  useIncidents,
-  useIncidentStatistics,
-} from "../../services/incidentContext";
-import type { Incident } from "../../services/incidentManagementService";
+} from 'lucide-react';
+import { IncidentDrawer } from '../shared/IncidentDrawer';
+import { useIncidents, useIncidentStatistics } from '../../services/incidentContext';
+import type { Incident } from '../../services/incidentManagementService';
+import { eventService } from '../../services/event.service';
+import { alertService } from '../../services/alert.service';
 
 interface EventDashboardProps {
   eventId: string;
@@ -43,31 +42,24 @@ interface EventDashboardProps {
   onCreateEvent: () => void;
 }
 
-export function EventDashboard({
-  eventId,
-  onNavigate,
-  onBack,
-  onSwitchEvent,
-  onCreateEvent,
-}: EventDashboardProps) {
+export function EventDashboard({ eventId, onNavigate, onBack, onSwitchEvent, onCreateEvent }: EventDashboardProps) {
   const [showEventSwitcher, setShowEventSwitcher] = useState(false);
-  const [activeMapLayer, setActiveMapLayer] = useState("Heatmap");
+  const [activeMapLayer, setActiveMapLayer] = useState('Heatmap');
   const [showOperationsLog, setShowOperationsLog] = useState(false);
-  const [activeIncidentFilter, setActiveIncidentFilter] = useState("All");
+  const [activeIncidentFilter, setActiveIncidentFilter] = useState('All');
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [showIncidentDrawer, setShowIncidentDrawer] = useState(false);
   const [showDispatchModal, setShowDispatchModal] = useState<
-    "medical" | "security" | "gate" | "broadcast" | "reroute" | null
+    'medical' | 'security' | 'gate' | 'broadcast' | 'reroute' | null
   >(null);
   const [mapSrc, setMapSrc] = useState<string>(
-    "https://www.google.com/maps?q=Bayfront%20Beach%2C%20USA&z=13&output=embed"
+    'https://www.google.com/maps?q=Bayfront%20Beach%2C%20USA&z=13&output=embed'
   );
   const [locError, setLocError] = useState<string | null>(null);
   const [iframeError, setIframeError] = useState<boolean>(false);
 
   // Use incident context to get real-time incidents
-  const { incidents: allIncidents, isLoading: incidentsLoading } =
-    useIncidents();
+  const { incidents: allIncidents, isLoading: incidentsLoading } = useIncidents();
   const incidentStats = useIncidentStatistics();
 
   const getEmbedUrl = (lat: number, lng: number) => {
@@ -77,7 +69,7 @@ export function EventDashboard({
 
   const refreshLocation = () => {
     setLocError(null);
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
@@ -85,100 +77,143 @@ export function EventDashboard({
           setMapSrc(url);
         },
         () => {
-          setLocError(
-            "Location access denied or unavailable. Showing default map."
-          );
+          setLocError('Location access denied or unavailable. Showing default map.');
           setMapSrc(getEmbedUrl(37.7749, -122.4194)); // San Francisco fallback
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
       );
     } else {
-      setLocError("Geolocation not supported. Showing default map.");
+      setLocError('Geolocation not supported. Showing default map.');
       setMapSrc(getEmbedUrl(37.7749, -122.4194)); // San Francisco fallback
     }
   };
 
   useEffect(() => {
     refreshLocation();
-  }, []);
+    loadEventData();
+  }, [eventId]);
 
-  // Mock event data
-  const event = {
-    id: eventId,
-    name: "Summer Music Festival 2025",
-    status: "Live", // 'Draft', 'Scheduled', 'Live', 'Completed'
-    date: "June 20, 2025",
-    location: "Bayfront Beach, USA",
-    capacity: 10000,
-    currentAttendees: 9485,
-    statusColor: "emerald",
-    healthScore: 92,
-    healthStatus: "Stable",
+  // Load event data from API
+  const [event, setEvent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState<any[]>([]);
+
+  const loadEventData = async () => {
+    try {
+      setLoading(true);
+      const [eventResponse, alertsResponse] = await Promise.all([
+        eventService.getEvent(eventId),
+        alertService.getEventAlerts(eventId),
+      ]);
+
+      setEvent({
+        id: eventResponse.data.id,
+        name: eventResponse.data.name,
+        status:
+          eventResponse.data.status === 'ACTIVE'
+            ? 'Live'
+            : eventResponse.data.status === 'SCHEDULED'
+              ? 'Scheduled'
+              : eventResponse.data.status === 'COMPLETED'
+                ? 'Completed'
+                : 'Draft',
+        date: new Date(eventResponse.data.startTime).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        location: eventResponse.data.venue || eventResponse.data.location,
+        capacity: eventResponse.data.expectedAttendees,
+        currentAttendees: eventResponse.data.actualAttendees || 0,
+        statusColor:
+          eventResponse.data.status === 'ACTIVE'
+            ? 'emerald'
+            : eventResponse.data.status === 'SCHEDULED'
+              ? 'blue'
+              : eventResponse.data.status === 'COMPLETED'
+                ? 'purple'
+                : 'slate',
+        healthScore: 92, // Can be calculated from metrics
+        healthStatus: 'Stable',
+      });
+
+      setAlerts(alertsResponse.data || []);
+    } catch (error) {
+      console.error('Failed to load event data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const isLive = event.status === "Live";
-  const isDraft = event.status === "Draft";
-  const isScheduled = event.status === "Scheduled";
+  if (loading || !event) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Activity className="w-8 h-8 animate-spin mx-auto mb-2" />
+          <p>Loading event data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isLive = event.status === 'Live';
+  const isDraft = event.status === 'Draft';
+  const isScheduled = event.status === 'Scheduled';
 
   // Critical stats for the alert strip
+  const criticalAlerts = alerts.filter((a) => a.severity === 'CRITICAL' || a.severity === 'critical');
+  const warnings = alerts.filter((a) => a.severity === 'MEDIUM' || a.severity === 'medium');
+  const safeZones = alerts.filter((a) => a.type === 'ZONE' && a.status === 'RESOLVED').length;
+
   const criticalStats = [
     {
       icon: <AlertTriangle className="w-5 h-5" />,
-      label: "Critical Alerts",
-      value: isLive ? "2" : "0",
-      color: "red",
-      bgColor: "bg-red-100",
-      textColor: "text-red-700",
-      borderColor: "border-red-200",
+      label: 'Critical Alerts',
+      value: isLive ? criticalAlerts.length.toString() : '0',
+      color: 'red',
+      bgColor: 'bg-red-100',
+      textColor: 'text-red-700',
+      borderColor: 'border-red-200',
     },
     {
       icon: <AlertCircle className="w-5 h-5" />,
-      label: "Warnings",
-      value: isLive ? "5" : "0",
-      color: "amber",
-      bgColor: "bg-amber-100",
-      textColor: "text-amber-700",
-      borderColor: "border-amber-200",
+      label: 'Warnings',
+      value: isLive ? warnings.length.toString() : '0',
+      color: 'amber',
+      bgColor: 'bg-amber-100',
+      textColor: 'text-amber-700',
+      borderColor: 'border-amber-200',
     },
     {
       icon: <CheckCircle2 className="w-5 h-5" />,
-      label: "Safe Zones",
-      value: isLive ? "12/15" : "15",
-      color: "emerald",
-      bgColor: "bg-emerald-100",
-      textColor: "text-emerald-700",
-      borderColor: "border-emerald-200",
+      label: 'Safe Zones',
+      value: isLive ? `${safeZones}/15` : '15',
+      color: 'emerald',
+      bgColor: 'bg-emerald-100',
+      textColor: 'text-emerald-700',
+      borderColor: 'border-emerald-200',
     },
     {
       icon: <Heart className="w-5 h-5" />,
-      label: "Medical",
+      label: 'Medical',
       value: isLive
-        ? String(
-            allIncidents.filter(
-              (i) =>
-                i.source === "attendee-medical" || i.type.includes("Medical")
-            ).length
-          )
-        : "0",
-      color: "blue",
-      bgColor: "bg-blue-100",
-      textColor: "text-blue-700",
-      borderColor: "border-blue-200",
+        ? String(allIncidents.filter((i) => i.source === 'attendee-medical' || i.type.includes('Medical')).length)
+        : '0',
+      color: 'blue',
+      bgColor: 'bg-blue-100',
+      textColor: 'text-blue-700',
+      borderColor: 'border-blue-200',
     },
     {
       icon: <Shield className="w-5 h-5" />,
-      label: "Security",
+      label: 'Security',
       value: isLive
-        ? String(
-            allIncidents.filter(
-              (i) => i.source === "attendee-sos" || i.type.includes("SOS")
-            ).length
-          )
-        : "0",
-      color: "purple",
-      bgColor: "bg-purple-100",
-      textColor: "text-purple-700",
-      borderColor: "border-purple-200",
+        ? String(allIncidents.filter((i) => i.source === 'attendee-sos' || i.type.includes('SOS')).length)
+        : '0',
+      color: 'purple',
+      bgColor: 'bg-purple-100',
+      textColor: 'text-purple-700',
+      borderColor: 'border-purple-200',
     },
   ];
 
@@ -186,18 +221,18 @@ export function EventDashboard({
   const incidents = allIncidents.map((incident) => ({
     type: incident.type,
     location: incident.location,
-    time: new Date(incident.timestamp).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
+    time: new Date(incident.timestamp).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
     }),
     status:
-      incident.severity === "critical" || incident.severity === "high"
-        ? "Critical"
-        : incident.severity === "medium"
-        ? "Warning"
-        : incident.status === "resolved"
-        ? "Resolved"
-        : "In Progress",
+      incident.severity === 'critical' || incident.severity === 'high'
+        ? 'Critical'
+        : incident.severity === 'medium'
+          ? 'Warning'
+          : incident.status === 'resolved'
+            ? 'Resolved'
+            : 'In Progress',
     color: incident.color,
     description: incident.description,
     aiAnalysis: incident.aiAnalysis,
@@ -217,15 +252,11 @@ export function EventDashboard({
 
   // Filter incidents based on active filter
   const filteredIncidents = incidents.filter((incident) => {
-    if (activeIncidentFilter === "All") return true;
-    if (activeIncidentFilter === "Critical")
-      return incident.status === "Critical";
-    if (activeIncidentFilter === "Warning")
-      return incident.status === "Warning";
-    if (activeIncidentFilter === "Info")
-      return incident.status === "In Progress";
-    if (activeIncidentFilter === "Resolved")
-      return incident.status === "Resolved";
+    if (activeIncidentFilter === 'All') return true;
+    if (activeIncidentFilter === 'Critical') return incident.status === 'Critical';
+    if (activeIncidentFilter === 'Warning') return incident.status === 'Warning';
+    if (activeIncidentFilter === 'Info') return incident.status === 'In Progress';
+    if (activeIncidentFilter === 'Resolved') return incident.status === 'Resolved';
     return true;
   });
 
@@ -233,46 +264,46 @@ export function EventDashboard({
   const workflowSteps = [
     {
       id: 1,
-      title: "Event Information",
-      description: "Basic details and event type",
-      status: "completed",
-      route: "event-details",
+      title: 'Event Information',
+      description: 'Basic details and event type',
+      status: 'completed',
+      route: 'event-details',
     },
     {
       id: 2,
-      title: "Venue Mapping",
-      description: "Digital twin and zone creation",
-      status: isDraft ? "current" : "completed",
-      route: "venue-mapping",
+      title: 'Venue Mapping',
+      description: 'Digital twin and zone creation',
+      status: isDraft ? 'current' : 'completed',
+      route: 'venue-mapping',
     },
     {
       id: 3,
-      title: "Teams & Schedules",
-      description: "Staff and volunteer assignments",
-      status: isDraft ? "pending" : "completed",
-      route: "teams-setup",
+      title: 'Teams & Schedules',
+      description: 'Staff and volunteer assignments',
+      status: isDraft ? 'pending' : 'completed',
+      route: 'teams-setup',
     },
     {
       id: 4,
-      title: "Analytics Setup",
-      description: "Configure monitoring and alerts",
-      status: "pending",
-      route: "analytics-setup",
+      title: 'Analytics Setup',
+      description: 'Configure monitoring and alerts',
+      status: 'pending',
+      route: 'analytics-setup',
     },
     {
       id: 5,
-      title: "Go Live",
-      description: "Final review and launch",
-      status: "pending",
-      route: "go-live",
+      title: 'Go Live',
+      description: 'Final review and launch',
+      status: 'pending',
+      route: 'go-live',
     },
   ];
 
   const statusColors: Record<string, string> = {
-    emerald: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    blue: "bg-blue-100 text-blue-700 border-blue-200",
-    slate: "bg-slate-100 text-slate-700 border-slate-200",
-    purple: "bg-purple-100 text-purple-700 border-purple-200",
+    emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    blue: 'bg-blue-100 text-blue-700 border-blue-200',
+    slate: 'bg-slate-100 text-slate-700 border-slate-200',
+    purple: 'bg-purple-100 text-purple-700 border-purple-200',
   };
 
   return (
@@ -282,10 +313,7 @@ export function EventDashboard({
         <div className="px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <button
-                onClick={onBack}
-                className="text-slate-600 hover:text-slate-900 transition-colors"
-              >
+              <button onClick={onBack} className="text-slate-600 hover:text-slate-900 transition-colors">
                 ← Back
               </button>
 
@@ -298,11 +326,7 @@ export function EventDashboard({
                 <div>
                   <h1 className="text-slate-900 text-xl">{event.name}</h1>
                   <div className="flex items-center gap-3 mt-1">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-md border ${
-                        statusColors[event.statusColor]
-                      }`}
-                    >
+                    <span className={`text-xs px-2 py-1 rounded-md border ${statusColors[event.statusColor]}`}>
                       {event.status}
                     </span>
                     <span className="text-slate-600 text-sm">{event.date}</span>
@@ -340,7 +364,7 @@ export function EventDashboard({
             </div>
 
             <button
-              onClick={() => onNavigate("go-live")}
+              onClick={() => onNavigate('go-live')}
               className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
             >
               <PlayCircle className="w-5 h-5" />
@@ -387,32 +411,32 @@ export function EventDashboard({
               <div className="lg:col-span-2">
                 <div
                   className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
-                  style={{ height: "500px" }}
+                  style={{ height: '500px' }}
                 >
                   {/* Map Header */}
                   <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
                     <h3 className="text-slate-900">Live Operations Map</h3>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setActiveMapLayer("Heatmap")}
+                        onClick={() => setActiveMapLayer('Heatmap')}
                         className={`px-3 py-1.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors ${
-                          activeMapLayer === "Heatmap" ? "bg-slate-50" : ""
+                          activeMapLayer === 'Heatmap' ? 'bg-slate-50' : ''
                         }`}
                       >
                         Heatmap
                       </button>
                       <button
-                        onClick={() => setActiveMapLayer("Incidents")}
+                        onClick={() => setActiveMapLayer('Incidents')}
                         className={`px-3 py-1.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors ${
-                          activeMapLayer === "Incidents" ? "bg-slate-50" : ""
+                          activeMapLayer === 'Incidents' ? 'bg-slate-50' : ''
                         }`}
                       >
                         Incidents
                       </button>
                       <button
-                        onClick={() => setActiveMapLayer("Teams")}
+                        onClick={() => setActiveMapLayer('Teams')}
                         className={`px-3 py-1.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors ${
-                          activeMapLayer === "Teams" ? "bg-slate-50" : ""
+                          activeMapLayer === 'Teams' ? 'bg-slate-50' : ''
                         }`}
                       >
                         Teams
@@ -424,23 +448,22 @@ export function EventDashboard({
                   <div
                     className="h-[calc(100%-60px)] relative"
                     style={{
-                      background:
-                        "linear-gradient(to bottom right, #f1f5f9, #cbd5e1)",
+                      background: 'linear-gradient(to bottom right, #f1f5f9, #cbd5e1)',
                     }}
                   >
                     {/* Map Placeholder */}
                     <div
                       style={{
-                        position: "absolute",
+                        position: 'absolute',
                         inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         zIndex: 0,
-                        pointerEvents: "none",
+                        pointerEvents: 'none',
                       }}
                     >
-                      <div style={{ textAlign: "center" }}>
+                      <div style={{ textAlign: 'center' }}>
                         <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-3" />
                         <p className="text-slate-600">Live Venue Map</p>
                       </div>
@@ -458,7 +481,7 @@ export function EventDashboard({
                     </div>
 
                     {/* Incident markers overlay */}
-                    {activeMapLayer === "Incidents" && (
+                    {activeMapLayer === 'Incidents' && (
                       <>
                         {incidents.map((incident, idx) => (
                           <button
@@ -469,13 +492,13 @@ export function EventDashboard({
                               left: `${incident.x}%`,
                               top: `${incident.y}%`,
                               backgroundColor:
-                                incident.color === "red"
-                                  ? "#ef4444"
-                                  : incident.color === "amber"
-                                  ? "#f59e0b"
-                                  : incident.color === "blue"
-                                  ? "#3b82f6"
-                                  : "#10b981",
+                                incident.color === 'red'
+                                  ? '#ef4444'
+                                  : incident.color === 'amber'
+                                    ? '#f59e0b'
+                                    : incident.color === 'blue'
+                                      ? '#3b82f6'
+                                      : '#10b981',
                               zIndex: 30,
                             }}
                           >
@@ -486,45 +509,45 @@ export function EventDashboard({
                     )}
 
                     {/* Heatmap overlay with enhanced blur */}
-                    {activeMapLayer === "Heatmap" && (
+                    {activeMapLayer === 'Heatmap' && (
                       <>
                         <div
                           style={{
-                            position: "absolute",
-                            top: "35%",
-                            left: "50%",
-                            width: "180px",
-                            height: "180px",
-                            backgroundColor: "rgba(239, 68, 68, 0.7)",
-                            borderRadius: "50%",
-                            filter: "blur(60px)",
+                            position: 'absolute',
+                            top: '35%',
+                            left: '50%',
+                            width: '180px',
+                            height: '180px',
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderRadius: '50%',
+                            filter: 'blur(60px)',
                             zIndex: 10,
-                            transform: "translateX(-50%)",
+                            transform: 'translateX(-50%)',
                           }}
                         />
                         <div
                           style={{
-                            position: "absolute",
-                            top: "45%",
-                            left: "25%",
-                            width: "140px",
-                            height: "140px",
-                            backgroundColor: "rgba(245, 158, 11, 0.6)",
-                            borderRadius: "50%",
-                            filter: "blur(45px)",
+                            position: 'absolute',
+                            top: '45%',
+                            left: '25%',
+                            width: '140px',
+                            height: '140px',
+                            backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                            borderRadius: '50%',
+                            filter: 'blur(45px)',
                             zIndex: 10,
                           }}
                         />
                         <div
                           style={{
-                            position: "absolute",
-                            bottom: "100px",
-                            right: "100%",
-                            width: "110px",
-                            height: "110px",
-                            backgroundColor: "rgba(34, 197, 94, 0.5)",
-                            borderRadius: "50%",
-                            filter: "blur(40px)",
+                            position: 'absolute',
+                            bottom: '100px',
+                            right: '100%',
+                            width: '110px',
+                            height: '110px',
+                            backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                            borderRadius: '50%',
+                            filter: 'blur(40px)',
                             zIndex: 10,
                           }}
                         />
@@ -532,72 +555,66 @@ export function EventDashboard({
                         {/* Zone Labels for Heatmap */}
                         <div
                           style={{
-                            position: "absolute",
-                            top: "200px",
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            backgroundColor: "#ef4444",
-                            color: "white",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            fontSize: "11px",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                            border: "2px solid white",
+                            position: 'absolute',
+                            top: '200px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            padding: '6px 10px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            border: '2px solid white',
                             zIndex: 20,
                           }}
                         >
-                          <div style={{ fontWeight: "600" }}>Main Stage</div>
-                          <div style={{ fontSize: "9px", opacity: 0.9 }}>
-                            High Density
-                          </div>
+                          <div style={{ fontWeight: '600' }}>Main Stage</div>
+                          <div style={{ fontSize: '9px', opacity: 0.9 }}>High Density</div>
                         </div>
 
                         <div
                           style={{
-                            position: "absolute",
-                            top: "50%",
-                            left: "22%",
-                            backgroundColor: "#f59e0b",
-                            color: "white",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            fontSize: "11px",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                            border: "2px solid white",
+                            position: 'absolute',
+                            top: '50%',
+                            left: '22%',
+                            backgroundColor: '#f59e0b',
+                            color: 'white',
+                            padding: '6px 10px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            border: '2px solid white',
                             zIndex: 20,
                           }}
                         >
-                          <div style={{ fontWeight: "600" }}>Food Court</div>
-                          <div style={{ fontSize: "9px", opacity: 0.9 }}>
-                            Medium Density
-                          </div>
+                          <div style={{ fontWeight: '600' }}>Food Court</div>
+                          <div style={{ fontSize: '9px', opacity: 0.9 }}>Medium Density</div>
                         </div>
 
                         <div
                           style={{
-                            position: "absolute",
-                            top: "50%",
-                            right: "18%",
-                            backgroundColor: "#16a34a",
-                            color: "white",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            fontSize: "11px",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                            border: "2px solid white",
+                            position: 'absolute',
+                            top: '50%',
+                            right: '18%',
+                            backgroundColor: '#16a34a',
+                            color: 'white',
+                            padding: '6px 10px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            border: '2px solid white',
                             zIndex: 20,
                           }}
                         >
-                          <div style={{ fontWeight: "600" }}>Exit Area</div>
-                          <div style={{ fontSize: "9px", opacity: 0.9 }}>
-                            Low Density
-                          </div>
+                          <div style={{ fontWeight: '600' }}>Exit Area</div>
+                          <div style={{ fontSize: '9px', opacity: 0.9 }}>Low Density</div>
                         </div>
                       </>
                     )}
 
                     {/* Teams overlay labels */}
-                    {activeMapLayer === "Teams" && (
+                    {activeMapLayer === 'Teams' && (
                       <>
                         <div className="absolute top-[25%] left-[20%] bg-blue-600 text-white px-2 py-1 rounded text-xs shadow-md flex items-center gap-1">
                           <Heart className="w-3 h-3" />
@@ -624,37 +641,30 @@ export function EventDashboard({
               {/* Incident Timeline */}
               <div
                 className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
-                style={{ height: "500px" }}
+                style={{ height: '500px' }}
               >
                 <div className="px-6 py-4 border-b border-slate-200">
                   <h3 className="text-slate-900">Incident Timeline</h3>
-                  <p className="text-slate-600 text-sm mt-1">
-                    Real-time event monitoring
-                  </p>
+                  <p className="text-slate-600 text-sm mt-1">Real-time event monitoring</p>
 
                   {/* Filter Controls */}
                   <div className="flex gap-1 mt-3 flex-wrap">
-                    {["All", "Critical", "Warning", "Info", "Resolved"].map(
-                      (filter) => (
-                        <button
-                          key={filter}
-                          onClick={() => setActiveIncidentFilter(filter)}
-                          className={`px-2.5 py-1 text-xs rounded transition-colors ${
-                            activeIncidentFilter === filter
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                          }`}
-                        >
-                          {filter}
-                        </button>
-                      )
-                    )}
+                    {['All', 'Critical', 'Warning', 'Info', 'Resolved'].map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setActiveIncidentFilter(filter)}
+                        className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                          activeIncidentFilter === filter
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        {filter}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div
-                  className="overflow-y-auto"
-                  style={{ height: "calc(100% - 145px)" }}
-                >
+                <div className="overflow-y-auto" style={{ height: 'calc(100% - 145px)' }}>
                   <div className="p-4 space-y-3">
                     {filteredIncidents.map((incident, idx) => (
                       <button
@@ -665,36 +675,30 @@ export function EventDashboard({
                         <div className="flex items-start gap-3">
                           <div
                             className={`w-2 h-2 rounded-full mt-1.5 ${
-                              incident.color === "red"
-                                ? "bg-red-500"
-                                : incident.color === "amber"
-                                ? "bg-amber-500"
-                                : incident.color === "blue"
-                                ? "bg-blue-500"
-                                : "bg-green-500"
+                              incident.color === 'red'
+                                ? 'bg-red-500'
+                                : incident.color === 'amber'
+                                  ? 'bg-amber-500'
+                                  : incident.color === 'blue'
+                                    ? 'bg-blue-500'
+                                    : 'bg-green-500'
                             }`}
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-slate-900 text-sm">
-                              {incident.type}
-                            </p>
-                            <p className="text-slate-600 text-xs mt-0.5">
-                              {incident.location}
-                            </p>
+                            <p className="text-slate-900 text-sm">{incident.type}</p>
+                            <p className="text-slate-600 text-xs mt-0.5">{incident.location}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <Clock className="w-3 h-3 text-slate-400" />
-                              <span className="text-slate-500 text-xs">
-                                {incident.time}
-                              </span>
+                              <span className="text-slate-500 text-xs">{incident.time}</span>
                               <span
                                 className={`text-xs px-2 py-0.5 rounded ${
-                                  incident.status === "Critical"
-                                    ? "bg-red-100 text-red-700"
-                                    : incident.status === "Warning"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : incident.status === "In Progress"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : "bg-green-100 text-green-700"
+                                  incident.status === 'Critical'
+                                    ? 'bg-red-100 text-red-700'
+                                    : incident.status === 'Warning'
+                                      ? 'bg-amber-100 text-amber-700'
+                                      : incident.status === 'In Progress'
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-green-100 text-green-700'
                                 }`}
                               >
                                 {incident.status}
@@ -715,56 +719,56 @@ export function EventDashboard({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <button
                   className="px-4 py-3 bg-red-50 text-red-700 rounded-lg border border-red-200 hover:bg-red-100 transition-colors flex items-center gap-2 justify-center"
-                  onClick={() => setShowDispatchModal("medical")}
+                  onClick={() => setShowDispatchModal('medical')}
                 >
                   <Heart className="w-4 h-4" />
                   Dispatch Medical
                 </button>
                 <button
                   className="px-4 py-3 bg-purple-50 text-purple-700 rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors flex items-center gap-2 justify-center"
-                  onClick={() => setShowDispatchModal("security")}
+                  onClick={() => setShowDispatchModal('security')}
                 >
                   <Shield className="w-4 h-4" />
                   Dispatch Security
                 </button>
                 <button
                   className="px-4 py-3 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors flex items-center gap-2 justify-center"
-                  onClick={() => setShowDispatchModal("gate")}
+                  onClick={() => setShowDispatchModal('gate')}
                 >
                   <DoorOpen className="w-4 h-4" />
                   Open/Close Gate
                 </button>
                 <button
                   className="px-4 py-3 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors flex items-center gap-2 justify-center"
-                  onClick={() => setShowDispatchModal("broadcast")}
+                  onClick={() => setShowDispatchModal('broadcast')}
                 >
                   <Bell className="w-4 h-4" />
                   Broadcast Message
                 </button>
                 <button
                   className="px-4 py-3 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 hover:bg-amber-100 transition-colors flex items-center gap-2 justify-center"
-                  onClick={() => setShowDispatchModal("reroute")}
+                  onClick={() => setShowDispatchModal('reroute')}
                 >
                   <Send className="w-4 h-4" />
                   Reroute Attendees
                 </button>
                 <button
                   className="px-4 py-3 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center gap-2 justify-center"
-                  onClick={() => onNavigate("live-monitoring")}
+                  onClick={() => onNavigate('live-monitoring')}
                 >
                   <Activity className="w-4 h-4" />
                   Open Live Monitoring
                 </button>
                 <button
                   className="px-4 py-3 bg-rose-50 text-rose-700 rounded-lg border border-rose-200 hover:bg-rose-100 transition-colors flex items-center gap-2 justify-center"
-                  onClick={() => onNavigate("alerts-center")}
+                  onClick={() => onNavigate('alerts-center')}
                 >
                   <AlertOctagon className="w-4 h-4" />
                   Open Alerts Center
                 </button>
                 <button
                   className="px-4 py-3 bg-cyan-50 text-cyan-700 rounded-lg border border-cyan-200 hover:bg-cyan-100 transition-colors flex items-center gap-2 justify-center"
-                  onClick={() => onNavigate("live-heatmap")}
+                  onClick={() => onNavigate('live-heatmap')}
                 >
                   <Map className="w-4 h-4" />
                   Open Heatmap
@@ -784,23 +788,15 @@ export function EventDashboard({
                       <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5" />
                       <div>
                         <p className="text-slate-900">Crowd Density Alert</p>
-                        <p className="text-slate-600 text-sm mt-1">
-                          Main Stage Area reaching capacity threshold
-                        </p>
+                        <p className="text-slate-600 text-sm mt-1">Main Stage Area reaching capacity threshold</p>
                       </div>
                     </div>
 
                     {/* Center: AI Suggested Action */}
                     <div className="md:col-span-5">
-                      <p className="text-slate-700 text-sm mb-1">
-                        Recommended Action
-                      </p>
-                      <p className="text-slate-900">
-                        Reroute attendees via Gate C and close Gate A
-                      </p>
-                      <p className="text-slate-500 text-xs mt-1">
-                        Crowd density rising 18% in 4 min
-                      </p>
+                      <p className="text-slate-700 text-sm mb-1">Recommended Action</p>
+                      <p className="text-slate-900">Reroute attendees via Gate C and close Gate A</p>
+                      <p className="text-slate-500 text-xs mt-1">Crowd density rising 18% in 4 min</p>
                     </div>
 
                     {/* Right: Quick Action */}
@@ -823,22 +819,14 @@ export function EventDashboard({
                       <div className="w-2 h-2 bg-amber-500 rounded-full mt-1.5" />
                       <div>
                         <p className="text-slate-900">Security Risk Detected</p>
-                        <p className="text-slate-600 text-sm mt-1">
-                          Unauthorized access detected near backstage
-                        </p>
+                        <p className="text-slate-600 text-sm mt-1">Unauthorized access detected near backstage</p>
                       </div>
                     </div>
 
                     <div className="md:col-span-5">
-                      <p className="text-slate-700 text-sm mb-1">
-                        Recommended Action
-                      </p>
-                      <p className="text-slate-900">
-                        Dispatch Security Team Bravo immediately
-                      </p>
-                      <p className="text-slate-500 text-xs mt-1">
-                        Security-risk score high • 2 incidents in zone
-                      </p>
+                      <p className="text-slate-700 text-sm mb-1">Recommended Action</p>
+                      <p className="text-slate-900">Dispatch Security Team Bravo immediately</p>
+                      <p className="text-slate-500 text-xs mt-1">Security-risk score high • 2 incidents in zone</p>
                     </div>
 
                     <div className="md:col-span-3 flex flex-col gap-2">
@@ -939,9 +927,7 @@ export function EventDashboard({
                 </div>
                 <div className="flex-1">
                   <p className="text-slate-900">Weather Conditions</p>
-                  <p className="text-slate-600 text_sm">
-                    Partly cloudy • 72°F • 20% rain probability
-                  </p>
+                  <p className="text-slate-600 text_sm">Partly cloudy • 72°F • 20% rain probability</p>
                 </div>
               </div>
             </div>
@@ -954,9 +940,7 @@ export function EventDashboard({
               >
                 <h3 className="text-slate-900">Recent Operations Log</h3>
                 <ChevronDown
-                  className={`w-5 h-5 text-slate-600 transition-transform ${
-                    showOperationsLog ? "rotate-180" : ""
-                  }`}
+                  className={`w-5 h-5 text-slate-600 transition-transform ${showOperationsLog ? 'rotate-180' : ''}`}
                 />
               </button>
               {showOperationsLog && (
@@ -965,45 +949,29 @@ export function EventDashboard({
                     <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                       <Clock className="w-4 h-4 text-slate-400 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-slate-900 text-sm">
-                          Medical Team Alpha dispatched
-                        </p>
-                        <p className="text-slate-600 text-xs mt-1">
-                          10:45 AM • Gate 3 - VIP Zone
-                        </p>
+                        <p className="text-slate-900 text-sm">Medical Team Alpha dispatched</p>
+                        <p className="text-slate-600 text-xs mt-1">10:45 AM • Gate 3 - VIP Zone</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                       <Clock className="w-4 h-4 text-slate-400 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-slate-900 text-sm">
-                          Gate A closed by AI recommendation
-                        </p>
-                        <p className="text-slate-600 text-xs mt-1">
-                          10:42 AM • System Auto-Action
-                        </p>
+                        <p className="text-slate-900 text-sm">Gate A closed by AI recommendation</p>
+                        <p className="text-slate-600 text-xs mt-1">10:42 AM • System Auto-Action</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                       <Clock className="w-4 h-4 text-slate-400 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-slate-900 text-sm">
-                          Security Team Bravo dispatched
-                        </p>
-                        <p className="text-slate-600 text-xs mt-1">
-                          10:30 AM • Backstage Area
-                        </p>
+                        <p className="text-slate-900 text-sm">Security Team Bravo dispatched</p>
+                        <p className="text-slate-600 text-xs mt-1">10:30 AM • Backstage Area</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                       <Clock className="w-4 h-4 text-slate-400 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-slate-900 text-sm">
-                          Broadcast message sent
-                        </p>
-                        <p className="text-slate-600 text-xs mt-1">
-                          10:15 AM • All Zones
-                        </p>
+                        <p className="text-slate-900 text-sm">Broadcast message sent</p>
+                        <p className="text-slate-600 text-xs mt-1">10:15 AM • All Zones</p>
                       </div>
                     </div>
                   </div>
@@ -1017,15 +985,11 @@ export function EventDashboard({
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex justify_between items-center mb-6">
                 <div>
-                  <h2 className="text-slate-900 text-2xl mb-2">
-                    Event Setup Workflow
-                  </h2>
-                  <p className="text-slate-600">
-                    Complete these steps to prepare your event
-                  </p>
+                  <h2 className="text-slate-900 text-2xl mb-2">Event Setup Workflow</h2>
+                  <p className="text-slate-600">Complete these steps to prepare your event</p>
                 </div>
                 <button
-                  onClick={() => onNavigate("workflow")}
+                  onClick={() => onNavigate('workflow')}
                   className="px-6 py-3 bg-gradient_to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md"
                 >
                   Continue Setup
@@ -1038,25 +1002,25 @@ export function EventDashboard({
                     key={step.id}
                     onClick={() => onNavigate(step.route)}
                     className={`p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
-                      step.status === "completed"
-                        ? "border-emerald-200 bg-emerald-50 hover:shadow-md"
-                        : step.status === "current"
-                        ? "border-blue-300 bg-blue-50 hover:shadow-md"
-                        : "border-slate-200 bg-white hover:bg-slate-50 hover:shadow-md"
+                      step.status === 'completed'
+                        ? 'border-emerald-200 bg-emerald-50 hover:shadow-md'
+                        : step.status === 'current'
+                          ? 'border-blue-300 bg-blue-50 hover:shadow-md'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 hover:shadow-md'
                     }`}
                   >
                     <div className="flex items-center gap-4">
                       {/* Step Number/Icon */}
                       <div
                         className={`w-12 h-12 rounded-lg flex items-center justify_center ${
-                          step.status === "completed"
-                            ? "bg-emerald-600 text-white"
-                            : step.status === "current"
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-200 text-slate-600"
+                          step.status === 'completed'
+                            ? 'bg-emerald-600 text-white'
+                            : step.status === 'current'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-slate-200 text-slate-600'
                         }`}
                       >
-                        {step.status === "completed" ? (
+                        {step.status === 'completed' ? (
                           <CheckCircle2 className="w-6 h-6" />
                         ) : (
                           <span className="text-lg">{step.id}</span>
@@ -1066,24 +1030,22 @@ export function EventDashboard({
                       {/* Step Info */}
                       <div className="flex-1">
                         <h3 className="text-slate-900 mb-1">{step.title}</h3>
-                        <p className="text-slate-600 text-sm">
-                          {step.description}
-                        </p>
+                        <p className="text-slate-600 text-sm">{step.description}</p>
                       </div>
 
                       {/* Status Badge */}
                       <div>
-                        {step.status === "completed" && (
+                        {step.status === 'completed' && (
                           <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-md text-sm border border-emerald-200">
                             Completed
                           </span>
                         )}
-                        {step.status === "current" && (
+                        {step.status === 'current' && (
                           <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm border border-blue-200">
                             In Progress
                           </span>
                         )}
-                        {step.status === "pending" && (
+                        {step.status === 'pending' && (
                           <span className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-md text-sm border border-slate-200">
                             Pending
                           </span>
@@ -1100,14 +1062,11 @@ export function EventDashboard({
 
       {/* Incident Drawer */}
       {showIncidentDrawer && selectedIncident && (
-        <IncidentDrawer
-          incident={selectedIncident}
-          onClose={() => setShowIncidentDrawer(false)}
-        />
+        <IncidentDrawer incident={selectedIncident} onClose={() => setShowIncidentDrawer(false)} />
       )}
 
       {/* Dispatch Modals */}
-      {showDispatchModal === "medical" && (
+      {showDispatchModal === 'medical' && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
             <div className="bg-gradient_to-r from-red-600 to-pink-600 text-white p-6 rounded-t-2xl">
@@ -1128,9 +1087,7 @@ export function EventDashboard({
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Select Team
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Select Team</label>
                 <select className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline_none focus:ring-2 focus:ring-red-500">
                   <option>Medical Team Alpha</option>
                   <option>Medical Team Bravo</option>
@@ -1138,9 +1095,7 @@ export function EventDashboard({
                 </select>
               </div>
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Location
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Location</label>
                 <select className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500">
                   <option>Gate 3 - VIP Zone</option>
                   <option>Main Stage Area</option>
@@ -1149,9 +1104,7 @@ export function EventDashboard({
                 </select>
               </div>
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Priority
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Priority</label>
                 <select className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500">
                   <option>Critical</option>
                   <option>High</option>
@@ -1160,9 +1113,7 @@ export function EventDashboard({
                 </select>
               </div>
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Notes
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Notes</label>
                 <textarea
                   className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
                   rows={3}
@@ -1178,7 +1129,7 @@ export function EventDashboard({
                 </button>
                 <button
                   onClick={() => {
-                    alert("Medical team dispatched!");
+                    alert('Medical team dispatched!');
                     setShowDispatchModal(null);
                   }}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all shadow-lg"
@@ -1191,7 +1142,7 @@ export function EventDashboard({
         </div>
       )}
 
-      {showDispatchModal === "security" && (
+      {showDispatchModal === 'security' && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify_center p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-2xl">
@@ -1212,9 +1163,7 @@ export function EventDashboard({
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Select Team
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Select Team</label>
                 <select className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500">
                   <option>Security Team Alpha</option>
                   <option>Security Team Bravo</option>
@@ -1222,9 +1171,7 @@ export function EventDashboard({
                 </select>
               </div>
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Location
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Location</label>
                 <select className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500">
                   <option>Backstage Area</option>
                   <option>Main Stage Area</option>
@@ -1233,9 +1180,7 @@ export function EventDashboard({
                 </select>
               </div>
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Threat Level
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Threat Level</label>
                 <select className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500">
                   <option>Critical</option>
                   <option>High</option>
@@ -1244,9 +1189,7 @@ export function EventDashboard({
                 </select>
               </div>
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Instructions
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Instructions</label>
                 <textarea
                   className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                   rows={3}
@@ -1262,7 +1205,7 @@ export function EventDashboard({
                 </button>
                 <button
                   onClick={() => {
-                    alert("Security team dispatched!");
+                    alert('Security team dispatched!');
                     setShowDispatchModal(null);
                   }}
                   className="flex-1 px-6 py-3 bg-gradient_to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
@@ -1275,7 +1218,7 @@ export function EventDashboard({
         </div>
       )}
 
-      {showDispatchModal === "broadcast" && (
+      {showDispatchModal === 'broadcast' && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
             <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 rounded-t-2xl">
@@ -1296,9 +1239,7 @@ export function EventDashboard({
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Target Zones
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Target Zones</label>
                 <select className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
                   <option>All Zones</option>
                   <option>Main Stage Area</option>
@@ -1307,9 +1248,7 @@ export function EventDashboard({
                 </select>
               </div>
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Message Type
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Message Type</label>
                 <select className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
                   <option>General Announcement</option>
                   <option>Safety Alert</option>
@@ -1318,9 +1257,7 @@ export function EventDashboard({
                 </select>
               </div>
               <div>
-                <label className="text-slate-700 text-sm mb-2 block">
-                  Message
-                </label>
+                <label className="text-slate-700 text-sm mb-2 block">Message</label>
                 <textarea
                   className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   rows={4}
@@ -1336,7 +1273,7 @@ export function EventDashboard({
                 </button>
                 <button
                   onClick={() => {
-                    alert("Message broadcasted!");
+                    alert('Message broadcasted!');
                     setShowDispatchModal(null);
                   }}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg"

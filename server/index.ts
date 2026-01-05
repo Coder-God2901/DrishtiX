@@ -95,6 +95,13 @@ import navigationRoutes from './routes/navigation.routes';
 import helpRoutes from './routes/help.routes';
 import notificationRoutes from './routes/notification.routes';
 
+// NEW: Additional Feature Routes
+import automationRoutes from './routes/automation.routes';
+import gateControlRoutes from './routes/gate-control.routes';
+import storageRoutes from './routes/storage.routes';
+import operationsRoutes from './routes/operations.routes';
+import postAnalysisRoutes from './routes/post-analysis.routes';
+
 app.use('/api/events', eventRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/alerts', alertRoutes);
@@ -122,6 +129,13 @@ app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/navigation', navigationRoutes);
 app.use('/api/help', helpRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// NEW: Feature endpoints
+app.use('/api/automation', automationRoutes);
+app.use('/api/gates', gateControlRoutes);
+app.use('/api/storage', storageRoutes);
+app.use('/api/operations', operationsRoutes);
+app.use('/api/post-analysis', postAnalysisRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

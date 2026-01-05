@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { eventService } from '../../services/event.service';
 import {
   ArrowLeft,
   Activity,
@@ -18,7 +19,7 @@ import {
   Lightbulb,
   ArrowRight,
   Layers,
-  Timer
+  Timer,
 } from 'lucide-react';
 import { LeafletMap } from '../shared/LeafletMap';
 
@@ -55,18 +56,56 @@ interface CrowdInsight {
   icon: React.ElementType;
 }
 
-// Mock data hook - simulates real-time updates
-function useHeatmapData() {
+// API data hook with real-time updates
+function useHeatmapData(eventId?: string) {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isLive, setIsLive] = useState(true);
-  
+  const [loading, setLoading] = useState(true);
+
   const [kpis, setKpis] = useState<HeatmapKPI>({
-    highDensityZones: 3,
-    mediumDensityZones: 5,
-    lowDensityZones: 7,
-    totalAttendees: 12847,
-    avgCrowdFlowRate: 142
+    highDensityZones: 0,
+    mediumDensityZones: 0,
+    lowDensityZones: 0,
+    totalAttendees: 0,
+    avgCrowdFlowRate: 0,
   });
+
+  useEffect(() => {
+    if (eventId) {
+      loadHeatmapData();
+      const interval = setInterval(loadHeatmapData, 5000); // Update every 5s
+      return () => clearInterval(interval);
+    }
+  }, [eventId]);
+
+  const loadHeatmapData = async () => {
+    if (!eventId) return;
+    try {
+      const [heatmapResponse, metricsResponse] = await Promise.all([
+        eventService.getEventHeatmap(eventId),
+        eventService.getEventMetrics(eventId),
+      ]);
+      const heatmap = heatmapResponse.data || [];
+      const metrics = metricsResponse.data;
+
+      const highZones = heatmap.filter((z: any) => z.density > 70).length;
+      const mediumZones = heatmap.filter((z: any) => z.density > 40 && z.density <= 70).length;
+      const lowZones = heatmap.filter((z: any) => z.density <= 40).length;
+
+      setKpis({
+        highDensityZones: highZones,
+        mediumDensityZones: mediumZones,
+        lowDensityZones: lowZones,
+        totalAttendees: metrics?.currentAttendees || 0,
+        avgCrowdFlowRate: Math.round(metrics?.crowdDensity || 0),
+      });
+      setLastUpdated(new Date());
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to load heatmap data:', error);
+      setLoading(false);
+    }
+  };
 
   const [zones, setZones] = useState<ZoneDensity[]>([
     {
@@ -76,11 +115,11 @@ function useHeatmapData() {
       occupancy: 4250,
       capacity: 5000,
       trend: 'rising',
-      coordinates: [28.6139, 77.2090],
+      coordinates: [28.6139, 77.209],
       timeToThreshold: 7,
       entryRate: 85,
       exitRate: 42,
-      avgDwellTime: 45
+      avgDwellTime: 45,
     },
     {
       id: 'z2',
@@ -89,10 +128,10 @@ function useHeatmapData() {
       occupancy: 1820,
       capacity: 2000,
       trend: 'falling',
-      coordinates: [28.6149, 77.2100],
+      coordinates: [28.6149, 77.21],
       entryRate: 32,
       exitRate: 58,
-      avgDwellTime: 22
+      avgDwellTime: 22,
     },
     {
       id: 'z3',
@@ -101,10 +140,10 @@ function useHeatmapData() {
       occupancy: 980,
       capacity: 1200,
       trend: 'stable',
-      coordinates: [28.6159, 77.2080],
+      coordinates: [28.6159, 77.208],
       entryRate: 45,
       exitRate: 44,
-      avgDwellTime: 8
+      avgDwellTime: 8,
     },
     {
       id: 'z4',
@@ -113,11 +152,11 @@ function useHeatmapData() {
       occupancy: 650,
       capacity: 1500,
       trend: 'rising',
-      coordinates: [28.6129, 77.2110],
+      coordinates: [28.6129, 77.211],
       timeToThreshold: 18,
       entryRate: 28,
       exitRate: 18,
-      avgDwellTime: 32
+      avgDwellTime: 32,
     },
     {
       id: 'z5',
@@ -126,10 +165,10 @@ function useHeatmapData() {
       occupancy: 420,
       capacity: 800,
       trend: 'stable',
-      coordinates: [28.6169, 77.2070],
+      coordinates: [28.6169, 77.207],
       entryRate: 12,
       exitRate: 13,
-      avgDwellTime: 15
+      avgDwellTime: 15,
     },
     {
       id: 'z6',
@@ -142,7 +181,7 @@ function useHeatmapData() {
       timeToThreshold: 25,
       entryRate: 22,
       exitRate: 15,
-      avgDwellTime: 38
+      avgDwellTime: 38,
     },
     {
       id: 'z7',
@@ -151,10 +190,10 @@ function useHeatmapData() {
       occupancy: 890,
       capacity: 2000,
       trend: 'falling',
-      coordinates: [28.6139, 77.2120],
+      coordinates: [28.6139, 77.212],
       entryRate: 18,
       exitRate: 28,
-      avgDwellTime: 28
+      avgDwellTime: 28,
     },
     {
       id: 'z8',
@@ -166,7 +205,7 @@ function useHeatmapData() {
       coordinates: [28.6109, 77.2085],
       entryRate: 15,
       exitRate: 15,
-      avgDwellTime: 18
+      avgDwellTime: 18,
     },
     {
       id: 'z9',
@@ -178,7 +217,7 @@ function useHeatmapData() {
       coordinates: [28.6149, 77.2075],
       entryRate: 8,
       exitRate: 8,
-      avgDwellTime: 5
+      avgDwellTime: 5,
     },
     {
       id: 'z10',
@@ -187,10 +226,10 @@ function useHeatmapData() {
       occupancy: 85,
       capacity: 300,
       trend: 'rising',
-      coordinates: [28.6129, 77.2130],
+      coordinates: [28.6129, 77.213],
       entryRate: 3,
       exitRate: 1,
-      avgDwellTime: 65
+      avgDwellTime: 65,
     },
     {
       id: 'z11',
@@ -202,7 +241,7 @@ function useHeatmapData() {
       coordinates: [28.6099, 77.2105],
       entryRate: 2,
       exitRate: 5,
-      avgDwellTime: 42
+      avgDwellTime: 42,
     },
     {
       id: 'z12',
@@ -211,10 +250,10 @@ function useHeatmapData() {
       occupancy: 45,
       capacity: 200,
       trend: 'stable',
-      coordinates: [28.6159, 77.2110],
+      coordinates: [28.6159, 77.211],
       entryRate: 4,
       exitRate: 4,
-      avgDwellTime: 3
+      avgDwellTime: 3,
     },
     {
       id: 'z13',
@@ -223,10 +262,10 @@ function useHeatmapData() {
       occupancy: 32,
       capacity: 150,
       trend: 'stable',
-      coordinates: [28.6089, 77.2090],
+      coordinates: [28.6089, 77.209],
       entryRate: 1,
       exitRate: 1,
-      avgDwellTime: 28
+      avgDwellTime: 28,
     },
     {
       id: 'z14',
@@ -235,10 +274,10 @@ function useHeatmapData() {
       occupancy: 68,
       capacity: 250,
       trend: 'rising',
-      coordinates: [28.6169, 77.2120],
+      coordinates: [28.6169, 77.212],
       entryRate: 5,
       exitRate: 3,
-      avgDwellTime: 12
+      avgDwellTime: 12,
     },
     {
       id: 'z15',
@@ -250,8 +289,8 @@ function useHeatmapData() {
       coordinates: [28.6179, 77.2095],
       entryRate: 1,
       exitRate: 1,
-      avgDwellTime: 2
-    }
+      avgDwellTime: 2,
+    },
   ]);
 
   const [insights, setInsights] = useState<CrowdInsight[]>([
@@ -259,26 +298,26 @@ function useHeatmapData() {
       id: 'i1',
       message: 'Main Stage density rising rapidly - approaching capacity',
       severity: 'warning',
-      icon: AlertTriangle
+      icon: AlertTriangle,
     },
     {
       id: 'i2',
       message: 'Food Court congestion easing as crowd shifts to Main Stage',
       severity: 'info',
-      icon: TrendingDown
+      icon: TrendingDown,
     },
     {
       id: 'i3',
       message: 'Main Stage likely to reach threshold in ~7 minutes',
       severity: 'critical',
-      icon: Timer
+      icon: Timer,
     },
     {
       id: 'i4',
       message: 'VIP Lounge flow is normal, no congestion detected',
       severity: 'info',
-      icon: CheckCircle2
-    }
+      icon: CheckCircle2,
+    },
   ]);
 
   // Simulate real-time updates every 10 seconds
@@ -287,38 +326,40 @@ function useHeatmapData() {
 
     const interval = setInterval(() => {
       setLastUpdated(new Date());
-      
+
       // Update KPIs with slight variations
-      setKpis(prev => ({
+      setKpis((prev) => ({
         ...prev,
         totalAttendees: prev.totalAttendees + Math.floor(Math.random() * 20 - 5),
-        avgCrowdFlowRate: Math.max(100, prev.avgCrowdFlowRate + Math.floor(Math.random() * 10 - 5))
+        avgCrowdFlowRate: Math.max(100, prev.avgCrowdFlowRate + Math.floor(Math.random() * 10 - 5)),
       }));
 
       // Update some zone densities randomly
-      setZones(prev => prev.map(zone => {
-        if (Math.random() > 0.7) {
-          const change = Math.floor(Math.random() * 40 - 20);
-          const newOccupancy = Math.max(0, Math.min(zone.capacity, zone.occupancy + change));
-          const occupancyPercent = (newOccupancy / zone.capacity) * 100;
-          
-          let newDensity: 'high' | 'medium' | 'low' = 'low';
-          if (occupancyPercent >= 75) newDensity = 'high';
-          else if (occupancyPercent >= 40) newDensity = 'medium';
+      setZones((prev) =>
+        prev.map((zone) => {
+          if (Math.random() > 0.7) {
+            const change = Math.floor(Math.random() * 40 - 20);
+            const newOccupancy = Math.max(0, Math.min(zone.capacity, zone.occupancy + change));
+            const occupancyPercent = (newOccupancy / zone.capacity) * 100;
 
-          let newTrend: 'rising' | 'falling' | 'stable' = 'stable';
-          if (change > 5) newTrend = 'rising';
-          else if (change < -5) newTrend = 'falling';
+            let newDensity: 'high' | 'medium' | 'low' = 'low';
+            if (occupancyPercent >= 75) newDensity = 'high';
+            else if (occupancyPercent >= 40) newDensity = 'medium';
 
-          return {
-            ...zone,
-            occupancy: newOccupancy,
-            density: newDensity,
-            trend: newTrend
-          };
-        }
-        return zone;
-      }));
+            let newTrend: 'rising' | 'falling' | 'stable' = 'stable';
+            if (change > 5) newTrend = 'rising';
+            else if (change < -5) newTrend = 'falling';
+
+            return {
+              ...zone,
+              occupancy: newOccupancy,
+              density: newDensity,
+              trend: newTrend,
+            };
+          }
+          return zone;
+        })
+      );
     }, 10000);
 
     return () => clearInterval(interval);
@@ -336,33 +377,45 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
 
   const getDensityColor = (density: 'high' | 'medium' | 'low') => {
     switch (density) {
-      case 'high': return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium': return 'text-amber-600 bg-amber-50 border-amber-200';
-      case 'low': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+      case 'high':
+        return 'text-red-600 bg-red-50 border-red-200';
+      case 'medium':
+        return 'text-amber-600 bg-amber-50 border-amber-200';
+      case 'low':
+        return 'text-emerald-600 bg-emerald-50 border-emerald-200';
     }
   };
 
   const getDensityBadgeColor = (density: 'high' | 'medium' | 'low') => {
     switch (density) {
-      case 'high': return 'bg-red-500 text-white';
-      case 'medium': return 'bg-amber-500 text-white';
-      case 'low': return 'bg-emerald-500 text-white';
+      case 'high':
+        return 'bg-red-500 text-white';
+      case 'medium':
+        return 'bg-amber-500 text-white';
+      case 'low':
+        return 'bg-emerald-500 text-white';
     }
   };
 
   const getTrendIcon = (trend: 'rising' | 'falling' | 'stable') => {
     switch (trend) {
-      case 'rising': return <TrendingUp className="w-4 h-4 text-red-600" />;
-      case 'falling': return <TrendingDown className="w-4 h-4 text-emerald-600" />;
-      case 'stable': return <Minus className="w-4 h-4 text-slate-600" />;
+      case 'rising':
+        return <TrendingUp className="w-4 h-4 text-red-600" />;
+      case 'falling':
+        return <TrendingDown className="w-4 h-4 text-emerald-600" />;
+      case 'stable':
+        return <Minus className="w-4 h-4 text-slate-600" />;
     }
   };
 
   const getInsightColor = (severity: 'info' | 'warning' | 'critical') => {
     switch (severity) {
-      case 'critical': return 'border-red-200 bg-red-50';
-      case 'warning': return 'border-amber-200 bg-amber-50';
-      case 'info': return 'border-blue-200 bg-blue-50';
+      case 'critical':
+        return 'border-red-200 bg-red-50';
+      case 'warning':
+        return 'border-amber-200 bg-amber-50';
+      case 'info':
+        return 'border-blue-200 bg-blue-50';
     }
   };
 
@@ -375,11 +428,11 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
   const avgDwellTime = Math.round(zones.reduce((sum, z) => sum + z.avgDwellTime, 0) / zones.length);
 
   // Map markers for zones
-  const zoneMarkers = zones.map(zone => ({
+  const zoneMarkers = zones.map((zone) => ({
     id: zone.id,
     position: zone.coordinates as [number, number],
     label: zone.name,
-    color: zone.density === 'high' ? 'red' : zone.density === 'medium' ? 'orange' : 'green'
+    color: zone.density === 'high' ? 'red' : zone.density === 'medium' ? 'orange' : 'green',
   }));
 
   return (
@@ -388,10 +441,7 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
       <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white px-8 py-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            >
+            <button onClick={onBack} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
@@ -399,9 +449,7 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
                 <BarChart3 className="w-8 h-8" />
                 Heatmap & Crowd Density
               </h1>
-              <p className="text-purple-100 text-sm">
-                Real-time crowd distribution and congestion analysis
-              </p>
+              <p className="text-purple-100 text-sm">Real-time crowd distribution and congestion analysis</p>
             </div>
           </div>
 
@@ -445,9 +493,7 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
               <div className="p-2 bg-red-100 rounded-lg">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
-              <span className={`text-xs px-2 py-1 rounded-full font-bold ${getDensityBadgeColor('high')}`}>
-                HIGH
-              </span>
+              <span className={`text-xs px-2 py-1 rounded-full font-bold ${getDensityBadgeColor('high')}`}>HIGH</span>
             </div>
             <div className="mt-3">
               <p className="text-3xl font-bold text-red-600">{kpis.highDensityZones}</p>
@@ -477,9 +523,7 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
               <div className="p-2 bg-emerald-100 rounded-lg">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
               </div>
-              <span className={`text-xs px-2 py-1 rounded-full font-bold ${getDensityBadgeColor('low')}`}>
-                LOW
-              </span>
+              <span className={`text-xs px-2 py-1 rounded-full font-bold ${getDensityBadgeColor('low')}`}>LOW</span>
             </div>
             <div className="mt-3">
               <p className="text-3xl font-bold text-emerald-600">{kpis.lowDensityZones}</p>
@@ -522,7 +566,7 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
               <Layers className="w-5 h-5" />
               Interactive Heatmap
             </h2>
-            
+
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
               <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
@@ -567,13 +611,13 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
           {/* Map Container */}
           <div className="relative h-[500px]">
             <LeafletMap
-              center={[28.6139, 77.2090]}
+              center={[28.6139, 77.209]}
               zoom={15}
               markers={zoneMarkers}
               onMarkerClick={(zoneId: string) => setSelectedZone(zoneId)}
               height="500px"
             />
-            
+
             {/* Map Legend */}
             <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-slate-200 p-3 z-[1000]">
               <h3 className="text-xs font-bold text-slate-900 mb-2">Density Legend</h3>
@@ -603,12 +647,12 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
               Zone Density Cards
             </h2>
           </div>
-          
+
           <div className="p-6 grid grid-cols-3 gap-4">
-            {zones.map(zone => {
+            {zones.map((zone) => {
               const occupancyPercent = Math.round((zone.occupancy / zone.capacity) * 100);
               const isSelected = selectedZone === zone.id;
-              
+
               return (
                 <div
                   key={zone.id}
@@ -620,7 +664,9 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-bold text-slate-900 text-sm mb-1">{zone.name}</h3>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${getDensityBadgeColor(zone.density)}`}>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-bold ${getDensityBadgeColor(zone.density)}`}
+                      >
                         {zone.density.toUpperCase()}
                       </span>
                     </div>
@@ -638,9 +684,11 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
                     <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
                       <div
                         className={`h-full transition-all ${
-                          zone.density === 'high' ? 'bg-red-500' :
-                          zone.density === 'medium' ? 'bg-amber-500' :
-                          'bg-emerald-500'
+                          zone.density === 'high'
+                            ? 'bg-red-500'
+                            : zone.density === 'medium'
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
                         }`}
                         style={{ width: `${occupancyPercent}%` }}
                       />
@@ -711,7 +759,8 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600 font-medium">Net Flow</span>
                   <span className={`text-lg font-bold ${netFlow > 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                    {netFlow > 0 ? '+' : ''}{netFlow} /min
+                    {netFlow > 0 ? '+' : ''}
+                    {netFlow} /min
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -751,25 +800,30 @@ export function HeatmapCrowdDensity({ onBack }: HeatmapCrowdDensityProps) {
               <p className="text-xs text-slate-600 italic mb-3">
                 AI-generated insights for crowd management (advisory only)
               </p>
-              
-              {insights.map(insight => {
+
+              {insights.map((insight) => {
                 const Icon = insight.icon;
                 return (
-                  <div
-                    key={insight.id}
-                    className={`border-2 rounded-lg p-3 ${getInsightColor(insight.severity)}`}
-                  >
+                  <div key={insight.id} className={`border-2 rounded-lg p-3 ${getInsightColor(insight.severity)}`}>
                     <div className="flex items-start gap-3">
-                      <div className={`p-1.5 rounded-lg ${
-                        insight.severity === 'critical' ? 'bg-red-100' :
-                        insight.severity === 'warning' ? 'bg-amber-100' :
-                        'bg-blue-100'
-                      }`}>
-                        <Icon className={`w-4 h-4 ${
-                          insight.severity === 'critical' ? 'text-red-600' :
-                          insight.severity === 'warning' ? 'text-amber-600' :
-                          'text-blue-600'
-                        }`} />
+                      <div
+                        className={`p-1.5 rounded-lg ${
+                          insight.severity === 'critical'
+                            ? 'bg-red-100'
+                            : insight.severity === 'warning'
+                              ? 'bg-amber-100'
+                              : 'bg-blue-100'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 ${
+                            insight.severity === 'critical'
+                              ? 'text-red-600'
+                              : insight.severity === 'warning'
+                                ? 'text-amber-600'
+                                : 'text-blue-600'
+                          }`}
+                        />
                       </div>
                       <div className="flex-1">
                         <p className="text-sm text-slate-900 font-medium">{insight.message}</p>

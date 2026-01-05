@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Calendar,
   MapPin,
@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   FileText,
   TrendingUp,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface Event {
   id: string;
@@ -30,63 +30,61 @@ interface OrganizerHomeProps {
   onCreateEvent?: () => void;
 }
 
-export function OrganizerHome({
-  onSelectEvent,
-  onCreateEvent,
-}: OrganizerHomeProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+export function OrganizerHome({ onSelectEvent, onCreateEvent }: OrganizerHomeProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock events data - preserving existing event card design
-  const events = [
-    {
-      id: "1",
-      title: "Summer Music Festival 2025",
-      date: "Jun 20, 2025",
-      location: "Bayfront Beach, USA",
-      capacity: "10,000",
-      attendees: 9485,
-      status: "Live",
-      statusColor: "emerald",
-      type: "Music Festival",
-    },
-    {
-      id: "2",
-      title: "Tech Conference 2025",
-      date: "Nov 15, 2025",
-      location: "Innovation Convention Center",
-      capacity: "3,000",
-      attendees: 2340,
-      status: "Scheduled",
-      statusColor: "blue",
-      type: "Conference",
-    },
-    {
-      id: "3",
-      title: "City Marathon",
-      date: "Dec 10, 2025",
-      location: "Downtown City Center",
-      capacity: "5,000",
-      attendees: 1650,
-      status: "Draft",
-      statusColor: "slate",
-      type: "Sports",
-    },
-    {
-      id: "4",
-      title: "Food & Wine Expo",
-      date: "Aug 25, 2025",
-      location: "Event Plaza Center",
-      capacity: "2,500",
-      attendees: 1725,
-      status: "Completed",
-      statusColor: "purple",
-      type: "Expo",
-    },
-  ];
+  // Load events from API
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await eventService.getEvents();
+      const eventsData = (response.data || []).map((e: any) => ({
+        id: e.id,
+        title: e.name,
+        date: new Date(e.startTime).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        }),
+        location: e.venue || e.location,
+        capacity: e.expectedAttendees?.toLocaleString() || '0',
+        attendees: e.actualAttendees || 0,
+        status:
+          e.status === 'ACTIVE'
+            ? 'Live'
+            : e.status === 'SCHEDULED'
+              ? 'Scheduled'
+              : e.status === 'COMPLETED'
+                ? 'Completed'
+                : 'Draft',
+        statusColor:
+          e.status === 'ACTIVE'
+            ? 'emerald'
+            : e.status === 'SCHEDULED'
+              ? 'blue'
+              : e.status === 'COMPLETED'
+                ? 'purple'
+                : 'slate',
+        type: e.description || 'Event',
+      }));
+      setEvents(eventsData);
+    } catch (error) {
+      console.error('Failed to load events:', error);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const hasEvents = events.length > 0;
-  const liveEvent = events.find((e) => e.status === "Live");
+  const liveEvent = events.find((e) => e.status === 'Live');
 
   // If there's a live event, we avoid auto-navigation in this UI-only wrapper.
 
@@ -94,17 +92,15 @@ export function OrganizerHome({
     const matchesSearch =
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter =
-      filterStatus === "all" ||
-      event.status.toLowerCase() === filterStatus.toLowerCase();
+    const matchesFilter = filterStatus === 'all' || event.status.toLowerCase() === filterStatus.toLowerCase();
     return matchesSearch && matchesFilter;
   });
 
   const statusColors: Record<string, string> = {
-    emerald: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    blue: "bg-blue-100 text-blue-700 border-blue-200",
-    slate: "bg-slate-100 text-slate-700 border-slate-200",
-    purple: "bg-purple-100 text-purple-700 border-purple-200",
+    emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    blue: 'bg-blue-100 text-blue-700 border-blue-200',
+    slate: 'bg-slate-100 text-slate-700 border-slate-200',
+    purple: 'bg-purple-100 text-purple-700 border-purple-200',
   };
 
   // State A: No events exist
@@ -116,13 +112,10 @@ export function OrganizerHome({
             <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Calendar className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-slate-900 text-3xl mb-4">
-              Welcome to DrishtiX
-            </h2>
+            <h2 className="text-slate-900 text-3xl mb-4">Welcome to DrishtiX</h2>
             <p className="text-slate-600 mb-8 max-w-md mx-auto">
-              Create your first event and experience the power of AI-driven
-              event management with real-time safety monitoring, crowd
-              analytics, and intelligent operations control.
+              Create your first event and experience the power of AI-driven event management with real-time safety
+              monitoring, crowd analytics, and intelligent operations control.
             </p>
             <button
               onClick={() => onCreateEvent && onCreateEvent()}
@@ -139,27 +132,21 @@ export function OrganizerHome({
                   <MapPin className="w-5 h-5" />
                 </div>
                 <h3 className="text-slate-900 mb-1">Venue Mapping</h3>
-                <p className="text-slate-600 text-sm">
-                  Digital twin technology for complete venue visualization
-                </p>
+                <p className="text-slate-600 text-sm">Digital twin technology for complete venue visualization</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                 <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 mb-3">
                   <Users className="w-5 h-5" />
                 </div>
                 <h3 className="text-slate-900 mb-1">Crowd Intelligence</h3>
-                <p className="text-slate-600 text-sm">
-                  Real-time analytics and safety monitoring
-                </p>
+                <p className="text-slate-600 text-sm">Real-time analytics and safety monitoring</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-3">
                   <TrendingUp className="w-5 h-5" />
                 </div>
                 <h3 className="text-slate-900 mb-1">Smart Operations</h3>
-                <p className="text-slate-600 text-sm">
-                  AI-powered team coordination and incident response
-                </p>
+                <p className="text-slate-600 text-sm">AI-powered team coordination and incident response</p>
               </div>
             </div>
           </div>
@@ -177,9 +164,7 @@ export function OrganizerHome({
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-slate-900 text-3xl mb-2">My Events</h1>
-              <p className="text-slate-600">
-                Select an event to manage or create a new one
-              </p>
+              <p className="text-slate-600">Select an event to manage or create a new one</p>
             </div>
             <button
               onClick={() => onCreateEvent && onCreateEvent()}
@@ -209,41 +194,41 @@ export function OrganizerHome({
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setFilterStatus("all")}
+                onClick={() => setFilterStatus('all')}
                 className={`px-4 py-3 rounded-lg border transition-all duration-200 ${
-                  filterStatus === "all"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-slate-600 border-slate-300 hover:border-blue-600"
+                  filterStatus === 'all'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-blue-600'
                 }`}
               >
                 All
               </button>
               <button
-                onClick={() => setFilterStatus("live")}
+                onClick={() => setFilterStatus('live')}
                 className={`px-4 py-3 rounded-lg border transition-all duration-200 ${
-                  filterStatus === "live"
-                    ? "bg-emerald-600 text-white border-emerald-600"
-                    : "bg-white text-slate-600 border-slate-300 hover:border-emerald-600"
+                  filterStatus === 'live'
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-emerald-600'
                 }`}
               >
                 Live
               </button>
               <button
-                onClick={() => setFilterStatus("scheduled")}
+                onClick={() => setFilterStatus('scheduled')}
                 className={`px-4 py-3 rounded-lg border transition-all duration-200 ${
-                  filterStatus === "scheduled"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-slate-600 border-slate-300 hover:border-blue-600"
+                  filterStatus === 'scheduled'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-blue-600'
                 }`}
               >
                 Scheduled
               </button>
               <button
-                onClick={() => setFilterStatus("draft")}
+                onClick={() => setFilterStatus('draft')}
                 className={`px-4 py-3 rounded-lg border transition-all duration-200 ${
-                  filterStatus === "draft"
-                    ? "bg-slate-600 text-white border-slate-600"
-                    : "bg-white text-slate-600 border-slate-300 hover:border-slate-600"
+                  filterStatus === 'draft'
+                    ? 'bg-slate-600 text-white border-slate-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-slate-600'
                 }`}
               >
                 Draft
@@ -263,27 +248,15 @@ export function OrganizerHome({
               {/* Status Banner */}
               <div
                 className={`px-6 py-3 border-b border-slate-100 flex items-center justify-between ${
-                  event.status === "Live" ? "bg-emerald-50" : "bg-slate-50"
+                  event.status === 'Live' ? 'bg-emerald-50' : 'bg-slate-50'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  {event.status === "Live" && (
-                    <PlayCircle className="w-4 h-4 text-emerald-600" />
-                  )}
-                  {event.status === "Scheduled" && (
-                    <Clock className="w-4 h-4 text-blue-600" />
-                  )}
-                  {event.status === "Draft" && (
-                    <FileText className="w-4 h-4 text-slate-600" />
-                  )}
-                  {event.status === "Completed" && (
-                    <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                  )}
-                  <span
-                    className={`text-sm px-2 py-1 rounded-md border ${
-                      statusColors[event.statusColor]
-                    }`}
-                  >
+                  {event.status === 'Live' && <PlayCircle className="w-4 h-4 text-emerald-600" />}
+                  {event.status === 'Scheduled' && <Clock className="w-4 h-4 text-blue-600" />}
+                  {event.status === 'Draft' && <FileText className="w-4 h-4 text-slate-600" />}
+                  {event.status === 'Completed' && <CheckCircle2 className="w-4 h-4 text-purple-600" />}
+                  <span className={`text-sm px-2 py-1 rounded-md border ${statusColors[event.statusColor]}`}>
                     {event.status}
                   </span>
                 </div>
@@ -305,8 +278,7 @@ export function OrganizerHome({
                   </div>
                   <div className="flex items-center gap-2 text-slate-600 text-sm">
                     <Users className="w-4 h-4" />
-                    {event.attendees.toLocaleString()} / {event.capacity}{" "}
-                    attendees
+                    {event.attendees.toLocaleString()} / {event.capacity} attendees
                   </div>
                 </div>
 
@@ -315,27 +287,16 @@ export function OrganizerHome({
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-slate-600">Capacity</span>
                     <span className="text-slate-900">
-                      {Math.round(
-                        (event.attendees /
-                          parseInt(event.capacity.replace(",", ""))) *
-                          100
-                      )}
-                      %
+                      {Math.round((event.attendees / parseInt(event.capacity.replace(',', ''))) * 100)}%
                     </span>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className={`h-full bg-gradient-to-r ${
-                        event.status === "Live"
-                          ? "from-emerald-500 to-emerald-600"
-                          : "from-blue-500 to-indigo-600"
+                        event.status === 'Live' ? 'from-emerald-500 to-emerald-600' : 'from-blue-500 to-indigo-600'
                       }`}
                       style={{
-                        width: `${
-                          (event.attendees /
-                            parseInt(event.capacity.replace(",", ""))) *
-                          100
-                        }%`,
+                        width: `${(event.attendees / parseInt(event.capacity.replace(',', ''))) * 100}%`,
                       }}
                     />
                   </div>
@@ -361,9 +322,7 @@ export function OrganizerHome({
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
             <Filter className="w-12 h-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-slate-900 mb-2">No events found</h3>
-            <p className="text-slate-600">
-              Try adjusting your search or filter criteria
-            </p>
+            <p className="text-slate-600">Try adjusting your search or filter criteria</p>
           </div>
         )}
       </div>
