@@ -63,6 +63,10 @@ import { gcpConfig, validateGCPConfig } from './config/gcp.config';
 import { riskEngineService } from './services/risk-engine.service';
 import { gcpOrchestrator } from './services/gcp-orchestrator.service';
 
+// Real-time Workers (Frontend V2)
+import { metricsWorker } from './workers/metrics.worker';
+import { heatmapWorker } from './workers/heatmap.worker';
+
 // API Routes
 import eventRoutes from './routes/event.routes';
 import incidentRoutes from './routes/incident.routes';
@@ -84,6 +88,20 @@ import simulationRoutes from './routes/simulation.routes';
 import authRoutes from './routes/auth.routes';
 import recommendationRoutes from './routes/recommendation.routes';
 
+// Frontend V2 Routes (Attendee/Organizer Features)
+import ticketRoutes from './routes/ticket.routes';
+import volunteerRoutes from './routes/volunteer.routes';
+import navigationRoutes from './routes/navigation.routes';
+import helpRoutes from './routes/help.routes';
+import notificationRoutes from './routes/notification.routes';
+
+// NEW: Additional Feature Routes
+import automationRoutes from './routes/automation.routes';
+import gateControlRoutes from './routes/gate-control.routes';
+import storageRoutes from './routes/storage.routes';
+import operationsRoutes from './routes/operations.routes';
+import postAnalysisRoutes from './routes/post-analysis.routes';
+
 app.use('/api/events', eventRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/alerts', alertRoutes);
@@ -104,6 +122,20 @@ app.use('/api/voice', voiceRoutes);
 app.use('/api/simulation', simulationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/recommendations', recommendationRoutes);
+
+// Frontend V2 endpoints
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/volunteers', volunteerRoutes);
+app.use('/api/navigation', navigationRoutes);
+app.use('/api/help', helpRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// NEW: Feature endpoints
+app.use('/api/automation', automationRoutes);
+app.use('/api/gates', gateControlRoutes);
+app.use('/api/storage', storageRoutes);
+app.use('/api/operations', operationsRoutes);
+app.use('/api/post-analysis', postAnalysisRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -129,6 +161,12 @@ io.on('connection', (socket: Socket) => {
     console.log(`Socket ${socket.id} joined event:${eventId}`);
   });
 
+  // Join user room for personal notifications
+  socket.on('join:user', (userId: string) => {
+    socket.join(`user:${userId}`);
+    console.log(`Socket ${socket.id} joined user:${userId}`);
+  });
+
   // Subscribe to real-time updates
   socket.on('subscribe:incidents', (eventId: string) => {
     socket.join(`incidents:${eventId}`);
@@ -140,6 +178,37 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('subscribe:alerts', (eventId: string) => {
     socket.join(`alerts:${eventId}`);
+  });
+
+  // Frontend V2 subscriptions
+  socket.on('subscribe:metrics', (eventId: string) => {
+    socket.join(`metrics:${eventId}`);
+    console.log(`Socket ${socket.id} subscribed to metrics for ${eventId}`);
+  });
+
+  socket.on('subscribe:heatmap', (eventId: string) => {
+    socket.join(`heatmap:${eventId}`);
+    console.log(`Socket ${socket.id} subscribed to heatmap for ${eventId}`);
+  });
+
+  socket.on('subscribe:volunteers', (eventId: string) => {
+    socket.join(`volunteers:${eventId}`);
+    console.log(`Socket ${socket.id} subscribed to volunteers for ${eventId}`);
+  });
+
+  socket.on('subscribe:tickets', (eventId: string) => {
+    socket.join(`tickets:${eventId}`);
+    console.log(`Socket ${socket.id} subscribed to tickets for ${eventId}`);
+  });
+
+  socket.on('subscribe:notifications', (userId: string) => {
+    socket.join(`notifications:${userId}`);
+    console.log(`Socket ${socket.id} subscribed to notifications for ${userId}`);
+  });
+
+  socket.on('subscribe:activity', (eventId: string) => {
+    socket.join(`activity:${eventId}`);
+    console.log(`Socket ${socket.id} subscribed to activity for ${eventId}`);
   });
 
   // DrishtiX subscriptions
@@ -283,6 +352,12 @@ async function startServer() {
     // Initialize Pub/Sub listeners
     initializePubSubListeners();
 
+    // Initialize real-time workers for Frontend V2
+    console.log('🚀 Starting real-time workers...');
+    await metricsWorker.startAllActiveEvents();
+    await heatmapWorker.startAllActiveEvents();
+    console.log(`✓ Real-time workers started (${metricsWorker.getActiveCount()} events)`);
+
     httpServer.listen(PORT, () => {
       console.log(`
 ╔════════════════════════════════════════════════════════════════╗
@@ -327,6 +402,8 @@ startServer();
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully...');
+  metricsWorker.stopAll();
+  heatmapWorker.stopAll();
   await gcpOrchestrator.shutdown();
   await pubSubService.close();
   await prisma.$disconnect();
@@ -338,6 +415,8 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully...');
+  metricsWorker.stopAll();
+  heatmapWorker.stopAll();
   await gcpOrchestrator.shutdown();
   await pubSubService.close();
   await prisma.$disconnect();

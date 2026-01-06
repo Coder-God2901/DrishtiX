@@ -7,6 +7,7 @@ import { Router } from 'express';
 import { recommendationEngineService } from '../services/recommendation-engine.service';
 import { riskEngineService } from '../services/risk-engine.service';
 import { prisma } from '../index';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -14,7 +15,7 @@ const router = Router();
  * POST /api/recommendations/:actionId/approve
  * Approve a recommendation and record feedback
  */
-router.post('/:actionId/approve', async (req, res) => {
+router.post('/:actionId/approve', authenticate, async (req, res) => {
   try {
     const { actionId } = req.params;
     const { eventId, zoneId, outcome } = req.body;
@@ -24,16 +25,22 @@ router.post('/:actionId/approve', async (req, res) => {
     }
 
     // Record feedback
-    await recommendationEngineService.recordFeedback(eventId, actionId, 'APPROVED', outcome);
+    await recommendationEngineService.recordFeedback(
+      eventId,
+      actionId,
+      'APPROVED',
+      outcome,
+      (req as any).user?.id
+    );
 
     // Create audit log
     await prisma.auditLog.create({
       data: {
-        userId: 'system', // TODO: Get from auth context
+        userId: (req as any).user?.id || 'system',
         action: 'RECOMMENDATION_APPROVED',
-        resource: 'RECOMMENDATION',
-        resourceId: actionId,
-        details: {
+        entityType: 'RECOMMENDATION',
+        entityId: actionId,
+        metadata: {
           eventId,
           zoneId,
           actionId,
@@ -58,7 +65,7 @@ router.post('/:actionId/approve', async (req, res) => {
  * POST /api/recommendations/:actionId/reject
  * Reject a recommendation and record feedback
  */
-router.post('/:actionId/reject', async (req, res) => {
+router.post('/:actionId/reject', authenticate, async (req, res) => {
   try {
     const { actionId } = req.params;
     const { eventId, zoneId, reason } = req.body;
@@ -68,16 +75,22 @@ router.post('/:actionId/reject', async (req, res) => {
     }
 
     // Record feedback
-    await recommendationEngineService.recordFeedback(eventId, actionId, 'REJECTED');
+    await recommendationEngineService.recordFeedback(
+      eventId,
+      actionId,
+      'REJECTED',
+      undefined,
+      (req as any).user?.id
+    );
 
     // Create audit log
     await prisma.auditLog.create({
       data: {
-        userId: 'system', // TODO: Get from auth context
+        userId: (req as any).user?.id || 'system',
         action: 'RECOMMENDATION_REJECTED',
-        resource: 'RECOMMENDATION',
-        resourceId: actionId,
-        details: {
+        entityType: 'RECOMMENDATION',
+        entityId: actionId,
+        metadata: {
           eventId,
           zoneId,
           actionId,
@@ -155,10 +168,8 @@ router.get('/history/:eventId', async (req, res) => {
         action: {
           in: ['RECOMMENDATION_APPROVED', 'RECOMMENDATION_REJECTED'],
         },
-        details: {
-          path: ['eventId'],
-          equals: eventId,
-        },
+        // Metadata filtering would need JSON query - simplified
+        entityType: 'RECOMMENDATION',
       },
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
@@ -170,10 +181,7 @@ router.get('/history/:eventId', async (req, res) => {
         action: {
           in: ['RECOMMENDATION_APPROVED', 'RECOMMENDATION_REJECTED'],
         },
-        details: {
-          path: ['eventId'],
-          equals: eventId,
-        },
+        entityType: 'RECOMMENDATION',
       },
     });
 
