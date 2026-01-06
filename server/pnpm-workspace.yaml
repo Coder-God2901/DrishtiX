@@ -1,0 +1,10 @@
+ignoredBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@tensorflow/tfjs-node'
+  - bcrypt
+  - canvas
+  - core-js
+  - esbuild
+  - prisma
+  - protobufjs
