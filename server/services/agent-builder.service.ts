@@ -1,11 +1,11 @@
 /**
  * Agent Builder Service
- * Automated emergency dispatch using Vertex AI Agent Builder
+ * Automated emergency dispatch using Azure OpenAI
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Client as GoogleMapsClient, TravelMode, TrafficModel } from '@googlemaps/google-maps-services-js';
-import { gcpConfig } from '../config/gcp.config';
+import { azureOpenAIService } from './azure-openai.service';
+import { azureMapsService } from './azure-maps.service';
+import { azureConfig } from '../config/azure.config';
 import { drishtiXConfig } from '../config/drishtix.config';
 
 export interface DispatchRequest {
@@ -68,23 +68,8 @@ export interface RouteStep {
 }
 
 class AgentBuilderService {
-  private genAI: GoogleGenerativeAI;
-  private mapsClient: GoogleMapsClient;
-  private agentModel: any;
-
   constructor() {
-    this.genAI = new GoogleGenerativeAI(gcpConfig.gemini.apiKey);
-    this.mapsClient = new GoogleMapsClient({});
-    this.initializeAgent();
-  }
-
-  /**
-   * Initialize AI agent
-   */
-  private initializeAgent() {
-    this.agentModel = this.genAI.getGenerativeModel({
-      model: gcpConfig.gemini.model,
-    });
+    console.log('[Agent Builder] Initialized with Azure OpenAI and Azure Maps');
   }
 
   /**
@@ -189,9 +174,11 @@ You are an emergency dispatch AI for the DrishtiX crowd safety platform. Analyze
 `;
 
     try {
-      const result = await this.agentModel.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const messages = [
+        { role: 'user' as const, content: prompt },
+      ];
+
+      const text = await azureOpenAIService.generateText(messages);
 
       // Extract JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -300,34 +287,24 @@ You are an emergency dispatch AI for the DrishtiX crowd safety platform. Analyze
 
     for (const responder of responders) {
       try {
-        const response = await this.mapsClient.directions({
-          params: {
-            origin: `${responder.currentLocation.lat},${responder.currentLocation.lon}`,
-            destination: `${destination.lat},${destination.lon}`,
-            mode: TravelMode.driving,
-            departure_time: 'now',
-            traffic_model: TrafficModel.best_guess,
-            alternatives: true,
-            key: gcpConfig.maps.apiKey,
-          },
-        });
+        const routeResult = await azureMapsService.calculateRoute(
+          responder.currentLocation,
+          destination
+        );
 
-        if (response.data.routes.length > 0) {
-          const mainRoute = response.data.routes[0];
-          const leg = mainRoute.legs[0];
-
+        if (routeResult) {
           routes.push({
             origin: responder.currentLocation,
             destination,
-            distance: leg.distance.value,
-            duration: leg.duration.value,
-            durationInTraffic: leg.duration_in_traffic?.value,
-            polyline: mainRoute.overview_polyline.points,
-            steps: leg.steps.map(step => ({
-              instruction: step.html_instructions.replace(/<[^>]*>/g, ''),
-              distance: step.distance.value,
-              duration: step.duration.value,
-              maneuver: step.maneuver,
+            distance: routeResult.distance,
+            duration: routeResult.duration,
+            durationInTraffic: routeResult.duration, // Azure Maps includes traffic by default
+            polyline: routeResult.polyline || '',
+            steps: routeResult.instructions.map((instruction: string, index: number) => ({
+              instruction,
+              distance: Math.round(routeResult.distance / routeResult.instructions.length),
+              duration: Math.round(routeResult.duration / routeResult.instructions.length),
+              maneuver: undefined,
             })),
             alternativeRoutes: response.data.routes.slice(1, 3).map(route => ({
               origin: responder.currentLocation,
