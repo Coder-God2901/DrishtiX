@@ -8,7 +8,7 @@
  * - Age and gender estimation
  * - Expression detection (happy, sad, angry, etc.)
  * - Unauthorized access alerts
- * - Firebase storage for face descriptors
+ * - Azure Cosmos DB storage for face descriptors
  * 
  * Models used:
  * - SSD MobileNet V1 for face detection
@@ -20,7 +20,7 @@ import * as faceapi from '@vladmandic/face-api';
 import * as tf from '@tensorflow/tfjs-node';
 import * as canvas from 'canvas';
 import cv from '@u4/opencv4nodejs';
-import { firebaseAdminService } from './firebase-admin.service';
+import { azureService } from './azure.service';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -357,21 +357,23 @@ class FacialRecognitionService {
   }
 
   /**
-   * Load registered faces from Firebase
+   * Load registered faces from Azure Cosmos DB
    */
   private async loadRegisteredFaces(): Promise<void> {
     try {
-      const db = firebaseAdminService.getFirestore();
-      const snapshot = await db.collection('registered_faces').get();
+      const documents = await azureService.queryDocuments(
+        'registered_faces',
+        'SELECT * FROM c',
+        []
+      );
 
-      for (const doc of snapshot.docs) {
-        const data = doc.data();
+      for (const doc of documents) {
         const person: RegisteredPerson = {
           personId: doc.id,
-          name: data.name,
-          role: data.role,
-          descriptor: new Float32Array(data.descriptor),
-          registeredAt: data.registeredAt?.toDate() || new Date(),
+          name: doc.name,
+          role: doc.role,
+          descriptor: new Float32Array(doc.descriptor),
+          registeredAt: new Date(doc.registeredAt),
         };
 
         this.registeredFaces.set(doc.id, person);
@@ -385,19 +387,19 @@ class FacialRecognitionService {
   }
 
   /**
-   * Save registered face to Firebase
+   * Save registered face to Azure Cosmos DB
    */
   private async saveRegisteredFace(person: RegisteredPerson): Promise<void> {
     try {
-      const db = firebaseAdminService.getFirestore();
-      await db.collection('registered_faces').doc(person.personId).set({
+      await azureService.createCosmosDocument('registered_faces', person.personId, {
+        id: person.personId,
         name: person.name,
         role: person.role,
         descriptor: Array.from(person.descriptor),
-        registeredAt: person.registeredAt,
+        registeredAt: person.registeredAt.toISOString(),
       });
     } catch (error: any) {
-      console.error('[Facial Recognition] Error saving to Firebase:', error.message);
+      console.error('[Facial Recognition] Error saving to Azure Cosmos DB:', error.message);
       // Don't throw - keep in-memory version
     }
   }
