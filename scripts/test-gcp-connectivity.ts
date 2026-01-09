@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * GCP Services Connectivity Test
  * Verifies all 14 Google Cloud Platform services are properly configured
  */
@@ -20,10 +35,10 @@ const results: TestResult[] = [];
 
 function logResult(result: TestResult) {
   const emoji = {
-    PASS: '✅',
-    FAIL: '❌',
-    WARN: '⚠️',
-    SKIP: '⏭️',
+    PASS: 'âœ…',
+    FAIL: 'âŒ',
+    WARN: 'âš ï¸',
+    SKIP: 'â­ï¸',
   }[result.status];
 
   console.log(`${emoji} ${result.service}: ${result.message}`);
@@ -34,7 +49,7 @@ function logResult(result: TestResult) {
 }
 
 async function testGCPConfiguration() {
-  console.log('\n🔍 Testing GCP Configuration...\n');
+  console.log('\nðŸ” Testing GCP Configuration...\n');
 
   // Test 1: Validate GCP Config
   const validation = validateGCPConfig();
@@ -103,7 +118,7 @@ async function testGCPConfiguration() {
 }
 
 async function testFirebase() {
-  console.log('\n🔥 Testing Firebase Services...\n');
+  console.log('\nðŸ”¥ Testing Firebase Services...\n');
 
   // Firebase Configuration
   const firebaseVars = [
@@ -149,7 +164,7 @@ async function testFirebase() {
 }
 
 async function testGoogleMaps() {
-  console.log('\n🗺️  Testing Google Maps Platform...\n');
+  console.log('\nðŸ—ºï¸  Testing Google Maps Platform...\n');
 
   if (gcpConfig.maps.apiKey) {
     logResult({
@@ -195,7 +210,7 @@ async function testGoogleMaps() {
 }
 
 async function testVertexAI() {
-  console.log('\n🤖 Testing Vertex AI Services...\n');
+  console.log('\nðŸ¤– Testing Vertex AI Services...\n');
 
   if (gcpConfig.vertexAI.modelId) {
     logResult({
@@ -227,7 +242,7 @@ async function testVertexAI() {
 }
 
 async function testGemini() {
-  console.log('\n💎 Testing Gemini API...\n');
+  console.log('\nðŸ’Ž Testing Gemini API...\n');
 
   if (gcpConfig.gemini.apiKey) {
     logResult({
@@ -250,7 +265,7 @@ async function testGemini() {
 }
 
 async function testBigQuery() {
-  console.log('\n📊 Testing BigQuery...\n');
+  console.log('\nðŸ“Š Testing BigQuery...\n');
 
   if (gcpConfig.bigquery.dataset) {
     logResult({
@@ -276,7 +291,7 @@ async function testBigQuery() {
 }
 
 async function testPubSub() {
-  console.log('\n📨 Testing Pub/Sub...\n');
+  console.log('\nðŸ“¨ Testing Pub/Sub...\n');
 
   const topics = Object.entries(gcpConfig.pubsub.topics);
   const subscriptions = Object.entries(gcpConfig.pubsub.subscriptions);
@@ -297,7 +312,7 @@ async function testPubSub() {
 }
 
 async function testCloudStorage() {
-  console.log('\n🪣 Testing Cloud Storage...\n');
+  console.log('\nðŸª£ Testing Cloud Storage...\n');
 
   const buckets = Object.entries(gcpConfig.storage.buckets);
 
@@ -310,7 +325,7 @@ async function testCloudStorage() {
 }
 
 async function testEarthEngine() {
-  console.log('\n🌍 Testing Earth Engine...\n');
+  console.log('\nðŸŒ Testing Earth Engine...\n');
 
   if (gcpConfig.earthEngine.enabled) {
     if (gcpConfig.earthEngine.project) {
@@ -336,7 +351,7 @@ async function testEarthEngine() {
 }
 
 async function testOrchestrator() {
-  console.log('\n🎯 Testing GCP Services Orchestrator...\n');
+  console.log('\nðŸŽ¯ Testing GCP Services Orchestrator...\n');
 
   try {
     // Initialize orchestrator
@@ -387,7 +402,7 @@ async function testOrchestrator() {
 
 async function printSummary() {
   console.log('\n' + '='.repeat(60));
-  console.log('📋 TEST SUMMARY');
+  console.log('ðŸ“‹ TEST SUMMARY');
   console.log('='.repeat(60) + '\n');
 
   const passed = results.filter((r) => r.status === 'PASS').length;
@@ -395,14 +410,14 @@ async function printSummary() {
   const warned = results.filter((r) => r.status === 'WARN').length;
   const skipped = results.filter((r) => r.status === 'SKIP').length;
 
-  console.log(`✅ Passed:  ${passed}`);
-  console.log(`❌ Failed:  ${failed}`);
-  console.log(`⚠️  Warnings: ${warned}`);
-  console.log(`⏭️  Skipped: ${skipped}`);
+  console.log(`âœ… Passed:  ${passed}`);
+  console.log(`âŒ Failed:  ${failed}`);
+  console.log(`âš ï¸  Warnings: ${warned}`);
+  console.log(`â­ï¸  Skipped: ${skipped}`);
   console.log(`   Total:   ${results.length}\n`);
 
   if (failed > 0) {
-    console.log('❌ FAILED TESTS:');
+    console.log('âŒ FAILED TESTS:');
     results
       .filter((r) => r.status === 'FAIL')
       .forEach((r) => {
@@ -412,7 +427,7 @@ async function printSummary() {
   }
 
   if (warned > 0) {
-    console.log('⚠️  WARNINGS:');
+    console.log('âš ï¸  WARNINGS:');
     results
       .filter((r) => r.status === 'WARN')
       .forEach((r) => {
@@ -422,20 +437,20 @@ async function printSummary() {
   }
 
   const overallStatus = failed === 0 ? 'PASS' : 'FAIL';
-  const statusEmoji = overallStatus === 'PASS' ? '✅' : '❌';
+  const statusEmoji = overallStatus === 'PASS' ? 'âœ…' : 'âŒ';
 
   console.log('='.repeat(60));
   console.log(`${statusEmoji} OVERALL STATUS: ${overallStatus}`);
   console.log('='.repeat(60) + '\n');
 
   if (overallStatus === 'PASS') {
-    console.log('🎉 All critical services are properly configured!\n');
+    console.log('ðŸŽ‰ All critical services are properly configured!\n');
     console.log('Next steps:');
     console.log('  1. Start the development server: pnpm run dev');
     console.log('  2. Check service logs for any runtime errors');
     console.log('  3. Test end-to-end data flow\n');
   } else {
-    console.log('⚠️  Please fix the failed tests before running the application.\n');
+    console.log('âš ï¸  Please fix the failed tests before running the application.\n');
     console.log('See docs/GCP_DEVELOPER_SETUP_GUIDE.md for setup instructions.\n');
     process.exit(1);
   }
@@ -443,7 +458,7 @@ async function printSummary() {
 
 async function main() {
   console.log('\n' + '='.repeat(60));
-  console.log('🚀 GCP SERVICES CONNECTIVITY TEST');
+  console.log('ðŸš€ GCP SERVICES CONNECTIVITY TEST');
   console.log('   EventSphere / DrishtiX Platform');
   console.log('='.repeat(60));
 
@@ -460,7 +475,7 @@ async function main() {
     await testOrchestrator();
     await printSummary();
   } catch (error) {
-    console.error('\n❌ Test execution failed:', error);
+    console.error('\nâŒ Test execution failed:', error);
     process.exit(1);
   }
 }

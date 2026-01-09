@@ -1,3 +1,18 @@
+/**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
 #!/usr/bin/env node
 
 /**
@@ -23,15 +38,15 @@ function check(name: string, condition: boolean, message: string, isWarning = fa
   results.push({
     name,
     status: condition ? 'pass' : isWarning ? 'warning' : 'fail',
-    message: condition ? '✅ ' + message : (isWarning ? '⚠️  ' : '❌ ') + message,
+    message: condition ? 'âœ… ' + message : (isWarning ? 'âš ï¸  ' : 'âŒ ') + message,
   });
 }
 
-console.log('\n🔍 DrishtiX Setup Verification\n');
+console.log('\nðŸ” DrishtiX Setup Verification\n');
 console.log('='.repeat(60));
 
 // 1. Check .env file
-console.log('\n📋 Checking Environment Configuration...\n');
+console.log('\nðŸ“‹ Checking Environment Configuration...\n');
 
 const envPath = join(process.cwd(), '.env');
 check(
@@ -66,7 +81,7 @@ const optionalVars = [
   'OPENWEATHER_API_KEY',
 ];
 
-console.log('\n📦 Checking Optional APIs...\n');
+console.log('\nðŸ“¦ Checking Optional APIs...\n');
 
 optionalVars.forEach((varName) => {
   check(
@@ -80,7 +95,7 @@ optionalVars.forEach((varName) => {
 });
 
 // 4. Check GCP service account file
-console.log('\n🔐 Checking GCP Credentials...\n');
+console.log('\nðŸ” Checking GCP Credentials...\n');
 
 const gcpKeyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || './config/gcp-service-account-key.json';
 check(
@@ -114,7 +129,7 @@ if (existsSync(gcpKeyPath)) {
 }
 
 // 5. Check Prisma schema
-console.log('\n🗄️  Checking Database Configuration...\n');
+console.log('\nðŸ—„ï¸  Checking Database Configuration...\n');
 
 const schemaPath = join(process.cwd(), 'prisma', 'schema.prisma');
 check(
@@ -136,7 +151,7 @@ if (process.env.DATABASE_URL) {
 }
 
 // 7. Check Firebase config
-console.log('\n🔥 Checking Firebase Configuration...\n');
+console.log('\nðŸ”¥ Checking Firebase Configuration...\n');
 
 const firebaseVars = [
   'VITE_FIREBASE_API_KEY',
@@ -157,7 +172,7 @@ check(
 );
 
 // 8. Check feature flags
-console.log('\n🚩 Checking Feature Flags...\n');
+console.log('\nðŸš© Checking Feature Flags...\n');
 
 const features = [
   'VITE_ENABLE_PREDICTIVE_ANALYTICS',
@@ -178,7 +193,7 @@ features.forEach((flag) => {
 });
 
 // 9. Check Firestore schema doc
-console.log('\n📚 Checking Documentation...\n');
+console.log('\nðŸ“š Checking Documentation...\n');
 
 const docsPath = join(process.cwd(), 'docs', 'FIRESTORE_SCHEMA.md');
 check(
@@ -196,7 +211,7 @@ check(
 
 // Print results
 console.log('\n' + '='.repeat(60));
-console.log('\n📊 Verification Results\n');
+console.log('\nðŸ“Š Verification Results\n');
 
 const passed = results.filter((r) => r.status === 'pass').length;
 const failed = results.filter((r) => r.status === 'fail').length;
@@ -207,21 +222,21 @@ results.forEach((result) => {
 });
 
 console.log('\n' + '='.repeat(60));
-console.log(`\n✅ Passed: ${passed}`);
-console.log(`❌ Failed: ${failed}`);
-console.log(`⚠️  Warnings: ${warnings}`);
+console.log(`\nâœ… Passed: ${passed}`);
+console.log(`âŒ Failed: ${failed}`);
+console.log(`âš ï¸  Warnings: ${warnings}`);
 console.log('\n' + '='.repeat(60));
 
 if (failed > 0) {
-  console.log('\n⚠️  Setup is incomplete. Please fix the failed checks above.');
-  console.log('\n📖 See docs/GOOGLE_CLOUD_SETUP.md for detailed setup instructions.\n');
+  console.log('\nâš ï¸  Setup is incomplete. Please fix the failed checks above.');
+  console.log('\nðŸ“– See docs/GOOGLE_CLOUD_SETUP.md for detailed setup instructions.\n');
   process.exit(1);
 } else if (warnings > 0) {
-  console.log('\n✅ Basic setup complete! Some optional features are not configured.');
-  console.log('\n📖 See docs/GOOGLE_CLOUD_SETUP.md to enable additional features.\n');
+  console.log('\nâœ… Basic setup complete! Some optional features are not configured.');
+  console.log('\nðŸ“– See docs/GOOGLE_CLOUD_SETUP.md to enable additional features.\n');
   process.exit(0);
 } else {
-  console.log('\n🎉 Perfect! Your DrishtiX setup is complete and ready to use!\n');
+  console.log('\nðŸŽ‰ Perfect! Your DrishtiX setup is complete and ready to use!\n');
   console.log('Next steps:');
   console.log('  1. Run migrations: pnpm prisma migrate dev');
   console.log('  2. Seed database: pnpm prisma db seed');

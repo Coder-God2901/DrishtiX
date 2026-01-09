@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Redis-based Failed Login Tracker Service
  * Production-ready with Redis persistence
  */
@@ -31,7 +46,7 @@ class RedisFailedLoginTrackerService {
       this.redis = new Redis(redisUrl, {
         retryStrategy: (times) => {
           if (times > 3) {
-            console.warn('⚠️ Redis connection failed, falling back to in-memory tracking')
+            console.warn('âš ï¸ Redis connection failed, falling back to in-memory tracking')
             return null // Stop retrying
           }
           return Math.min(times * 50, 2000)
@@ -40,14 +55,14 @@ class RedisFailedLoginTrackerService {
       })
 
       this.redis.on('connect', () => {
-        console.log('✅ Redis connected for failed-login tracking')
+        console.log('âœ… Redis connected for failed-login tracking')
       })
 
       this.redis.on('error', (err) => {
-        console.error('❌ Redis error:', err.message)
+        console.error('âŒ Redis error:', err.message)
       })
     } catch (error) {
-      console.warn('⚠️ Redis initialization failed, using fallback')
+      console.warn('âš ï¸ Redis initialization failed, using fallback')
       this.redis = null
     }
   }
@@ -134,7 +149,7 @@ class RedisFailedLoginTrackerService {
     }
 
     console.warn(
-      `⚠️ Failed login attempt ${attempt.count}/${this.MAX_ATTEMPTS} for ${type}: ${identifier}`
+      `âš ï¸ Failed login attempt ${attempt.count}/${this.MAX_ATTEMPTS} for ${type}: ${identifier}`
     )
   }
 
@@ -193,7 +208,7 @@ class RedisFailedLoginTrackerService {
     metadata?: any
   ): Promise<void> {
     console.error(
-      `🚨 SECURITY ALERT: ${attemptCount} failed login attempts from ${type}: ${identifier}`
+      `ðŸš¨ SECURITY ALERT: ${attemptCount} failed login attempts from ${type}: ${identifier}`
     )
 
     // Publish to incident-alerts topic

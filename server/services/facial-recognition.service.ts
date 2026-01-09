@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Facial Recognition Service
  * Real-time face detection and recognition using face-api.js
  * 
@@ -115,8 +130,8 @@ class FacialRecognitionService {
       await this.loadRegisteredFaces();
 
       this.isInitialized = true;
-      console.log('✓ [Facial Recognition] All models loaded successfully');
-      console.log(`✓ [Facial Recognition] ${this.registeredFaces.size} registered faces loaded`);
+      console.log('âœ“ [Facial Recognition] All models loaded successfully');
+      console.log(`âœ“ [Facial Recognition] ${this.registeredFaces.size} registered faces loaded`);
     } catch (error: any) {
       console.error('[Facial Recognition] Initialization failed:', error.message);
       console.warn('[Facial Recognition] Falling back to stub mode.');
@@ -295,7 +310,7 @@ class FacialRecognitionService {
       // Store in Firebase for persistence
       await this.saveRegisteredFace(person);
 
-      console.log(`✓ [Facial Recognition] Registered ${name} (${role})`);
+      console.log(`âœ“ [Facial Recognition] Registered ${name} (${role})`);
       return true;
     } catch (error: any) {
       console.error('[Facial Recognition] Registration error:', error.message);

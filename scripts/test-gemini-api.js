@@ -1,3 +1,18 @@
+/**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
 #!/usr/bin/env node
 
 /**
@@ -32,18 +47,18 @@ async function testGeminiAPI() {
   log('1. Checking Configuration...', 'blue');
 
   if (!apiKey) {
-    log('❌ VITE_GEMINI_API_KEY not set', 'red');
+    log('âŒ VITE_GEMINI_API_KEY not set', 'red');
     log('   Get your API key from: https://makersuite.google.com/app/apikey', 'yellow');
     log('   Then add to .env: VITE_GEMINI_API_KEY=your-key-here', 'yellow');
     process.exit(1);
   }
 
   if (!apiKey.startsWith('AIzaSy')) {
-    log('⚠️  API key format looks incorrect (should start with AIzaSy)', 'yellow');
+    log('âš ï¸  API key format looks incorrect (should start with AIzaSy)', 'yellow');
   }
 
-  log(`✅ API Key configured (${apiKey.substring(0, 15)}...)`, 'green');
-  log(`✅ Endpoint: ${endpoint}`, 'green');
+  log(`âœ… API Key configured (${apiKey.substring(0, 15)}...)`, 'green');
+  log(`âœ… Endpoint: ${endpoint}`, 'green');
 
   // Test 1: Basic text generation
   log('\n2. Testing Basic Text Generation...', 'blue');
@@ -77,21 +92,21 @@ async function testGeminiAPI() {
     const latency = Date.now() - startTime;
     const generatedText = response.data.candidates[0]?.content?.parts[0]?.text || '';
 
-    log(`✅ Response received in ${latency}ms`, 'green');
-    log(`✅ Generated text length: ${generatedText.length} characters`, 'green');
+    log(`âœ… Response received in ${latency}ms`, 'green');
+    log(`âœ… Generated text length: ${generatedText.length} characters`, 'green');
     log(`   Response: "${generatedText.substring(0, 100)}..."`, 'cyan');
 
     if (latency > 5000) {
-      log(`⚠️  High latency detected (${latency}ms > 5000ms)`, 'yellow');
+      log(`âš ï¸  High latency detected (${latency}ms > 5000ms)`, 'yellow');
     }
   } catch (error) {
     if (error.response?.status === 400) {
-      log('❌ Invalid API key or request format', 'red');
+      log('âŒ Invalid API key or request format', 'red');
       log(`   Error: ${error.response.data.error.message}`, 'yellow');
     } else if (error.response?.status === 429) {
-      log('❌ Rate limit exceeded (60 requests/minute for free tier)', 'red');
+      log('âŒ Rate limit exceeded (60 requests/minute for free tier)', 'red');
     } else {
-      log(`❌ API request failed: ${error.message}`, 'red');
+      log(`âŒ API request failed: ${error.message}`, 'red');
     }
     process.exit(1);
   }
@@ -150,12 +165,12 @@ Generate a structured incident briefing with:
 
     const summary = response.data.candidates[0]?.content?.parts[0]?.text || '';
 
-    log('✅ Summary generated successfully', 'green');
+    log('âœ… Summary generated successfully', 'green');
     log('\n--- Generated Summary ---', 'cyan');
     log(summary, 'cyan');
     log('--- End Summary ---\n', 'cyan');
   } catch (error) {
-    log(`❌ Summary generation failed: ${error.message}`, 'red');
+    log(`âŒ Summary generation failed: ${error.message}`, 'red');
     process.exit(1);
   }
 
@@ -180,11 +195,11 @@ Generate a structured incident briefing with:
 
     const answer = response.data.candidates[0]?.content?.parts[0]?.text || '';
 
-    log(`✅ Query answered successfully`, 'green');
+    log(`âœ… Query answered successfully`, 'green');
     log(`   Q: "${query}"`, 'yellow');
     log(`   A: "${answer.substring(0, 200)}..."`, 'cyan');
   } catch (error) {
-    log(`⚠️  Query failed: ${error.message}`, 'yellow');
+    log(`âš ï¸  Query failed: ${error.message}`, 'yellow');
   }
 
   // Test 4: Safety filter check
@@ -206,18 +221,18 @@ Generate a structured incident briefing with:
     });
 
     const text = response.data.candidates[0]?.content?.parts[0]?.text || '';
-    log('✅ Safety filters working correctly', 'green');
+    log('âœ… Safety filters working correctly', 'green');
     log(`   Generated ${text.length} characters of safe content`, 'cyan');
   } catch (error) {
-    log(`⚠️  Safety filter test inconclusive: ${error.message}`, 'yellow');
+    log(`âš ï¸  Safety filter test inconclusive: ${error.message}`, 'yellow');
   }
 
   // Summary
   log('\n=== Test Summary ===\n', 'cyan');
-  log('✅ Gemini Pro API is operational', 'green');
-  log('✅ Incident summarization working', 'green');
-  log('✅ Natural language queries working', 'green');
-  log('✅ Ready for production use', 'green');
+  log('âœ… Gemini Pro API is operational', 'green');
+  log('âœ… Incident summarization working', 'green');
+  log('âœ… Natural language queries working', 'green');
+  log('âœ… Ready for production use', 'green');
 
   log('\nNext steps:', 'blue');
   log('  1. Enable VITE_ENABLE_GEMINI_SUMMARIES=true in .env', 'cyan');
@@ -232,7 +247,7 @@ Generate a structured incident briefing with:
 
 // Run tests
 testGeminiAPI().catch((error) => {
-  log(`\n❌ Test failed: ${error.message}`, 'red');
+  log(`\nâŒ Test failed: ${error.message}`, 'red');
   console.error(error);
   process.exit(1);
 });

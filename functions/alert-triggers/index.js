@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Cloud Function: Alert Triggers
  *
  * Automatically triggers alerts when proof validation events occur.
@@ -226,10 +241,10 @@ async function sendSMS(to, body, alertId) {
  */
 function formatAlertMessage(data, alertId) {
   const severityEmoji = {
-    [ALERT_SEVERITY.LOW]: '🔵',
-    [ALERT_SEVERITY.MEDIUM]: '🟡',
-    [ALERT_SEVERITY.HIGH]: '🟠',
-    [ALERT_SEVERITY.CRITICAL]: '🔴',
+    [ALERT_SEVERITY.LOW]: 'ðŸ”µ',
+    [ALERT_SEVERITY.MEDIUM]: 'ðŸŸ¡',
+    [ALERT_SEVERITY.HIGH]: 'ðŸŸ ',
+    [ALERT_SEVERITY.CRITICAL]: 'ðŸ”´',
   };
 
   return `${severityEmoji[data.severity]} ALERT: ${data.type}

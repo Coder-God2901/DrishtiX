@@ -1,3 +1,16 @@
+# Copyright Â© 2025 DrishtiX. All Rights Reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL
+#
+# This software is the proprietary information of DrishtiX.
+# Unauthorized copying, distribution, modification, or use of this software,
+# via any medium, is strictly prohibited without the express written permission
+# of DrishtiX.
+#
+# This software is provided "as is" without warranty of any kind, express or implied.
+#
+# For licensing inquiries: licensing@drishtix.com
+# License: See LICENSE file in the project root
 """
 ML Inference Service - Replaces Vertex AI
 FastAPI service providing crowd forecasting, anomaly detection, and risk prediction
@@ -382,7 +395,7 @@ async def predict_risk(request: RiskPredictionRequest):
         if risk_score > 0.8:
             risk_level = "CRITICAL"
             recommendations = [
-                "⚠️ IMMEDIATE ACTION REQUIRED: Stop entry",
+                "âš ï¸ IMMEDIATE ACTION REQUIRED: Stop entry",
                 "Deploy all security personnel",
                 "Activate emergency exits",
                 "Consider evacuation protocols"
@@ -486,7 +499,7 @@ async def root():
             "/api/train",
             "/health"
         ],
-        "replaces": "Vertex AI (cost optimization: $100/month → $10/month)"
+        "replaces": "Vertex AI (cost optimization: $100/month â†’ $10/month)"
     }
 
 if __name__ == "__main__":

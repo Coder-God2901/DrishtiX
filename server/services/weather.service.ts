@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Weather Service - OpenWeatherMap Integration
  * Real-time weather data for ML predictions and dashboard display
  */
@@ -72,7 +87,7 @@ class WeatherService {
       await this.fetchAndPublishWeather(eventId, location);
     }, this.cacheDuration);
 
-    console.log(`✓ Weather monitoring active for event ${eventId}`);
+    console.log(`âœ“ Weather monitoring active for event ${eventId}`);
   }
 
   /**
@@ -238,10 +253,10 @@ class WeatherService {
     }
 
     // Add UV impact (0-11+ scale)
-    const uvImpact = uvIndex * 0.5; // UV contributes up to 5.5°C equivalent
+    const uvImpact = uvIndex * 0.5; // UV contributes up to 5.5Â°C equivalent
     const effectiveTemp = heatIndex + uvImpact;
 
-    // Normalize to 0-1 scale (assuming max dangerous temp is 50°C)
+    // Normalize to 0-1 scale (assuming max dangerous temp is 50Â°C)
     const normalizedIndex = Math.min(effectiveTemp / 50, 1);
 
     // Determine level
@@ -312,7 +327,7 @@ class WeatherService {
       io.to(`event:${eventId}`).emit('weather:update', weatherData);
       io.to(`weather:${eventId}`).emit('weather:data', weatherData);
 
-      console.log(`[Weather Service] Published weather update for ${location.name}: ${weather.temperature}°C, ${weather.condition}`);
+      console.log(`[Weather Service] Published weather update for ${location.name}: ${weather.temperature}Â°C, ${weather.condition}`);
     } catch (error) {
       console.error('[Weather Service] Error in fetch and publish:', error);
     }

@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Cloud Functions Test Script
  *
  * Tests all deployed Cloud Functions with sample data
@@ -50,15 +65,15 @@ function header(message) {
 }
 
 function success(message) {
-  log(`✓ ${message}`, 'green');
+  log(`âœ“ ${message}`, 'green');
 }
 
 function error(message) {
-  log(`✗ ${message}`, 'red');
+  log(`âœ— ${message}`, 'red');
 }
 
 function info(message) {
-  log(`ℹ ${message}`, 'blue');
+  log(`â„¹ ${message}`, 'blue');
 }
 
 // Test data
@@ -330,7 +345,7 @@ function generateSummary(results) {
 
   console.log('\nResults:');
   results.forEach((result) => {
-    const icon = result.status === 'pass' ? '✓' : '✗';
+    const icon = result.status === 'pass' ? 'âœ“' : 'âœ—';
     const color = result.status === 'pass' ? 'green' : 'red';
     log(`  ${icon} ${result.name}`, color);
   });
@@ -339,9 +354,9 @@ function generateSummary(results) {
   log(`Total: ${total} | Passed: ${passed} | Failed: ${failed}`, failed === 0 ? 'green' : 'yellow');
 
   if (failed === 0) {
-    log('\n🎉 All tests passed!', 'green');
+    log('\nðŸŽ‰ All tests passed!', 'green');
   } else {
-    log(`\n⚠️  ${failed} test(s) failed`, 'yellow');
+    log(`\nâš ï¸  ${failed} test(s) failed`, 'yellow');
   }
 }
 

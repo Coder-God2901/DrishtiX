@@ -1,3 +1,16 @@
+# Copyright Â© 2025 DrishtiX. All Rights Reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL
+#
+# This software is the proprietary information of DrishtiX.
+# Unauthorized copying, distribution, modification, or use of this software,
+# via any medium, is strictly prohibited without the express written permission
+# of DrishtiX.
+#
+# This software is provided "as is" without warranty of any kind, express or implied.
+#
+# For licensing inquiries: licensing@drishtix.com
+# License: See LICENSE file in the project root
 """
 Training Data Collection Script
 Fetches historical data from BigQuery for ML model training
@@ -69,14 +82,14 @@ def collect_convlstm_data(days: int = 30, output_dir: str = 'data/convlstm'):
         df = client.query(query).to_dataframe()
 
         if df.empty:
-            print("⚠️ No data found in BigQuery. Generating synthetic data...")
+            print("âš ï¸ No data found in BigQuery. Generating synthetic data...")
             df = generate_synthetic_convlstm_data(days)
         else:
-            print(f"✅ Fetched {len(df)} rows from BigQuery")
+            print(f"âœ… Fetched {len(df)} rows from BigQuery")
 
         # Save raw data
         df.to_csv(f'{output_dir}/raw_data.csv', index=False)
-        print(f"📁 Saved raw data to {output_dir}/raw_data.csv")
+        print(f"ðŸ“ Saved raw data to {output_dir}/raw_data.csv")
 
         # Process into sequences
         sequences, labels = create_time_sequences(
@@ -86,15 +99,15 @@ def collect_convlstm_data(days: int = 30, output_dir: str = 'data/convlstm'):
         np.save(f'{output_dir}/sequences.npy', sequences)
         np.save(f'{output_dir}/labels.npy', labels)
 
-        print(f"✅ Created {len(sequences)} training sequences")
+        print(f"âœ… Created {len(sequences)} training sequences")
         print(f"   Sequence shape: {sequences.shape}")
         print(f"   Labels shape: {labels.shape}")
-        print(f"📁 Saved to {output_dir}/sequences.npy and labels.npy")
+        print(f"ðŸ“ Saved to {output_dir}/sequences.npy and labels.npy")
 
         return sequences, labels
 
     except Exception as e:
-        print(f"❌ Error fetching data: {e}")
+        print(f"âŒ Error fetching data: {e}")
         print("Generating synthetic data instead...")
         df = generate_synthetic_convlstm_data(days)
         df.to_csv(f'{output_dir}/raw_data.csv', index=False)
@@ -137,10 +150,10 @@ def collect_isolation_forest_data(days: int = 30, output_dir: str = 'data/isolat
         df = client.query(query).to_dataframe()
 
         if df.empty:
-            print("⚠️ No data found. Generating synthetic data...")
+            print("âš ï¸ No data found. Generating synthetic data...")
             df = generate_synthetic_isolation_forest_data(days)
         else:
-            print(f"✅ Fetched {len(df)} rows from BigQuery")
+            print(f"âœ… Fetched {len(df)} rows from BigQuery")
 
         # Encode zone_type
         df['zone_type_enc'] = pd.Categorical(df['zone_type']).codes
@@ -155,14 +168,14 @@ def collect_isolation_forest_data(days: int = 30, output_dir: str = 'data/isolat
 
         np.save(f'{output_dir}/features.npy', X)
 
-        print(f"✅ Created {len(X)} feature vectors")
+        print(f"âœ… Created {len(X)} feature vectors")
         print(f"   Feature shape: {X.shape}")
-        print(f"📁 Saved to {output_dir}/features.npy")
+        print(f"ðŸ“ Saved to {output_dir}/features.npy")
 
         return X
 
     except Exception as e:
-        print(f"❌ Error fetching data: {e}")
+        print(f"âŒ Error fetching data: {e}")
         print("Generating synthetic data instead...")
         df = generate_synthetic_isolation_forest_data(days)
         df.to_csv(f'{output_dir}/features.csv', index=False)
@@ -183,7 +196,7 @@ def collect_autoencoder_data(days: int = 7, output_dir: str = 'data/autoencoder'
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    print("⚠️ Video frame collection requires access to GCS bucket with stored frames")
+    print("âš ï¸ Video frame collection requires access to GCS bucket with stored frames")
     print("   Expected path: gs://drishtix-data-storage/video-frames/")
     print("   Frame format: event_id/camera_id/timestamp.jpg")
 
@@ -194,9 +207,9 @@ def collect_autoencoder_data(days: int = 7, output_dir: str = 'data/autoencoder'
 
     np.save(f'{output_dir}/frames.npy', frames)
 
-    print(f"✅ Created {len(frames)} synthetic frames")
+    print(f"âœ… Created {len(frames)} synthetic frames")
     print(f"   Frame shape: {frames.shape}")
-    print(f"📁 Saved to {output_dir}/frames.npy")
+    print(f"ðŸ“ Saved to {output_dir}/frames.npy")
 
     return frames
 
@@ -243,7 +256,7 @@ def create_time_sequences(df, sequence_length=60, forecast_horizon=5):
 
 def generate_synthetic_convlstm_data(days: int = 30):
     """Generate synthetic crowd density data for testing"""
-    print("🔄 Generating synthetic ConvLSTM data...")
+    print("ðŸ”„ Generating synthetic ConvLSTM data...")
 
     timestamps = pd.date_range(
         start=datetime.now() - timedelta(days=days),
@@ -279,13 +292,13 @@ def generate_synthetic_convlstm_data(days: int = 30):
             })
 
     df = pd.DataFrame(data)
-    print(f"✅ Generated {len(df)} synthetic rows")
+    print(f"âœ… Generated {len(df)} synthetic rows")
     return df
 
 
 def generate_synthetic_isolation_forest_data(days: int = 30):
     """Generate synthetic anomaly detection data"""
-    print("🔄 Generating synthetic Isolation Forest data...")
+    print("ðŸ”„ Generating synthetic Isolation Forest data...")
 
     timestamps = pd.date_range(
         start=datetime.now() - timedelta(days=days),
@@ -317,13 +330,13 @@ def generate_synthetic_isolation_forest_data(days: int = 30):
 
     df = pd.DataFrame(data)
     df['zone_type_enc'] = pd.Categorical(df['zone_type']).codes
-    print(f"✅ Generated {len(df)} synthetic rows")
+    print(f"âœ… Generated {len(df)} synthetic rows")
     return df
 
 
 def generate_synthetic_video_frames(num_frames: int = 1000, height: int = 224, width: int = 224):
     """Generate synthetic video frames (grayscale)"""
-    print(f"🔄 Generating {num_frames} synthetic video frames...")
+    print(f"ðŸ”„ Generating {num_frames} synthetic video frames...")
 
     frames = []
     for i in range(num_frames):
@@ -380,8 +393,8 @@ def main():
         collect_autoencoder_data(args.days, f'{args.output_dir}/autoencoder')
 
     print("\n" + "=" * 60)
-    print("✅ Data collection complete!")
-    print(f"📁 Data saved to: {args.output_dir}/")
+    print("âœ… Data collection complete!")
+    print(f"ðŸ“ Data saved to: {args.output_dir}/")
     print("=" * 60)
 
 

@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Cloud Function: Reward Automation
  *
  * Automatically triggers gamification rewards based on attendee actions.
@@ -169,7 +184,7 @@ async function processReward(data) {
     points,
     totalPoints: newPoints,
     notification: {
-      title: '🎉 Reward Earned!',
+      title: 'ðŸŽ‰ Reward Earned!',
       body: `You earned ${points} points for ${formatActionType(data.actionType)}!`,
       data: {
         type: 'reward',
@@ -290,7 +305,7 @@ async function unlockAchievement(attendeeId, achievementKey, achievement) {
 
     // Send achievement notification
     await sendPushNotification(attendeeId, {
-      title: '🏆 Achievement Unlocked!',
+      title: 'ðŸ† Achievement Unlocked!',
       body: `${achievement.title} - ${achievement.points} bonus points!`,
       data: {
         type: 'achievement',

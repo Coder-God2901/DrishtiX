@@ -1,3 +1,16 @@
+# Copyright Â© 2025 DrishtiX. All Rights Reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL
+#
+# This software is the proprietary information of DrishtiX.
+# Unauthorized copying, distribution, modification, or use of this software,
+# via any medium, is strictly prohibited without the express written permission
+# of DrishtiX.
+#
+# This software is provided "as is" without warranty of any kind, express or implied.
+#
+# For licensing inquiries: licensing@drishtix.com
+# License: See LICENSE file in the project root
 """
 Autoencoder Training Pipeline for L3 Visual Anomaly Detection
 Trains a convolutional autoencoder on crowd scene images
@@ -90,7 +103,7 @@ def setup_directories():
     os.makedirs(IMAGE_DIR, exist_ok=True)
     os.makedirs(os.path.join(IMAGE_DIR, 'normal'), exist_ok=True)
     os.makedirs(os.path.join(IMAGE_DIR, 'anomaly'), exist_ok=True)
-    print(f"✓ Directories created: {MODEL_DIR}, {DATA_DIR}, {IMAGE_DIR}")
+    print(f"âœ“ Directories created: {MODEL_DIR}, {DATA_DIR}, {IMAGE_DIR}")
 
 
 def fetch_images_from_gcs(days_back=90):
@@ -103,7 +116,7 @@ def fetch_images_from_gcs(days_back=90):
     Returns:
         List of image paths
     """
-    print(f"\n📊 Fetching {days_back} days of camera images from GCS...")
+    print(f"\nðŸ“Š Fetching {days_back} days of camera images from GCS...")
 
     try:
         storage_client = storage.Client(project=PROJECT_ID)
@@ -127,12 +140,12 @@ def fetch_images_from_gcs(days_back=90):
                 if count % 100 == 0:
                     print(f"   Downloaded {count} images...")
 
-        print(f"✓ Fetched {len(image_paths)} images from GCS")
+        print(f"âœ“ Fetched {len(image_paths)} images from GCS")
         return image_paths
 
     except Exception as e:
-        print(f"⚠️  GCS fetch failed: {e}")
-        print("⚠️  Using synthetic images for training demonstration...")
+        print(f"âš ï¸  GCS fetch failed: {e}")
+        print("âš ï¸  Using synthetic images for training demonstration...")
         return generate_synthetic_images()
 
 
@@ -151,7 +164,7 @@ def generate_synthetic_images(num_normal=1000, num_anomaly=100):
         List of image paths
     """
     print(
-        f"\n🔧 Generating {num_normal} normal + {num_anomaly} anomaly synthetic images...")
+        f"\nðŸ”§ Generating {num_normal} normal + {num_anomaly} anomaly synthetic images...")
 
     image_paths = []
 
@@ -225,8 +238,8 @@ def generate_synthetic_images(num_normal=1000, num_anomaly=100):
         cv2.imwrite(path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
         image_paths.append(path)
 
-    print(f"✓ Generated {num_normal} normal + {num_anomaly} anomaly images")
-    print(f"✓ Saved to {IMAGE_DIR}")
+    print(f"âœ“ Generated {num_normal} normal + {num_anomaly} anomaly images")
+    print(f"âœ“ Saved to {IMAGE_DIR}")
 
     return image_paths
 
@@ -241,7 +254,7 @@ def load_and_preprocess_images(image_paths):
     Returns:
         X: Preprocessed image array (samples, height, width, channels)
     """
-    print(f"\n🔄 Loading and preprocessing {len(image_paths)} images...")
+    print(f"\nðŸ”„ Loading and preprocessing {len(image_paths)} images...")
 
     images = []
 
@@ -263,12 +276,12 @@ def load_and_preprocess_images(image_paths):
                 print(f"   Processed {i + 1}/{len(image_paths)} images...")
 
         except Exception as e:
-            print(f"⚠️  Failed to load {path}: {e}")
+            print(f"âš ï¸  Failed to load {path}: {e}")
             continue
 
     X = np.array(images)
 
-    print(f"✓ Preprocessed images: {X.shape}")
+    print(f"âœ“ Preprocessed images: {X.shape}")
     print(f"   Mean: {X.mean():.4f}, Std: {X.std():.4f}")
 
     return X
@@ -292,7 +305,7 @@ def build_autoencoder(input_shape: Tuple[int, int, int]) -> Model:
         raise ImportError(
             "TensorFlow required. Install with: pip install tensorflow>=2.13.0")
 
-    logger.info(f"\n🏗️  Building Convolutional Autoencoder...")
+    logger.info(f"\nðŸ—ï¸  Building Convolutional Autoencoder...")
     logger.info(f"   Input shape: {input_shape}")
     logger.info(f"   Latent dimension: {LATENT_DIM}")
 
@@ -340,7 +353,7 @@ def build_autoencoder(input_shape: Tuple[int, int, int]) -> Model:
         metrics=['mae']
     )
 
-    print("✓ Autoencoder built successfully")
+    print("âœ“ Autoencoder built successfully")
     autoencoder.summary()
 
     return autoencoder
@@ -357,7 +370,7 @@ def train_model(X_train, X_val):
     Returns:
         Trained model and history
     """
-    print(f"\n🚀 Starting training...")
+    print(f"\nðŸš€ Starting training...")
     print(f"   Training samples: {len(X_train)}")
     print(f"   Validation samples: {len(X_val)}")
     print(f"   Batch size: {BATCH_SIZE}, Epochs: {EPOCHS}")
@@ -406,23 +419,23 @@ def train_model(X_train, X_val):
     # Save final model
     model_path = os.path.join(MODEL_DIR, 'autoencoder_final.h5')
     model.save(model_path)
-    print(f"\n✓ Model saved to {model_path}")
+    print(f"\nâœ“ Model saved to {model_path}")
 
     # Calculate reconstruction error threshold
-    print(f"\n📊 Calculating reconstruction error threshold...")
+    print(f"\nðŸ“Š Calculating reconstruction error threshold...")
     train_reconstructions = model.predict(X_train, batch_size=BATCH_SIZE)
     train_mse = np.mean(
         np.square(X_train - train_reconstructions), axis=(1, 2, 3))
 
     threshold = np.percentile(train_mse, 95)  # 95th percentile
     print(
-        f"✓ Reconstruction error threshold (95th percentile): {threshold:.6f}")
+        f"âœ“ Reconstruction error threshold (95th percentile): {threshold:.6f}")
 
     # Save threshold
     threshold_path = os.path.join(MODEL_DIR, 'threshold.txt')
     with open(threshold_path, 'w') as f:
         f.write(f"{threshold:.6f}\n")
-    print(f"✓ Threshold saved to {threshold_path}")
+    print(f"âœ“ Threshold saved to {threshold_path}")
 
     return model, history, threshold
 
@@ -436,7 +449,7 @@ def evaluate_model(model, X_test, threshold):
         X_test: Test images
         threshold: Anomaly detection threshold
     """
-    print(f"\n📊 Evaluating on test set...")
+    print(f"\nðŸ“Š Evaluating on test set...")
 
     # Reconstruct test images
     X_reconstructed = model.predict(X_test, batch_size=BATCH_SIZE)
@@ -463,14 +476,14 @@ def evaluate_model(model, X_test, threshold):
         reconstructions=X_reconstructed[:num_samples],
         mse=mse[:num_samples]
     )
-    print(f"✓ Sample reconstructions saved to {fig_path}")
+    print(f"âœ“ Sample reconstructions saved to {fig_path}")
 
 
 def deploy_to_vertex_ai():
     """
     Deploy trained autoencoder to Vertex AI endpoint
     """
-    print(f"\n☁️  Deploying autoencoder to Vertex AI...")
+    print(f"\nâ˜ï¸  Deploying autoencoder to Vertex AI...")
 
     try:
         aiplatform.init(project=PROJECT_ID, location=LOCATION)
@@ -483,7 +496,7 @@ def deploy_to_vertex_ai():
             serving_container_image_uri="us-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-13:latest",
             description="Convolutional autoencoder for L3 visual anomaly detection",
         )
-        print(f"✓ Model uploaded: {model.resource_name}")
+        print(f"âœ“ Model uploaded: {model.resource_name}")
 
         # Create endpoint
         print("   Creating Vertex AI endpoint...")
@@ -491,7 +504,7 @@ def deploy_to_vertex_ai():
             display_name=f"autoencoder-endpoint-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
             description="Autoencoder visual anomaly detection endpoint"
         )
-        print(f"✓ Endpoint created: {endpoint.resource_name}")
+        print(f"âœ“ Endpoint created: {endpoint.resource_name}")
 
         # Deploy model to endpoint
         print("   Deploying model to endpoint...")
@@ -503,13 +516,13 @@ def deploy_to_vertex_ai():
             max_replica_count=3,
         )
 
-        print(f"\n✅ Model deployed successfully!")
+        print(f"\nâœ… Model deployed successfully!")
         print(f"   Endpoint ID: {endpoint.name}")
         print(f"   Add to .env file:")
         print(f"   VERTEX_AI_AUTOENCODER_ENDPOINT={endpoint.name}")
 
     except Exception as e:
-        print(f"\n❌ Deployment failed: {e}")
+        print(f"\nâŒ Deployment failed: {e}")
         print("   Make sure you have:")
         print("   1. Vertex AI API enabled")
         print("   2. GCS bucket created")
@@ -560,10 +573,10 @@ def main():
         np.save(os.path.join(DATA_DIR, 'X_train.npy'), X_train)
         np.save(os.path.join(DATA_DIR, 'X_val.npy'), X_val)
         np.save(os.path.join(DATA_DIR, 'X_test.npy'), X_test)
-        print(f"✓ Saved prepared data to {DATA_DIR}")
+        print(f"âœ“ Saved prepared data to {DATA_DIR}")
 
         if args.mode == 'fetch-data':
-            print("\n✅ Data preparation complete. Run with --mode train to train model.")
+            print("\nâœ… Data preparation complete. Run with --mode train to train model.")
             return
 
     # Step 2: Train Model
@@ -579,7 +592,7 @@ def main():
         evaluate_model(model, X_test, threshold)
 
         if args.mode == 'train':
-            print("\n✅ Training complete. Run with --mode deploy to deploy to Vertex AI.")
+            print("\nâœ… Training complete. Run with --mode deploy to deploy to Vertex AI.")
             return
 
     # Step 3: Deploy to Vertex AI
@@ -605,10 +618,10 @@ def main():
         np.save(os.path.join(DATA_DIR, 'X_train.npy'), X_train)
         np.save(os.path.join(DATA_DIR, 'X_val.npy'), X_val)
         np.save(os.path.join(DATA_DIR, 'X_test.npy'), X_test)
-        print(f"✓ Saved prepared data to {DATA_DIR}")
+        print(f"âœ“ Saved prepared data to {DATA_DIR}")
 
         if args.mode == 'fetch-data':
-            print("\n✅ Data preparation complete. Run with --mode train to train model.")
+            print("\nâœ… Data preparation complete. Run with --mode train to train model.")
             return
 
     # Step 2: Train Model
@@ -624,7 +637,7 @@ def main():
         evaluate_model(model, X_test, threshold)
 
         if args.mode == 'train':
-            print("\n✅ Training complete. Run with --mode deploy to deploy to Vertex AI.")
+            print("\nâœ… Training complete. Run with --mode deploy to deploy to Vertex AI.")
             return
 
     # Step 3: Deploy to Vertex AI
@@ -632,7 +645,7 @@ def main():
         deploy_to_vertex_ai()
 
     print("\n" + "=" * 60)
-    print("✅ Pipeline complete!")
+    print("âœ… Pipeline complete!")
     print("=" * 60)
 
 

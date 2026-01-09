@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Google Earth Engine Service
  * Satellite imagery, venue mapping, and synthetic training data generation
  * 
@@ -59,9 +74,9 @@ class GoogleEarthEngineService {
   constructor() {
     // Lazy initialization - only initialize when needed
     if (gcpConfig.earthEngine.enabled) {
-      console.log('🌍 Earth Engine service configured - will initialize on first use');
+      console.log('ðŸŒ Earth Engine service configured - will initialize on first use');
     } else {
-      console.warn('⚠️ Earth Engine disabled in config - using fallback mode');
+      console.warn('âš ï¸ Earth Engine disabled in config - using fallback mode');
     }
   }
 
@@ -75,7 +90,7 @@ class GoogleEarthEngineService {
     this.initializationPromise = (async () => {
       try {
         if (!gcpConfig.earthEngine.enabled) {
-          console.warn('⚠️ Earth Engine disabled - skipping initialization');
+          console.warn('âš ï¸ Earth Engine disabled - skipping initialization');
           return;
         }
 
@@ -101,24 +116,24 @@ class GoogleEarthEngineService {
                 null,
                 null,
                 () => {
-                  console.log('✅ Earth Engine initialized successfully');
+                  console.log('âœ… Earth Engine initialized successfully');
                   this.initialized = true;
                   resolve();
                 },
                 (error: Error) => {
-                  console.error('❌ Earth Engine initialization failed:', error);
+                  console.error('âŒ Earth Engine initialization failed:', error);
                   reject(error);
                 }
               );
             },
             (error: Error) => {
-              console.error('❌ Earth Engine authentication failed:', error);
+              console.error('âŒ Earth Engine authentication failed:', error);
               reject(error);
             }
           );
         });
       } catch (error) {
-        console.error('❌ Earth Engine initialization error:', error);
+        console.error('âŒ Earth Engine initialization error:', error);
         this.initialized = false;
         throw error;
       }
@@ -173,7 +188,7 @@ class GoogleEarthEngineService {
         });
       });
 
-      console.log(`✅ Generated Earth Engine imagery for event ${request.eventId}`);
+      console.log(`âœ… Generated Earth Engine imagery for event ${request.eventId}`);
       return mapId.urlFormat;
     } catch (error) {
       console.error('Earth Engine imagery error:', error);
@@ -245,7 +260,7 @@ class GoogleEarthEngineService {
           };
         });
 
-      console.log(`✅ Generated terrain analysis with ${hazardZones.length} hazard zones`);
+      console.log(`âœ… Generated terrain analysis with ${hazardZones.length} hazard zones`);
 
       return {
         elevation: elevationValues,
@@ -301,7 +316,7 @@ class GoogleEarthEngineService {
         });
       });
 
-      console.log('✅ Generated land cover map');
+      console.log('âœ… Generated land cover map');
       return mapId.urlFormat;
     } catch (error) {
       console.error('Earth Engine land cover error:', error);

@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * GCP Services Orchestrator
  * Central coordinator for all Google Cloud Platform services
  * 
@@ -95,9 +110,9 @@ class GCPServicesOrchestrator {
    */
   public async initialize(): Promise<void> {
     try {
-      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🚀 Initializing GCP Services Orchestrator');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”');
+      console.log('ðŸš€ Initializing GCP Services Orchestrator');
+      console.log('â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n');
 
       // Initialize core services
       await this.initializeCoreServices();
@@ -116,15 +131,15 @@ class GCPServicesOrchestrator {
 
       this.initialized = true;
 
-      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('✅ GCP Services Orchestrator Ready');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”');
+      console.log('âœ… GCP Services Orchestrator Ready');
+      console.log('â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n');
 
       await cloudLoggingMonitoring.info('GCP Services Orchestrator initialized', {
         config: this.config,
       });
     } catch (error) {
-      console.error('❌ Error initializing GCP Services Orchestrator:', error);
+      console.error('âŒ Error initializing GCP Services Orchestrator:', error);
       await cloudLoggingMonitoring.error('Orchestrator initialization failed', error as Error);
       throw error;
     }
@@ -134,13 +149,13 @@ class GCPServicesOrchestrator {
    * Initialize core infrastructure services
    */
   private async initializeCoreServices(): Promise<void> {
-    console.log('📡 Initializing Core Services...');
+    console.log('ðŸ“¡ Initializing Core Services...');
 
     // Azure Service Bus is initialized in its constructor
-    console.log('  ✓ Azure Service Bus (Event Streaming)');
+    console.log('  âœ“ Azure Service Bus (Event Streaming)');
 
     // Azure Blob Storage is initialized in its constructor
-    console.log('  ✓ Azure Blob Storage (Asset Storage)');
+    console.log('  âœ“ Azure Blob Storage (Asset Storage)');
 
     console.log('');
   }
@@ -149,24 +164,24 @@ class GCPServicesOrchestrator {
    * Initialize AI/ML services
    */
   private async initializeAIServices(): Promise<void> {
-    console.log('🤖 Initializing AI/ML Services...');
+    console.log('ðŸ¤– Initializing AI/ML Services...');
 
     if (this.config.enableOpenAI) {
-      console.log('  ✓ Azure OpenAI (Crowd Forecasting)');
+      console.log('  âœ“ Azure OpenAI (Crowd Forecasting)');
     } else {
-      console.log('  ⚠ Azure OpenAI disabled (missing API key)');
+      console.log('  âš  Azure OpenAI disabled (missing API key)');
     }
 
     if (this.config.enableVisionAI) {
-      console.log('  ✓ Azure OpenAI Vision (Anomaly Detection)');
+      console.log('  âœ“ Azure OpenAI Vision (Anomaly Detection)');
     } else {
-      console.log('  ⚠ Azure OpenAI Vision disabled (missing API key)');
+      console.log('  âš  Azure OpenAI Vision disabled (missing API key)');
     }
 
     if (this.config.enableAgentBuilder) {
-      console.log('  ✓ Agent Builder (Automated Dispatch)');
+      console.log('  âœ“ Agent Builder (Automated Dispatch)');
     } else {
-      console.log('  ⚠ Agent Builder disabled (missing OpenAI key)');
+      console.log('  âš  Agent Builder disabled (missing OpenAI key)');
     }
 
     console.log('');
@@ -176,17 +191,17 @@ class GCPServicesOrchestrator {
    * Initialize data services
    */
   private async initializeDataServices(): Promise<void> {
-    console.log('💾 Initializing Data Services...');
+    console.log('ðŸ’¾ Initializing Data Services...');
 
-    console.log('  ✓ Azure Synapse Analytics (Analytics & Training Data)');
+    console.log('  âœ“ Azure Synapse Analytics (Analytics & Training Data)');
 
     if (this.config.enablePlanetaryComputer) {
-      console.log('  ✓ Azure Planetary Computer (Satellite Imagery)');
+      console.log('  âœ“ Azure Planetary Computer (Satellite Imagery)');
     } else {
-      console.log('  ⚠ Azure Planetary Computer disabled (missing API key)');
+      console.log('  âš  Azure Planetary Computer disabled (missing API key)');
     }
 
-    console.log('  ✓ Data Processing Pipeline (ETL)');
+    console.log('  âœ“ Data Processing Pipeline (ETL)');
 
     console.log('');
   }
@@ -195,20 +210,20 @@ class GCPServicesOrchestrator {
    * Initialize delivery services
    */
   private async initializeDeliveryServices(): Promise<void> {
-    console.log('📱 Initializing Delivery Services...');
+    console.log('ðŸ“± Initializing Delivery Services...');
 
     if (this.config.enableCosmosDB) {
-      console.log('  ✓ Azure Cosmos DB (Real-time Database)');
+      console.log('  âœ“ Azure Cosmos DB (Real-time Database)');
     }
 
     if (this.config.enableNotificationHubs) {
-      console.log('  ✓ Azure Notification Hubs (Push Notifications)');
+      console.log('  âœ“ Azure Notification Hubs (Push Notifications)');
     }
 
     if (this.config.enableMaps) {
-      console.log('  ✓ Azure Maps (Navigation & Routing)');
+      console.log('  âœ“ Azure Maps (Navigation & Routing)');
     } else {
-      console.log('  ⚠ Azure Maps disabled (missing subscription key)');
+      console.log('  âš  Azure Maps disabled (missing subscription key)');
     }
 
     console.log('');
@@ -218,8 +233,8 @@ class GCPServicesOrchestrator {
    * Initialize monitoring
    */
   private async initializeMonitoring(): Promise<void> {
-    console.log('📊 Initializing Monitoring...');
-    console.log('  ✓ Cloud Logging & Monitoring');
+    console.log('ðŸ“Š Initializing Monitoring...');
+    console.log('  âœ“ Cloud Logging & Monitoring');
     console.log('');
   }
 
@@ -260,7 +275,7 @@ class GCPServicesOrchestrator {
 
       await cloudLoggingMonitoring.info(`Started event pipeline for ${eventId}`, { pipeline });
 
-      console.log(`✅ Event pipeline started for ${eventId}`);
+      console.log(`âœ… Event pipeline started for ${eventId}`);
     } catch (error) {
       await cloudLoggingMonitoring.error(`Failed to start event pipeline for ${eventId}`, error as Error);
       throw error;
@@ -274,7 +289,7 @@ class GCPServicesOrchestrator {
     try {
       this.activePipelines.delete(eventId);
       await cloudLoggingMonitoring.info(`Stopped event pipeline for ${eventId}`);
-      console.log(`✅ Event pipeline stopped for ${eventId}`);
+      console.log(`âœ… Event pipeline stopped for ${eventId}`);
     } catch (error) {
       await cloudLoggingMonitoring.error(`Failed to stop event pipeline for ${eventId}`, error as Error);
       throw error;
@@ -381,7 +396,7 @@ class GCPServicesOrchestrator {
         recipientCount: deviceTokens.length,
       });
 
-      console.log(`🚨 Emergency alert sent for event ${eventId} to ${deviceTokens.length} devices`);
+      console.log(`ðŸš¨ Emergency alert sent for event ${eventId} to ${deviceTokens.length} devices`);
     } catch (error) {
       await cloudLoggingMonitoring.critical(`Failed to send emergency alert for event ${eventId}`, error as Error);
       throw error;
@@ -490,11 +505,11 @@ class GCPServicesOrchestrator {
     try {
       // Close Azure Service Bus connections
       await azureServiceBusService.close();
-      console.log('✓ Azure Service Bus closed');
+      console.log('âœ“ Azure Service Bus closed');
 
       // Close Azure Synapse connections (if any)
       await azureSynapseAnalyticsService.close();
-      console.log('✓ Azure Synapse closed');
+      console.log('âœ“ Azure Synapse closed');
 
       // Close other service connections
       this.initialized = false;

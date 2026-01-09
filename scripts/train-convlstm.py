@@ -1,3 +1,16 @@
+# Copyright Â© 2025 DrishtiX. All Rights Reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL
+#
+# This software is the proprietary information of DrishtiX.
+# Unauthorized copying, distribution, modification, or use of this software,
+# via any medium, is strictly prohibited without the express written permission
+# of DrishtiX.
+#
+# This software is provided "as is" without warranty of any kind, express or implied.
+#
+# For licensing inquiries: licensing@drishtix.com
+# License: See LICENSE file in the project root
 """
 ConvLSTM Training Pipeline for Crowd Density Prediction
 Trains a ConvLSTM model on historical crowd density heatmaps from BigQuery
@@ -75,7 +88,7 @@ def setup_directories():
     """Create necessary directories"""
     os.makedirs(MODEL_DIR, exist_ok=True)
     os.makedirs(DATA_DIR, exist_ok=True)
-    print(f"✓ Directories created: {MODEL_DIR}, {DATA_DIR}")
+    print(f"âœ“ Directories created: {MODEL_DIR}, {DATA_DIR}")
 
 
 def fetch_bigquery_data(days_back=90):
@@ -88,7 +101,7 @@ def fetch_bigquery_data(days_back=90):
     Returns:
         DataFrame with crowd density features
     """
-    print(f"\n📊 Fetching {days_back} days of historical data from BigQuery...")
+    print(f"\nðŸ“Š Fetching {days_back} days of historical data from BigQuery...")
 
     client = bigquery.Client(project=PROJECT_ID)
 
@@ -112,18 +125,18 @@ def fetch_bigquery_data(days_back=90):
 
     try:
         df = client.query(query).to_dataframe()
-        print(f"✓ Fetched {len(df)} records from BigQuery")
+        print(f"âœ“ Fetched {len(df)} records from BigQuery")
 
         # Save raw data
         data_path = os.path.join(DATA_DIR, 'raw_data.csv')
         df.to_csv(data_path, index=False)
-        print(f"✓ Saved raw data to {data_path}")
+        print(f"âœ“ Saved raw data to {data_path}")
 
         return df
 
     except Exception as e:
-        print(f"⚠️  BigQuery fetch failed: {e}")
-        print("⚠️  Using synthetic data for training demonstration...")
+        print(f"âš ï¸  BigQuery fetch failed: {e}")
+        print("âš ï¸  Using synthetic data for training demonstration...")
         return generate_synthetic_data()
 
 
@@ -142,7 +155,7 @@ def generate_synthetic_data(num_events=10, steps_per_event=200):
         DataFrame with synthetic crowd data
     """
     print(
-        f"\n🔧 Generating synthetic data: {num_events} events × {steps_per_event} steps")
+        f"\nðŸ”§ Generating synthetic data: {num_events} events Ã— {steps_per_event} steps")
 
     data = []
     for event_idx in range(num_events):
@@ -192,16 +205,16 @@ def generate_synthetic_data(num_events=10, steps_per_event=200):
     # Save synthetic data
     data_path = os.path.join(DATA_DIR, 'synthetic_data.csv')
     df.to_csv(data_path, index=False)
-    print(f"✓ Generated {len(df)} synthetic records")
-    print(f"✓ Saved to {data_path}")
+    print(f"âœ“ Generated {len(df)} synthetic records")
+    print(f"âœ“ Saved to {data_path}")
 
     return df
 
 
 def prepare_sequences(df, grid_size=GRID_SIZE, seq_length=SEQUENCE_LENGTH, forecast_horizon=FORECAST_HORIZON):
     df.to_csv(data_path, index=False)
-    print(f"✓ Generated {len(df)} synthetic records")
-    print(f"✓ Saved to {data_path}")
+    print(f"âœ“ Generated {len(df)} synthetic records")
+    print(f"âœ“ Saved to {data_path}")
 
     return df
 
@@ -220,9 +233,9 @@ def prepare_sequences(df, grid_size=GRID_SIZE, seq_length=SEQUENCE_LENGTH, forec
         X: Input sequences (samples, seq_length, grid_size, grid_size, features)
         y: Target sequences (samples, forecast_horizon, grid_size, grid_size, 1)
     """
-    print(f"\n🔄 Preparing ConvLSTM sequences...")
+    print(f"\nðŸ”„ Preparing ConvLSTM sequences...")
     print(
-        f"   Grid: {grid_size}×{grid_size}, Sequence: {seq_length}, Forecast: {forecast_horizon}")
+        f"   Grid: {grid_size}Ã—{grid_size}, Sequence: {seq_length}, Forecast: {forecast_horizon}")
 
     # Group by event
     events = df['event_id'].unique()
@@ -335,7 +348,7 @@ def prepare_sequences(df, grid_size=GRID_SIZE, seq_length=SEQUENCE_LENGTH, forec
     X = np.array(X_list)
     y = np.array(y_list)
 
-    print(f"✓ Prepared sequences: X shape = {X.shape}, y shape = {y.shape}")
+    print(f"âœ“ Prepared sequences: X shape = {X.shape}, y shape = {y.shape}")
     return X, y
 
 
@@ -355,7 +368,7 @@ def build_convlstm_model(input_shape: Tuple[int, int, int, int], output_steps: i
         raise ImportError(
             "TensorFlow required. Install with: pip install tensorflow>=2.13.0")
 
-    logger.info(f"\n🏗️  Building ConvLSTM model...")
+    logger.info(f"\nðŸ—ï¸  Building ConvLSTM model...")
     logger.info(f"   Input shape: {input_shape}")
     logger.info(f"   Output steps: {output_steps}")
 
@@ -405,7 +418,7 @@ def build_convlstm_model(input_shape: Tuple[int, int, int, int], output_steps: i
         metrics=['mae', 'mape']
     )
 
-    print("✓ Model built successfully")
+    print("âœ“ Model built successfully")
     model.summary()
 
     return model
@@ -422,7 +435,7 @@ def train_model(X_train, y_train, X_val, y_val):
     Returns:
         Trained model and training history
     """
-    print(f"\n🚀 Starting training...")
+    print(f"\nðŸš€ Starting training...")
     print(f"   Training samples: {len(X_train)}")
     print(f"   Validation samples: {len(X_val)}")
     print(f"   Batch size: {BATCH_SIZE}, Epochs: {EPOCHS}")
@@ -471,7 +484,7 @@ def train_model(X_train, y_train, X_val, y_val):
     # Save final model
     model_path = os.path.join(MODEL_DIR, 'convlstm_final.h5')
     model.save(model_path)
-    print(f"\n✓ Model saved to {model_path}")
+    print(f"\nâœ“ Model saved to {model_path}")
 
     return model, history
 
@@ -483,7 +496,7 @@ def deploy_to_vertex_ai(model_path):
     Args:
         model_path: Path to saved model
     """
-    print(f"\n☁️  Deploying model to Vertex AI...")
+    print(f"\nâ˜ï¸  Deploying model to Vertex AI...")
 
     try:
         aiplatform.init(project=PROJECT_ID, location=LOCATION)
@@ -496,7 +509,7 @@ def deploy_to_vertex_ai(model_path):
             serving_container_image_uri="us-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-13:latest",
             description="ConvLSTM model for crowd density forecasting",
         )
-        print(f"✓ Model uploaded: {model.resource_name}")
+        print(f"âœ“ Model uploaded: {model.resource_name}")
 
         # Create endpoint
         print("   Creating Vertex AI endpoint...")
@@ -504,7 +517,7 @@ def deploy_to_vertex_ai(model_path):
             display_name=f"convlstm-endpoint-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
             description="ConvLSTM crowd prediction endpoint"
         )
-        print(f"✓ Endpoint created: {endpoint.resource_name}")
+        print(f"âœ“ Endpoint created: {endpoint.resource_name}")
 
         # Deploy model to endpoint
         print("   Deploying model to endpoint...")
@@ -516,13 +529,13 @@ def deploy_to_vertex_ai(model_path):
             max_replica_count=3,
         )
 
-        print(f"\n✅ Model deployed successfully!")
+        print(f"\nâœ… Model deployed successfully!")
         print(f"   Endpoint ID: {endpoint.name}")
         print(f"   Add this to your .env file:")
         print(f"   VERTEX_AI_CONVLSTM_ENDPOINT={endpoint.name}")
 
     except Exception as e:
-        print(f"\n❌ Deployment failed: {e}")
+        print(f"\nâŒ Deployment failed: {e}")
         print("   Make sure you have:")
         print("   1. Vertex AI API enabled")
         print("   2. GCS bucket created")
@@ -571,12 +584,12 @@ def main():
         np.save(os.path.join(DATA_DIR, 'X_val.npy'), X_val)
         np.save(os.path.join(DATA_DIR, 'y_train.npy'), y_train)
         np.save(os.path.join(DATA_DIR, 'y_val.npy'), y_val)
-        print(f"✓ Saved prepared sequences to {DATA_DIR}")
+        print(f"âœ“ Saved prepared sequences to {DATA_DIR}")
 
         if args.mode == 'fetch-data':
-            print("\n✅ Data preparation complete. Run with --mode train to train model.")
+            print("\nâœ… Data preparation complete. Run with --mode train to train model.")
             returnprint(
-                "\n✅ Data preparation complete. Run with --mode train to train model.")
+                "\nâœ… Data preparation complete. Run with --mode train to train model.")
             return
 
     # Step 2: Train Model
@@ -590,9 +603,9 @@ def main():
         model, history = train_model(X_train, y_train, X_val, y_val)
 
         if args.mode == 'train':
-            print("\n✅ Training complete. Run with --mode deploy to deploy to Vertex AI.")
+            print("\nâœ… Training complete. Run with --mode deploy to deploy to Vertex AI.")
             returnprint(
-                "\n✅ Training complete. Run with --mode deploy to deploy to Vertex AI.")
+                "\nâœ… Training complete. Run with --mode deploy to deploy to Vertex AI.")
             return
 
     # Step 3: Deploy to Vertex AI
@@ -601,15 +614,15 @@ def main():
         if os.path.exists(model_path):
             deploy_to_vertex_ai(model_path)
         else:
-            print(f"\n❌ Model not found at {model_path}. Train model first.")
+            print(f"\nâŒ Model not found at {model_path}. Train model first.")
         model_path = os.path.join(MODEL_DIR, 'convlstm_final.h5')
         if os.path.exists(model_path):
             deploy_to_vertex_ai(model_path)
         else:
-            print(f"\n❌ Model not found at {model_path}. Train model first.")
+            print(f"\nâŒ Model not found at {model_path}. Train model first.")
 
     print("\n" + "=" * 60)
-    print("✅ Pipeline complete!")
+    print("âœ… Pipeline complete!")
     print("=" * 60)
 
 

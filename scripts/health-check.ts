@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * DrishtiX Platform Health Check Script
  * 
  * Verifies all services are properly configured and ready:
@@ -54,23 +69,23 @@ function log(message: string, color: keyof typeof colors = 'reset') {
 }
 
 function header(title: string) {
-  console.log(`\n${colors.bright}${colors.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`);
+  console.log(`\n${colors.bright}${colors.cyan}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}${title}${colors.reset}`);
-  console.log(`${colors.bright}${colors.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}\n`);
+  console.log(`${colors.bright}${colors.cyan}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${colors.reset}\n`);
 }
 
 function pass(service: string, message: string, details?: any) {
-  console.log(`${colors.green}✓${colors.reset} ${service}: ${message}`);
+  console.log(`${colors.green}âœ“${colors.reset} ${service}: ${message}`);
   results.push({ service, status: 'PASS', message, details });
 }
 
 function fail(service: string, message: string, details?: any) {
-  console.log(`${colors.red}✗${colors.reset} ${service}: ${message}`);
+  console.log(`${colors.red}âœ—${colors.reset} ${service}: ${message}`);
   results.push({ service, status: 'FAIL', message, details });
 }
 
 function warn(service: string, message: string, details?: any) {
-  console.log(`${colors.yellow}⚠${colors.reset} ${service}: ${message}`);
+  console.log(`${colors.yellow}âš ${colors.reset} ${service}: ${message}`);
   results.push({ service, status: 'WARN', message, details });
 }
 
@@ -176,7 +191,7 @@ async function checkGCPPubSub() {
       pass('Pub/Sub', `${drishtixTopics.length} DrishtiX topics found`);
       drishtixTopics.slice(0, 5).forEach(topic => {
         const topicName = topic.name.split('/').pop();
-        log(`  • ${topicName}`, 'reset');
+        log(`  â€¢ ${topicName}`, 'reset');
       });
     } else {
       warn('Pub/Sub', 'No DrishtiX topics found. Run: npx tsx scripts/initialize-gcp-services.ts');
@@ -216,7 +231,7 @@ async function checkGCPBigQuery() {
       if (tables.length > 0) {
         pass('BigQuery', `${tables.length} tables in dataset`);
         tables.slice(0, 5).forEach(table => {
-          log(`  • ${table.id}`, 'reset');
+          log(`  â€¢ ${table.id}`, 'reset');
         });
       } else {
         warn('BigQuery', 'Dataset exists but no tables found');
@@ -254,7 +269,7 @@ async function checkGCPStorage() {
     if (drishtixBuckets.length > 0) {
       pass('Cloud Storage', `${drishtixBuckets.length} DrishtiX buckets found`);
       drishtixBuckets.forEach(bucket => {
-        log(`  • ${bucket.name}`, 'reset');
+        log(`  â€¢ ${bucket.name}`, 'reset');
       });
     } else {
       warn('Cloud Storage', 'No DrishtiX buckets found. Run initialization script');
@@ -440,15 +455,15 @@ async function displaySummary() {
   const warnings = results.filter(r => r.status === 'WARN').length;
 
   log(`\n${colors.bright}Results:${colors.reset}`, 'reset');
-  log(`  ${colors.green}✓ Passed:${colors.reset}   ${passed}`, 'reset');
-  log(`  ${colors.red}✗ Failed:${colors.reset}   ${failed}`, 'reset');
-  log(`  ${colors.yellow}⚠ Warnings:${colors.reset} ${warnings}`, 'reset');
+  log(`  ${colors.green}âœ“ Passed:${colors.reset}   ${passed}`, 'reset');
+  log(`  ${colors.red}âœ— Failed:${colors.reset}   ${failed}`, 'reset');
+  log(`  ${colors.yellow}âš  Warnings:${colors.reset} ${warnings}`, 'reset');
   log('', 'reset');
 
   if (failed > 0) {
     log(`${colors.red}${colors.bright}FAILED CHECKS:${colors.reset}`, 'reset');
     results.filter(r => r.status === 'FAIL').forEach(r => {
-      log(`  • ${r.service}: ${r.message}`, 'red');
+      log(`  â€¢ ${r.service}: ${r.message}`, 'red');
     });
     log('', 'reset');
   }
@@ -456,7 +471,7 @@ async function displaySummary() {
   if (warnings > 0) {
     log(`${colors.yellow}${colors.bright}WARNINGS:${colors.reset}`, 'reset');
     results.filter(r => r.status === 'WARN').forEach(r => {
-      log(`  • ${r.service}: ${r.message}`, 'yellow');
+      log(`  â€¢ ${r.service}: ${r.message}`, 'yellow');
     });
     log('', 'reset');
   }
@@ -466,21 +481,21 @@ async function displaySummary() {
   log('', 'reset');
 
   if (healthScore >= 80) {
-    log('✓ Platform is ready for operation!', 'green');
+    log('âœ“ Platform is ready for operation!', 'green');
     log('  Start backend: cd server && npm run dev', 'reset');
     log('  Start frontend: npm run dev', 'reset');
   } else if (healthScore >= 60) {
-    log('⚠ Platform is partially ready. Fix critical issues before deployment.', 'yellow');
+    log('âš  Platform is partially ready. Fix critical issues before deployment.', 'yellow');
   } else {
-    log('✗ Platform is not ready. Fix critical issues.', 'red');
+    log('âœ— Platform is not ready. Fix critical issues.', 'red');
     log('  Run: npx tsx scripts/initialize-gcp-services.ts', 'reset');
   }
 }
 
 async function main() {
-  log('\n╔════════════════════════════════════════════════════════════════╗', 'bright');
-  log('║           DrishtiX Platform - Health Check System             ║', 'bright');
-  log('╚════════════════════════════════════════════════════════════════╝\n', 'bright');
+  log('\nâ•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—', 'bright');
+  log('â•‘           DrishtiX Platform - Health Check System             â•‘', 'bright');
+  log('â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n', 'bright');
 
   await checkEnvironmentVariables();
   await checkDatabaseConnection();

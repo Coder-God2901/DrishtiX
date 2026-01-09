@@ -1,0 +1,396 @@
+# PROPRIETARY SOFTWARE LICENSE AGREEMENT
+
+**DrishtiX™ Platform - Enterprise Crowd Management System**
+
+## ⚠️ LEGAL NOTICE - READ CAREFULLY
+
+**THIS IS A LEGALLY BINDING AGREEMENT BETWEEN YOU (EITHER AN INDIVIDUAL OR ENTITY, "LICENSEE") AND DRISHTIX ("LICENSOR"). BY ACCESSING, DOWNLOADING, INSTALLING, COPYING, OR USING THIS SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE. IF YOU DO NOT AGREE TO THESE TERMS, YOU MUST IMMEDIATELY CEASE ALL USE AND DESTROY ALL COPIES OF THE SOFTWARE.**
+
+---
+
+## 🔒 1. PROPRIETARY RIGHTS & OWNERSHIP
+
+### 1.1 Exclusive Ownership
+
+This software, including all source code, object code, documentation, designs, algorithms, trade secrets, know-how, and any other materials (collectively, the "Software") is the **exclusive proprietary property** of DrishtiX and is protected by:
+
+- United States Copyright Law (17 U.S.C. §§ 101-1332)
+- International Copyright Treaties (Berne Convention, WIPO Copyright Treaty)
+- Trade Secret Law
+- Patent Law (U.S. and International)
+- Trademark Law
+
+**NO OWNERSHIP OR TITLE TO THE SOFTWARE IS TRANSFERRED TO LICENSEE UNDER THIS LICENSE.**
+
+### 1.2 Protected Components
+
+The following components are proprietary and confidential:
+
+1. **Source Code**: All TypeScript, JavaScript, Python, and configuration files
+2. **ML Models**: ConvLSTM, Autoencoder, LSTM, Isolation Forest, YOLO models
+3. **Algorithms**: Crowd forecasting, anomaly detection, queue prediction
+4. **Architecture**: System design, database schemas, API structures
+5. **Documentation**: Technical documentation, setup guides, API references
+6. **Trade Secrets**: Business logic, optimization techniques, proprietary methods
+7. **Trademarks**: "DrishtiX" name, logo, and all related marks
+
+### 1.3 Copyright Notice
+
+```
+Copyright © 2025 DrishtiX. All Rights Reserved.
+
+This software and associated documentation files (the "Software") are proprietary
+and confidential. Unauthorized copying, modification, distribution, or use of this
+Software, via any medium, is strictly prohibited and may result in severe civil
+and criminal penalties.
+```
+
+---
+
+## 🚫 2. PROHIBITED USES & RESTRICTIONS
+
+### 2.1 Absolute Prohibitions
+
+**YOU ARE STRICTLY PROHIBITED FROM:**
+
+#### A. **Commercial Use** ⛔
+
+- ❌ Using the Software for any commercial purpose
+- ❌ Selling, leasing, renting, or sublicensing the Software
+- ❌ Offering Software-as-a-Service (SaaS) based on this Software
+- ❌ Using in production environments without explicit written license
+- ❌ Using for business operations, revenue generation, or profit
+- ❌ Offering consulting, training, or services related to this Software
+
+#### B. **Distribution & Sharing** ⛔
+
+- ❌ Distributing copies of the Software in any form
+- ❌ Sharing access to the Software with any third party
+- ❌ Uploading to public repositories (GitHub, GitLab, Bitbucket, etc.)
+- ❌ Publishing on package managers (npm, PyPI, etc.)
+- ❌ Including in open-source projects
+- ❌ Transferring ownership or licenses to any other party
+
+#### C. **Modification & Derivative Works** ⛔
+
+- ❌ Modifying, adapting, translating, or creating derivative works
+- ❌ Reverse engineering, decompiling, or disassembling
+- ❌ Extracting algorithms, logic, or methods for use elsewhere
+- ❌ Reusing code snippets in other projects
+- ❌ Creating compatible or competing products
+
+#### D. **Academic & Portfolio Use** ⛔
+
+- ❌ Using in academic assignments, theses, or research papers
+- ❌ Including in personal or professional portfolios
+- ❌ Demonstrating in job interviews or presentations
+- ❌ Showcasing on personal websites or blogs
+- ❌ Using as reference material without attribution and permission
+
+#### E. **Public Disclosure** ⛔
+
+- ❌ Publishing source code or documentation publicly
+- ❌ Discussing proprietary algorithms or methods publicly
+- ❌ Posting screenshots, demos, or videos without authorization
+- ❌ Writing blog posts, articles, or tutorials about the Software
+- ❌ Presenting at conferences, meetups, or webinars
+
+### 2.2 Removal of Notices
+
+**YOU MAY NOT:**
+
+- Remove, obscure, or alter any copyright, trademark, or proprietary notices
+- Remove or modify license headers in source code files
+- Remove confidentiality statements from documentation
+- Claim authorship or ownership of the Software
+
+---
+
+## ✅ 3. PERMITTED USES (LIMITED)
+
+### 3.1 Non-Commercial Evaluation Only
+
+**WITH EXPLICIT WRITTEN PERMISSION ONLY**, you may:
+
+1. **Evaluation License**: Install and evaluate the Software for 30 days
+2. **Internal Testing**: Test functionality in isolated, non-production environment
+3. **Research Proposal**: Request permission for academic research (subject to NDA)
+
+**ALL USES REQUIRE PRIOR WRITTEN AUTHORIZATION FROM DRISHTIX.**
+
+### 3.2 No Implied Licenses
+
+The absence of a specific prohibition does **NOT** grant permission. Any use not explicitly authorized in writing is **STRICTLY PROHIBITED**.
+
+---
+
+## 📜 4. LICENSING & AUTHORIZATION
+
+### 4.1 How to Obtain a License
+
+To use this Software, you **MUST** obtain a written license from DrishtiX:
+
+**Contact Information**:
+
+- **Email**: licensing@drishtix.com
+- **Website**: https://www.drishtix.com/licensing
+- **Business Address**: [Contact for details]
+
+### 4.2 License Types Available
+
+1. **Enterprise License**: Full commercial use, unlimited users
+2. **Professional License**: Small business use, limited users
+3. **Academic License**: Non-commercial research only (requires NDA)
+4. **Government License**: Public sector use only
+
+**Each license requires**:
+
+- Written agreement signed by both parties
+- Payment of applicable licensing fees
+- Adherence to usage restrictions
+- Annual renewal (where applicable)
+
+### 4.3 License Verification
+
+- All licensed users receive unique license keys
+- License keys must be embedded in deployments
+- Unauthorized use is detectable via telemetry
+- Regular audits may be conducted
+
+---
+
+## ⚖️ 5. LEGAL CONSEQUENCES OF VIOLATION
+
+### 5.1 Civil Penalties
+
+**Violation of this license may result in:**
+
+#### A. **Monetary Damages** 💰
+
+- **Actual Damages**: Full financial losses incurred by DrishtiX
+- **Statutory Damages**: Up to **$150,000 per work infringed** (17 U.S.C. § 504)
+- **Treble Damages**: Up to **3x actual damages** for willful infringement
+- **Lost Profits**: All profits derived from unauthorized use
+- **Attorney's Fees**: Reimbursement of all legal costs (17 U.S.C. § 505)
+
+#### B. **Injunctive Relief** 🛑
+
+- **Immediate Cease & Desist**: Court-ordered termination of use
+- **Permanent Injunction**: Prohibition from future use
+- **Asset Seizure**: Confiscation of all unauthorized copies
+- **Account Suspension**: Termination of GitHub, cloud, and related accounts
+
+### 5.2 Criminal Penalties
+
+**Unauthorized use may constitute criminal offenses:**
+
+#### A. **Federal Crimes (United States)**
+
+- **Copyright Infringement** (18 U.S.C. § 2319)
+  - Fines up to **$250,000**
+  - Imprisonment up to **5 years** (first offense)
+  - Imprisonment up to **10 years** (repeat offenses)
+
+- **Trade Secret Theft** (18 U.S.C. § 1832)
+  - Fines up to **$5,000,000** (organizations)
+  - Imprisonment up to **10 years**
+
+- **Computer Fraud & Abuse** (18 U.S.C. § 1030)
+  - Fines up to **$500,000**
+  - Imprisonment up to **20 years** (if bodily harm results)
+
+#### B. **State Crimes**
+
+- Theft of Trade Secrets (varies by state)
+- Fraud (varies by state)
+- Misappropriation (varies by state)
+
+### 5.3 International Enforcement
+
+**This license is enforceable worldwide through:**
+
+- WIPO Arbitration and Mediation Center
+- International copyright treaties
+- Bilateral enforcement agreements
+- Local courts in violator's jurisdiction
+
+### 5.4 Detection & Enforcement
+
+**DrishtiX employs multiple detection mechanisms:**
+
+- Code fingerprinting and watermarking
+- Telemetry and usage tracking
+- GitHub repository monitoring
+- Search engine monitoring for unauthorized hosting
+- Anonymous tip hotline
+- Periodic audits of licensed users
+
+**Violators WILL be prosecuted to the fullest extent of the law.**
+
+---
+
+## 🔐 6. CONFIDENTIALITY OBLIGATIONS
+
+### 6.1 Confidential Information
+
+All aspects of the Software constitute **Confidential Information**, including:
+
+- Source code and algorithms
+- Documentation and specifications
+- Performance metrics and benchmarks
+- Architecture and design decisions
+- Business logic and trade secrets
+
+### 6.2 Non-Disclosure Requirements
+
+**IF YOU GAIN ACCESS TO THIS SOFTWARE, YOU AGREE TO:**
+
+- Maintain strict confidentiality
+- Not disclose any information to third parties
+- Use information solely for authorized purposes
+- Implement reasonable security measures
+- Report any suspected breaches immediately
+
+### 6.3 Return or Destruction
+
+Upon termination or expiration of any authorization:
+
+- You must **immediately cease all use**
+- You must **destroy all copies** of the Software
+- You must **certify in writing** that all copies have been destroyed
+- You must **return any materials** provided by DrishtiX
+
+---
+
+## 🛡️ 7. WARRANTIES & DISCLAIMERS
+
+### 7.1 No Warranties
+
+**THE SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:**
+
+- MERCHANTABILITY
+- FITNESS FOR A PARTICULAR PURPOSE
+- NON-INFRINGEMENT
+- TITLE
+- ACCURACY OR COMPLETENESS
+- RELIABILITY OR AVAILABILITY
+
+### 7.2 Disclaimer of Liability
+
+**TO THE MAXIMUM EXTENT PERMITTED BY LAW, DRISHTIX SHALL NOT BE LIABLE FOR:**
+
+- Any direct, indirect, incidental, or consequential damages
+- Loss of profits, data, or business opportunities
+- System failures or data breaches
+- Damages arising from authorized or unauthorized use
+- Any claims by third parties
+
+**TOTAL LIABILITY SHALL NOT EXCEED $100 USD.**
+
+### 7.3 Assumption of Risk
+
+**BY USING THIS SOFTWARE (IF AUTHORIZED), YOU ASSUME ALL RISKS, INCLUDING:**
+
+- Security vulnerabilities
+- Data loss or corruption
+- System incompatibilities
+- Operational failures
+
+---
+
+## 📝 8. GENERAL PROVISIONS
+
+### 8.1 Governing Law
+
+This License shall be governed by the laws of **[State/Country]**, without regard to conflicts of law principles.
+
+### 8.2 Jurisdiction & Venue
+
+Any disputes arising under this License shall be resolved exclusively in the courts of **[State/Country]**. You consent to personal jurisdiction in such courts.
+
+### 8.3 Severability
+
+If any provision is held unenforceable, the remaining provisions shall remain in full force and effect.
+
+### 8.4 Entire Agreement
+
+This License constitutes the entire agreement between you and DrishtiX regarding the Software and supersedes all prior agreements.
+
+### 8.5 No Waiver
+
+Failure to enforce any provision does not constitute a waiver of that provision or any other provision.
+
+### 8.6 Assignment
+
+You may not assign or transfer your rights or obligations under this License without prior written consent.
+
+### 8.7 Amendments
+
+DrishtiX reserves the right to modify this License at any time. Continued use after modification constitutes acceptance of the new terms.
+
+### 8.8 Export Control
+
+The Software may be subject to export control laws. You agree to comply with all applicable laws and regulations.
+
+---
+
+## 📞 9. CONTACT INFORMATION
+
+**For Licensing Inquiries**:
+
+- **Email**: licensing@drishtix.com
+- **Website**: https://www.drishtix.com/licensing
+
+**For Legal Inquiries**:
+
+- **Email**: legal@drishtix.com
+
+**To Report Violations**:
+
+- **Email**: compliance@drishtix.com
+- **Anonymous Tip Line**: [Contact for details]
+
+---
+
+## ✅ 10. ACKNOWLEDGMENT
+
+**BY ACCESSING OR USING THIS SOFTWARE, YOU ACKNOWLEDGE THAT:**
+
+1. ✅ You have read and understood this License Agreement
+2. ✅ You agree to be bound by all terms and conditions
+3. ✅ You understand the severe legal consequences of violation
+4. ✅ You will not use this Software without proper authorization
+5. ✅ You will maintain confidentiality of all proprietary information
+6. ✅ You acknowledge DrishtiX's exclusive ownership
+7. ✅ You waive any claims to ownership or rights in the Software
+
+---
+
+## 🚨 FINAL WARNING
+
+**THIS IS YOUR LAST NOTICE:**
+
+Unauthorized use, copying, modification, distribution, or any violation of this License will result in:
+
+- ⚖️ **Immediate legal action**
+- 💰 **Substantial financial penalties**
+- 🔒 **Potential criminal prosecution**
+- 📢 **Public disclosure of violation**
+- 🚫 **Permanent ban from DrishtiX products and services**
+
+**We take intellectual property protection seriously. Violators will be prosecuted to the fullest extent of the law, without exception.**
+
+---
+
+**© 2025 DrishtiX. All Rights Reserved.**
+
+**DrishtiX™ is a registered trademark of DrishtiX. All other trademarks are the property of their respective owners.**
+
+**Last Updated**: January 2025  
+**License Version**: 1.0
+
+---
+
+**END OF LICENSE AGREEMENT**
+
+**IF YOU DO NOT AGREE TO THESE TERMS, IMMEDIATELY CEASE ALL ACCESS AND DELETE ALL COPIES.**

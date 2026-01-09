@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * ML Setup Verification Script
  * Verifies all ML services mentioned in ML_SETUP.md are properly implemented
  */
@@ -24,7 +39,7 @@ class MLSetupVerifier {
    * Verify YOLO Detection Service
    */
   async verifyYOLOService(): Promise<VerificationResult> {
-    console.log('\n🔍 Verifying YOLO Detection Service...');
+    console.log('\nðŸ” Verifying YOLO Detection Service...');
 
     try {
       // Check if service is initialized
@@ -68,7 +83,7 @@ class MLSetupVerifier {
       return {
         service: 'YOLO Detection Service',
         status: 'PASS',
-        details: `✓ Model loaded, ${methods.length} methods available`,
+        details: `âœ“ Model loaded, ${methods.length} methods available`,
         features: [
           'Person detection for crowd counting',
           'Multi-object detection (80 COCO classes)',
@@ -90,7 +105,7 @@ class MLSetupVerifier {
    * Verify Facial Recognition Service
    */
   async verifyFacialRecognitionService(): Promise<VerificationResult> {
-    console.log('\n🔍 Verifying Facial Recognition Service...');
+    console.log('\nðŸ” Verifying Facial Recognition Service...');
 
     try {
       // Check if service is initialized
@@ -119,7 +134,7 @@ class MLSetupVerifier {
       return {
         service: 'Facial Recognition Service',
         status: 'PASS',
-        details: `✓ Models loaded (SSD MobileNetV1, face-api.js), ${methods.length} methods available`,
+        details: `âœ“ Models loaded (SSD MobileNetV1, face-api.js), ${methods.length} methods available`,
         features: [
           'Face detection and recognition',
           'VIP/Security/Staff identification',
@@ -140,7 +155,7 @@ class MLSetupVerifier {
    * Verify Object Detection Service
    */
   async verifyObjectDetectionService(): Promise<VerificationResult> {
-    console.log('\n🔍 Verifying Object Detection Service...');
+    console.log('\nðŸ” Verifying Object Detection Service...');
 
     try {
       // Verify methods exist
@@ -166,7 +181,7 @@ class MLSetupVerifier {
       return {
         service: 'Object Detection Service',
         status: 'PASS',
-        details: `✓ COCO-SSD + OpenCV integration, ${methods.length} methods available`,
+        details: `âœ“ COCO-SSD + OpenCV integration, ${methods.length} methods available`,
         features: [
           'Weapon detection (knives, baseball bats)',
           'Safety equipment detection (fire extinguishers)',
@@ -188,7 +203,7 @@ class MLSetupVerifier {
    * Verify ML Training Service
    */
   async verifyMLTrainingService(): Promise<VerificationResult> {
-    console.log('\n🔍 Verifying ML Training Service...');
+    console.log('\nðŸ” Verifying ML Training Service...');
 
     try {
       // Verify methods exist
@@ -214,7 +229,7 @@ class MLSetupVerifier {
       return {
         service: 'ML Training Service',
         status: 'PASS',
-        details: `✓ TensorFlow.js + Vertex AI integration, ${methods.length} methods available`,
+        details: `âœ“ TensorFlow.js + Vertex AI integration, ${methods.length} methods available`,
         features: [
           'Custom model training (crowd density, anomaly detection)',
           'Model versioning and deployment to GCS',
@@ -236,7 +251,7 @@ class MLSetupVerifier {
    * Check package.json dependencies
    */
   verifyDependencies(): VerificationResult {
-    console.log('\n🔍 Verifying package.json dependencies...');
+    console.log('\nðŸ” Verifying package.json dependencies...');
 
     try {
       const packagePath = path.join(__dirname, '..', 'package.json');
@@ -263,7 +278,7 @@ class MLSetupVerifier {
       return {
         service: 'Package Dependencies',
         status: 'PASS',
-        details: `✓ All ${requiredDeps.length} required ML dependencies installed`,
+        details: `âœ“ All ${requiredDeps.length} required ML dependencies installed`,
         features: requiredDeps.map(dep => `${dep}: ${packageJson.dependencies[dep]}`)
       };
     } catch (error: any) {
@@ -279,9 +294,9 @@ class MLSetupVerifier {
    * Run all verifications
    */
   async runAll(): Promise<void> {
-    console.log('═══════════════════════════════════════════════════════');
+    console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
     console.log('    ML SETUP VERIFICATION (ML_SETUP.md)');
-    console.log('═══════════════════════════════════════════════════════');
+    console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 
     // Verify dependencies first
     this.results.push(this.verifyDependencies());
@@ -300,15 +315,15 @@ class MLSetupVerifier {
    * Print verification results
    */
   printResults(): void {
-    console.log('\n═══════════════════════════════════════════════════════');
+    console.log('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
     console.log('                   RESULTS');
-    console.log('═══════════════════════════════════════════════════════\n');
+    console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
 
     let passCount = 0;
     let failCount = 0;
 
     this.results.forEach((result) => {
-      const icon = result.status === 'PASS' ? '✅' : '❌';
+      const icon = result.status === 'PASS' ? 'âœ…' : 'âŒ';
       const statusColor = result.status === 'PASS' ? '\x1b[32m' : '\x1b[31m';
       const resetColor = '\x1b[0m';
 
@@ -328,15 +343,15 @@ class MLSetupVerifier {
       else failCount++;
     });
 
-    console.log('═══════════════════════════════════════════════════════');
+    console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
     console.log(`Summary: ${passCount} PASSED, ${failCount} FAILED`);
-    console.log('═══════════════════════════════════════════════════════\n');
+    console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
 
     if (failCount === 0) {
-      console.log('🎉 All ML services are properly configured and ready!');
-      console.log('✓ ML_SETUP.md claims validated successfully\n');
+      console.log('ðŸŽ‰ All ML services are properly configured and ready!');
+      console.log('âœ“ ML_SETUP.md claims validated successfully\n');
     } else {
-      console.log('⚠️  Some ML services need attention.');
+      console.log('âš ï¸  Some ML services need attention.');
       console.log('   Please review the failures above and fix them.\n');
       process.exit(1);
     }

@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * EventSphere Backend Server
  * Express + Socket.IO + Prisma + Firebase
  */
@@ -153,7 +168,7 @@ app.use((req: Request, res: Response) => {
 
 // Socket.IO connection handling
 io.on('connection', (socket: Socket) => {
-  console.log(`✅ Client connected: ${socket.id}`);
+  console.log(`âœ… Client connected: ${socket.id}`);
 
   // Join event room
   socket.on('join:event', (eventId: string) => {
@@ -288,7 +303,7 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`❌ Client disconnected: ${socket.id}`);
+    console.log(`âŒ Client disconnected: ${socket.id}`);
   });
 });
 
@@ -323,7 +338,7 @@ function initializePubSubListeners() {
     }
   });
 
-  console.log('✓ DrishtiX Pub/Sub listeners initialized');
+  console.log('âœ“ DrishtiX Pub/Sub listeners initialized');
 }
 
 // Export io for use in routes
@@ -337,58 +352,58 @@ async function startServer() {
     // Validate GCP configuration
     const validation = validateGCPConfig();
     if (!validation.valid) {
-      console.warn('⚠️  GCP Configuration warnings:');
+      console.warn('âš ï¸  GCP Configuration warnings:');
       validation.errors.forEach(err => console.warn(`   - ${err}`));
       console.warn('   Some features may not work correctly.');
     } else {
-      console.log('✓ GCP Configuration validated');
+      console.log('âœ“ GCP Configuration validated');
     }
 
     // Initialize GCP Services Orchestrator
-    console.log('🚀 Initializing GCP Services Orchestrator...');
+    console.log('ðŸš€ Initializing GCP Services Orchestrator...');
     await gcpOrchestrator.initialize();
-    console.log('✓ GCP Services Orchestrator ready');
+    console.log('âœ“ GCP Services Orchestrator ready');
 
     // Initialize Pub/Sub listeners
     initializePubSubListeners();
 
     // Initialize real-time workers for Frontend V2
-    console.log('🚀 Starting real-time workers...');
+    console.log('ðŸš€ Starting real-time workers...');
     await metricsWorker.startAllActiveEvents();
     await heatmapWorker.startAllActiveEvents();
-    console.log(`✓ Real-time workers started (${metricsWorker.getActiveCount()} events)`);
+    console.log(`âœ“ Real-time workers started (${metricsWorker.getActiveCount()} events)`);
 
     httpServer.listen(PORT, () => {
       console.log(`
-╔════════════════════════════════════════════════════════════════╗
-║                   🎯 DrishtiX Platform Started                ║
-╠════════════════════════════════════════════════════════════════╣
-║  Server:            http://localhost:${PORT}                        ║
-║  WebSocket:         Active                                     ║
-║  Database:          Connected                                  ║
-║  Pub/Sub:           Active                                     ║
-║  GCP Services:      ${gcpOrchestrator.getStatus().initialized ? '✓ Connected' : '✗ Offline'}                               ║
-║                                                                ║
-║  GCP Services Connected (14):                                  ║
-║    ✓ Firebase Auth + FCM + Firestore                          ║
-║    ✓ Google Maps Platform                                     ║
-║    ✓ Google Earth Engine                                      ║
-║    ✓ Pub/Sub Event Streaming                                  ║
-║    ✓ Data Processing Pipeline                                 ║
-║    ✓ BigQuery Analytics                                       ║
-║    ✓ Vertex AI Forecasting                                    ║
-║    ✓ Gemini Vision API                                        ║
-║    ✓ Agent Builder (Dispatch)                                 ║
-║    ✓ Cloud Logging & Monitoring                               ║
-║                                                                ║
-║  AI/ML Capabilities:                                           ║
-║    ✓ Predictive Crowd Density Forecasting                     ║
-║    ✓ Real-time Anomaly Detection (Gemini Vision)              ║
-║    ✓ Automated Emergency Dispatch                             ║
-║    ✓ Voice-First AI Interface                                 ║
-║    ✓ Hardware-Free Simulation Engine                          ║
-║    ✓ Privacy-First Cloud DLP                                  ║
-╚════════════════════════════════════════════════════════════════╝
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘                   ðŸŽ¯ DrishtiX Platform Started                â•‘
+â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
+â•‘  Server:            http://localhost:${PORT}                        â•‘
+â•‘  WebSocket:         Active                                     â•‘
+â•‘  Database:          Connected                                  â•‘
+â•‘  Pub/Sub:           Active                                     â•‘
+â•‘  GCP Services:      ${gcpOrchestrator.getStatus().initialized ? 'âœ“ Connected' : 'âœ— Offline'}                               â•‘
+â•‘                                                                â•‘
+â•‘  GCP Services Connected (14):                                  â•‘
+â•‘    âœ“ Firebase Auth + FCM + Firestore                          â•‘
+â•‘    âœ“ Google Maps Platform                                     â•‘
+â•‘    âœ“ Google Earth Engine                                      â•‘
+â•‘    âœ“ Pub/Sub Event Streaming                                  â•‘
+â•‘    âœ“ Data Processing Pipeline                                 â•‘
+â•‘    âœ“ BigQuery Analytics                                       â•‘
+â•‘    âœ“ Vertex AI Forecasting                                    â•‘
+â•‘    âœ“ Gemini Vision API                                        â•‘
+â•‘    âœ“ Agent Builder (Dispatch)                                 â•‘
+â•‘    âœ“ Cloud Logging & Monitoring                               â•‘
+â•‘                                                                â•‘
+â•‘  AI/ML Capabilities:                                           â•‘
+â•‘    âœ“ Predictive Crowd Density Forecasting                     â•‘
+â•‘    âœ“ Real-time Anomaly Detection (Gemini Vision)              â•‘
+â•‘    âœ“ Automated Emergency Dispatch                             â•‘
+â•‘    âœ“ Voice-First AI Interface                                 â•‘
+â•‘    âœ“ Hardware-Free Simulation Engine                          â•‘
+â•‘    âœ“ Privacy-First Cloud DLP                                  â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
       `);
     });
   } catch (error) {
