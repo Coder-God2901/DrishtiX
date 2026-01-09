@@ -1,5 +1,5 @@
 /**
- * Cloud Logging & Monitoring Service
+ * Azure Monitor & Application Insights Service
  * Comprehensive logging, monitoring, and alerting for security and performance
  * 
  * Purpose:
@@ -9,8 +9,7 @@
  * - Provide audit trails for compliance
  */
 
-import { Logging } from '@google-cloud/logging';
-import { gcpConfig } from '../config/gcp.config';
+import { azureConfig } from '../config/azure.config';
 
 interface LogEntry {
   severity: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
@@ -50,8 +49,6 @@ interface Alert {
 }
 
 class CloudLoggingMonitoringService {
-  private logging!: Logging;
-  private log: any;
   private initialized: boolean = false;
 
   // Security monitoring
@@ -66,25 +63,21 @@ class CloudLoggingMonitoringService {
   }
 
   /**
-   * Initialize Cloud Logging
+   * Initialize Azure Monitor / Application Insights
    */
   private initializeLogging(): void {
     try {
-      this.logging = new Logging({
-        projectId: gcpConfig.projectId,
-        keyFilename: gcpConfig.credentials,
-      });
-
-      this.log = this.logging.log('eventsphere-app');
+      // Note: Azure Monitor SDK integration needed
+      // Use @azure/monitor-opentelemetry or Application Insights SDK
       this.initialized = true;
 
-      console.log('✓ Cloud Logging initialized');
+      console.log('✓ Azure Monitor initialized (SDK integration pending)');
 
       // Start periodic monitoring
       this.startPeriodicMonitoring();
     } catch (error) {
-      console.error('Error initializing Cloud Logging:', error);
-      console.warn('⚠️ Cloud Logging not available - falling back to console');
+      console.error('Error initializing Azure Monitor:', error);
+      console.warn('⚠️ Azure Monitor not available - falling back to console');
     }
   }
 
