@@ -4,8 +4,8 @@
  */
 
 import axios from 'axios';
-import { pubSubService } from './pubsub.service';
-import { bigQueryAnalyticsService } from './bigquery-analytics.service';
+import { azureServiceBusService } from './azure-service-bus.service';
+import { azureSynapseAnalyticsService } from './azure-synapse-analytics.service';
 import { io } from '../index';
 
 export interface WeatherData {
@@ -288,15 +288,15 @@ class WeatherService {
         heatStressLevel: heatStress.level,
       };
 
-      // Publish to Pub/Sub for ML and dashboard
-      await pubSubService.publishMessage('weather-updates', {
+      // Publish to Azure Service Bus for ML and dashboard
+      await azureServiceBusService.publishMessage('weather-updates', {
         eventId,
         weather: weatherData,
         timestamp: new Date().toISOString(),
       });
 
-      // Stream to BigQuery for historical analytics
-      await bigQueryAnalyticsService.streamWeatherData({
+      // Stream to Azure Synapse for historical analytics
+      await azureSynapseAnalyticsService.streamWeatherData({
         eventId,
         timestamp: new Date(),
         temperature: weather.temperature,
