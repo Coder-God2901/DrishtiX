@@ -19,10 +19,10 @@ import { io } from '../index';
 import { yoloDetectionService } from './yolo-detection.service';
 import { facialRecognitionService } from './facial-recognition.service';
 import { objectDetectionService } from './object-detection.service';
-import { bigQueryAnalyticsService } from './bigquery-analytics.service';
+import { azureSynapseAnalyticsService } from './azure-synapse-analytics.service';
 import { mlModelTrainingService } from './ml-training.service';
-import { Storage } from '@google-cloud/storage';
-import { gcpConfig } from '../config/gcp.config';
+import { azureBlobStorageService } from './azure-blob-storage.service';
+import { azureConfig } from '../config/azure.config';
 import { PassThrough } from 'stream';
 
 export interface FrameAnalysisInput {
@@ -98,15 +98,10 @@ class VideoAnalyticsService {
   private useFacialRecognition: boolean = true;
   private useObjectDetection: boolean = true;
   private useAnomalyDetectionService: boolean = true; // Use ML-based anomaly detection
-  private storage: Storage;
   private videoStreams: Map<string, PassThrough> = new Map();
 
   constructor() {
     console.log('[Video Analytics Service] Initialized');
-    this.storage = new Storage({
-      keyFilename: gcpConfig.credentials,
-      projectId: gcpConfig.projectId,
-    });
     this.initializeServices();
   }
 
@@ -231,8 +226,8 @@ class VideoAnalyticsService {
 
       const processingTimeMs = Date.now() - startTime;
 
-      // Save to BigQuery for analytics
-      await this.saveToBigQuery(input, {
+      // Save to Azure Synapse for analytics
+      await this.saveToSynapse(input, {
         peopleCount,
         densityValue,
         anomalies,
@@ -542,8 +537,8 @@ class VideoAnalyticsService {
       location: input.location,
     });
 
-    // Stream to BigQuery for historical analytics
-    await bigQueryAnalyticsService.streamVideoAnalytics({
+    // Stream to Azure Synapse for historical analytics
+    await azureSynapseAnalyticsService.streamVideoAnalytics({
       eventId: input.eventId,
       cameraId: input.cameraId,
       zoneId: input.zoneId,
@@ -582,7 +577,7 @@ class VideoAnalyticsService {
   }
 
   /**
-   * Stream processed frame to Cloud Storage for archival
+   * Stream processed frame to Azure Blob Storage for archival
    */
   private async streamFrameToStorage(
     input: FrameAnalysisInput,
@@ -590,46 +585,31 @@ class VideoAnalyticsService {
     analytics: any
   ): Promise<void> {
     try {
-      const bucketName = process.env.GCS_VIDEO_BUCKET || 'eventsphere-video-analytics';
-      const fileName = `events/${input.eventId}/cameras/${input.cameraId}/${input.timestamp.getTime()}.jpg`;
-      const file = this.storage.bucket(bucketName).file(fileName);
+      const containerName = process.env.AZURE_VIDEO_CONTAINER || 'video-analytics';
+      const blobName = `events/${input.eventId}/cameras/${input.cameraId}/${input.timestamp.getTime()}.jpg`;
 
-      // Create PassThrough stream for efficient uploading
-      const passthroughStream = new PassThrough();
+      const metadata = {
+        eventId: input.eventId,
+        cameraId: input.cameraId,
+        timestamp: input.timestamp.toISOString(),
+        peopleCount: analytics.peopleCount?.toString() || '0',
+        density: analytics.densityValue?.toString() || '0',
+        anomalies: JSON.stringify(analytics.anomalies?.map((a: any) => a.type) || []),
+      };
 
-      // Store stream reference for potential cancellation
-      this.videoStreams.set(input.cameraId, passthroughStream);
-
-      // Pipe to Cloud Storage
-      const writeStream = file.createWriteStream({
-        metadata: {
+      await azureBlobStorageService.uploadFile(
+        containerName,
+        blobName,
+        processedFrame,
+        {
           contentType: 'image/jpeg',
-          metadata: {
-            eventId: input.eventId,
-            cameraId: input.cameraId,
-            timestamp: input.timestamp.toISOString(),
-            peopleCount: analytics.peopleCount?.toString(),
-            density: analytics.densityValue?.toString(),
-            anomalies: JSON.stringify(analytics.anomalies?.map((a: any) => a.type)),
-          },
-        },
-      });
+          metadata,
+        }
+      );
 
-      passthroughStream.pipe(writeStream);
-      passthroughStream.end(processedFrame);
-
-      await new Promise((resolve, reject) => {
-        writeStream.on('finish', () => {
-          this.videoStreams.delete(input.cameraId);
-          resolve(true);
-        });
-        writeStream.on('error', reject);
-      });
-
-      console.log(`[Video Analytics] Frame streamed to ${fileName}`);
+      console.log(`[Video Analytics] Frame streamed to ${blobName}`);
     } catch (error) {
       console.error('[Video Analytics] Error streaming frame to storage:', error);
-      this.videoStreams.delete(input.cameraId);
     }
   }
 
@@ -646,18 +626,15 @@ class VideoAnalyticsService {
   }
 
   /**
-   * Save analytics to BigQuery
+   * Save analytics to Azure Synapse
    */
-  private async saveToBigQuery(input: FrameAnalysisInput, analytics: any): Promise<void> {
+  private async saveToSynapse(input: FrameAnalysisInput, analytics: any): Promise<void> {
     try {
-      // Implement BigQuery insert logic here
-      // This would save the frame analytics for historical analysis
-
-      // Also stream processed frame to Cloud Storage for video archival
+      // Stream processed frame to Azure Blob Storage for video archival
       const processedFrame = cv.imencode('.jpg', await cv.imdecodeAsync(input.imageData));
       await this.streamFrameToStorage(input, processedFrame, analytics);
     } catch (error) {
-      console.error('[Video Analytics] Error saving to BigQuery:', error);
+      console.error('[Video Analytics] Error saving to Synapse:', error);
     }
   }
 
@@ -665,7 +642,7 @@ class VideoAnalyticsService {
    * Get analytics summary for event
    */
   async getEventSummary(eventId: string): Promise<any> {
-    return await bigQueryAnalyticsService.getEventMetrics(eventId);
+    return await azureSynapseAnalyticsService.getEventMetrics(eventId);
   }
 
   /**
@@ -677,21 +654,21 @@ class VideoAnalyticsService {
     endTime: Date,
     interval: '5min' | '15min' | '1hour' = '15min'
   ): Promise<any> {
-    return await bigQueryAnalyticsService.getCrowdTrends(eventId, startTime, endTime, interval);
+    return await azureSynapseAnalyticsService.getCrowdTrends(eventId, startTime, endTime, interval);
   }
 
   /**
    * Get zone analytics
    */
   async getZoneAnalytics(eventId: string, zoneId?: string): Promise<any> {
-    return await bigQueryAnalyticsService.getZoneAnalytics(eventId, zoneId);
+    return await azureSynapseAnalyticsService.getZoneAnalytics(eventId, zoneId);
   }
 
   /**
    * Get predictive insights
    */
   async getPredictiveInsights(eventId: string): Promise<any> {
-    return await bigQueryAnalyticsService.getPredictiveInsights(eventId);
+    return await azureSynapseAnalyticsService.getPredictiveInsights(eventId);
   }
 
   /**
