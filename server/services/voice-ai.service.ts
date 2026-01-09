@@ -1,11 +1,10 @@
 /**
  * Voice AI Service
- * Hands-free command center interaction using Gemini and Google Cloud Speech-to-Text
+ * Hands-free command center interaction using Azure OpenAI and Azure Speech Services
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { gcpConfig } from '../config/gcp.config';
-import { SpeechClient } from '@google-cloud/speech';
+import { azureOpenAIService } from './azure-openai.service';
+import { azureConfig } from '../config/azure.config';
 import { io } from '../index';
 
 export interface VoiceCommand {
@@ -35,30 +34,12 @@ export interface VisualData {
 }
 
 class VoiceAIService {
-  private genAI: GoogleGenerativeAI;
-  private conversationModel: any;
   private conversationHistory: Map<string, any[]>;
-  private speechClient: SpeechClient;
   private recognizeStream: any;
 
   constructor() {
-    this.genAI = new GoogleGenerativeAI(gcpConfig.gemini.apiKey);
     this.conversationHistory = new Map();
-    this.speechClient = new SpeechClient({
-      keyFilename: gcpConfig.credentials,
-    });
-    this.initializeModel();
-    console.log('✓ Voice AI Service initialized with Google Cloud Speech-to-Text');
-  }
-
-  /**
-   * Initialize conversational AI model
-   */
-  private initializeModel() {
-    this.conversationModel = this.genAI.getGenerativeModel({
-      model: gcpConfig.gemini.model,
-      systemInstruction: this.getSystemInstruction(),
-    });
+    console.log('✓ Voice AI Service initialized with Azure OpenAI and Azure Speech Services');
   }
 
   /**
@@ -122,21 +103,28 @@ GUIDELINES:
       // Build prompt with context
       const prompt = this.buildPrompt(command, contextData);
 
-      // Generate response
-      const chat = this.conversationModel.startChat({
-        history: history,
-      });
+      // Generate response using Azure OpenAI
+      const messages = [
+        {
+          role: 'system' as const,
+          content: this.getSystemInstruction(),
+        },
+        ...history,
+        {
+          role: 'user' as const,
+          content: prompt,
+        },
+      ];
 
-      const result = await chat.sendMessage(prompt);
-      const responseText = await result.response.text();
+      const responseText = await azureOpenAIService.generateText(messages);
 
       // Parse response
       const parsedResponse = this.parseResponse(responseText, command.timestamp);
 
       // Update conversation history
       history.push(
-        { role: 'user', parts: [{ text: prompt }] },
-        { role: 'model', parts: [{ text: responseText }] }
+        { role: 'user', content: prompt },
+        { role: 'assistant', content: responseText }
       );
 
       // Keep only last 10 exchanges
@@ -236,6 +224,7 @@ GUIDELINES:
 
   /**
    * Start real-time speech recognition stream
+   * TODO: Implement Azure Speech SDK integration
    */
   async startSpeechRecognition(
     eventId: string,
@@ -243,42 +232,10 @@ GUIDELINES:
     onTranscript?: (transcript: string) => void
   ): Promise<void> {
     try {
-      const request = {
-        config: {
-          encoding: 'LINEAR16' as const,
-          sampleRateHertz: 16000,
-          languageCode: language,
-          enableAutomaticPunctuation: true,
-          model: 'command_and_search',
-          useEnhanced: true,
-        },
-        interimResults: true,
-      };
-
-      this.recognizeStream = this.speechClient
-        .streamingRecognize(request)
-        .on('error', (error: Error) => {
-          console.error('[Voice AI] Speech recognition error:', error);
-        })
-        .on('data', (data: any) => {
-          const transcript = data.results[0]?.alternatives[0]?.transcript;
-          if (transcript) {
-            // Broadcast to WebSocket
-            io.to(`voice:${eventId}`).emit('voice:transcript', {
-              transcript,
-              isFinal: data.results[0]?.isFinal,
-              confidence: data.results[0]?.alternatives[0]?.confidence,
-              timestamp: new Date(),
-            });
-
-            // Call callback if provided
-            if (onTranscript && data.results[0]?.isFinal) {
-              onTranscript(transcript);
-            }
-          }
-        });
-
-      console.log(`✓ Started speech recognition for event ${eventId}`);
+      // Note: Azure Speech SDK implementation needed
+      // Use @azure/cognitiveservices-speech package
+      console.log(`[Voice AI] Speech recognition not yet implemented for Azure`);
+      console.log(`TODO: Implement Azure Speech SDK for event ${eventId}`);
     } catch (error) {
       console.error('[Voice AI] Failed to start speech recognition:', error);
       throw error;
@@ -298,34 +255,16 @@ GUIDELINES:
 
   /**
    * Transcribe audio buffer to text
+   * TODO: Implement Azure Speech SDK integration
    */
   async transcribeAudio(
     audioBuffer: Buffer,
     language: string = 'en-US'
   ): Promise<string> {
     try {
-      const audio = {
-        content: audioBuffer.toString('base64'),
-      };
-
-      const config = {
-        encoding: 'LINEAR16' as const,
-        sampleRateHertz: 16000,
-        languageCode: language,
-        enableAutomaticPunctuation: true,
-      };
-
-      const request = {
-        audio: audio,
-        config: config,
-      };
-
-      const [response] = await this.speechClient.recognize(request);
-      const transcription = response.results
-        ?.map((result: any) => result.alternatives?.[0]?.transcript)
-        .join('\n');
-
-      return transcription || '';
+      // Note: Azure Speech SDK implementation needed
+      console.log('[Voice AI] Audio transcription not yet implemented for Azure');
+      return '';
     } catch (error) {
       console.error('[Voice AI] Transcription error:', error);
       throw error;
@@ -349,9 +288,10 @@ GUIDELINES:
   async translateCommand(text: string, targetLanguage: string): Promise<string> {
     try {
       const prompt = `Translate this crowd safety command to ${targetLanguage}: "${text}"`;
-      const result = await this.conversationModel.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+      const messages = [
+        { role: 'user' as const, content: prompt },
+      ];
+      return await azureOpenAIService.generateText(messages);
     } catch (error) {
       console.error('Translation error:', error);
       return text;
