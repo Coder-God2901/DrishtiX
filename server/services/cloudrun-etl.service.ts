@@ -1,13 +1,13 @@
 /**
- * Cloud Run ETL Worker Integration Service
- * Sends raw data to Cloud Run worker for processing
+ * Azure Container Apps ETL Worker Integration Service
+ * Sends raw data to Azure Container Apps worker for processing
  * 
- * Replaces: Google Cloud Dataflow (cost-effective alternative)
+ * Replaces: Google Cloud Run ETL Worker
  */
 
 import axios from 'axios';
-import { gcpConfig } from '../config/gcp.config';
-import { pubSubService } from './pubsub.service';
+import { azureConfig } from '../config/azure.config';
+import { azureServiceBusService } from './azure-service-bus.service';
 
 interface RawDataBatch {
   eventId: string;
@@ -36,10 +36,10 @@ class CloudRunETLService {
 
   constructor() {
     this.workerUrl = process.env.ETL_WORKER_URL ||
-      gcpConfig.cloudRun?.etlWorkerUrl ||
-      'https://etl-worker-xxxxx-uc.a.run.app';
+      process.env.AZURE_CONTAINER_APPS_ETL_URL ||
+      'https://etl-worker.azurecontainerapps.io';
 
-    console.log(`Cloud Run ETL Worker URL: ${this.workerUrl}`);
+    console.log(`Azure Container Apps ETL Worker URL: ${this.workerUrl}`);
   }
 
   /**
