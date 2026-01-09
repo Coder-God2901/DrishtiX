@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * ML Model Training Service
  * Automated model training using Vertex AI and TensorFlow.js
  * 
@@ -170,7 +185,7 @@ class MLModelTrainingService {
 
       const trainingTimeMs = Date.now() - startTime;
 
-      console.log(`✓ [ML Training] Model trained successfully in ${trainingTimeMs}ms`);
+      console.log(`âœ“ [ML Training] Model trained successfully in ${trainingTimeMs}ms`);
 
       return {
         success: true,
@@ -465,7 +480,7 @@ class MLModelTrainingService {
       // 2. Deploy the model to the endpoint
       // 3. Set up model monitoring
 
-      console.log(`✓ [ML Training] Model deployed to gs://${this.MODEL_BUCKET}/${productionPath}`);
+      console.log(`âœ“ [ML Training] Model deployed to gs://${this.MODEL_BUCKET}/${productionPath}`);
       return `gs://${this.MODEL_BUCKET}/${productionPath}`;
     } catch (error: any) {
       console.error('[ML Training] Deployment error:', error.message);
@@ -568,7 +583,7 @@ class MLModelTrainingService {
         updateTime: new Date().toISOString(),
       };
 
-      console.log(`✓ [ML Training] Vertex AI job submitted: ${jobId}`);
+      console.log(`âœ“ [ML Training] Vertex AI job submitted: ${jobId}`);
       return job;
     } catch (error: any) {
       console.error('[ML Training] Vertex AI job submission error:', error.message);
@@ -647,7 +662,7 @@ class MLModelTrainingService {
         console.log(`[ML Training] Deleted old model: ${model.model_version}`);
       }
 
-      console.log(`✓ [ML Training] Cleaned up ${toDelete.length} old models`);
+      console.log(`âœ“ [ML Training] Cleaned up ${toDelete.length} old models`);
     } catch (error: any) {
       console.error('[ML Training] Cleanup error:', error.message);
     }

@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * YOLO Detection Service
  * Real-time object detection using COCO-SSD (TensorFlow.js)
  * 
@@ -69,7 +84,7 @@ class YOLODetectionService {
       });
 
       this.isInitialized = true;
-      console.log('✓ [YOLO] COCO-SSD model loaded successfully');
+      console.log('âœ“ [YOLO] COCO-SSD model loaded successfully');
     } catch (error: any) {
       console.error('[YOLO] Initialization failed:', error.message);
       console.warn('[YOLO] Falling back to stub mode. Install @tensorflow/tfjs-node and @tensorflow-models/coco-ssd for detection.');

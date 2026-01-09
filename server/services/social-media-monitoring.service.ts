@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Social Media Monitoring Service
  * Real-time Twitter/X API v2 integration with sentiment analysis
  * 
@@ -118,7 +133,7 @@ class SocialMediaMonitoringService extends EventEmitter {
     if (!this.initialized) {
       console.warn('[Social Media] Twitter API credentials not configured');
     } else {
-      console.log('✓ Social Media Monitoring Service initialized');
+      console.log('âœ“ Social Media Monitoring Service initialized');
     }
   }
 
@@ -150,7 +165,7 @@ class SocialMediaMonitoringService extends EventEmitter {
     }, 2 * 60 * 1000);
 
     this.monitoringIntervals.set(eventId, interval);
-    console.log(`✓ Social media monitoring active for event ${eventId}`);
+    console.log(`âœ“ Social media monitoring active for event ${eventId}`);
   }
 
   /**
@@ -161,7 +176,7 @@ class SocialMediaMonitoringService extends EventEmitter {
     if (interval) {
       clearInterval(interval);
       this.monitoringIntervals.delete(eventId);
-      console.log(`✓ Stopped monitoring for event ${eventId}`);
+      console.log(`âœ“ Stopped monitoring for event ${eventId}`);
     }
   }
 

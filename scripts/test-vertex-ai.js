@@ -1,3 +1,18 @@
+/**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
 #!/usr/bin/env node
 
 /**
@@ -35,23 +50,23 @@ async function testVertexAIEndpoint() {
   log('1. Checking Configuration...', 'blue');
 
   if (!endpoint) {
-    log('❌ VITE_VERTEX_AI_FORECASTING_ENDPOINT not set', 'red');
+    log('âŒ VITE_VERTEX_AI_FORECASTING_ENDPOINT not set', 'red');
     log('   Please configure in .env file', 'yellow');
     process.exit(1);
   }
 
   if (!projectId) {
-    log('❌ VITE_GOOGLE_CLOUD_PROJECT_ID not set', 'red');
+    log('âŒ VITE_GOOGLE_CLOUD_PROJECT_ID not set', 'red');
     process.exit(1);
   }
 
   if (!credentialsPath) {
-    log('⚠️  GOOGLE_APPLICATION_CREDENTIALS not set', 'yellow');
+    log('âš ï¸  GOOGLE_APPLICATION_CREDENTIALS not set', 'yellow');
     log('   Using default application credentials', 'yellow');
   }
 
-  log(`✅ Endpoint: ${endpoint}`, 'green');
-  log(`✅ Project: ${projectId}`, 'green');
+  log(`âœ… Endpoint: ${endpoint}`, 'green');
+  log(`âœ… Project: ${projectId}`, 'green');
 
   // Test 1: Direct Vertex AI prediction
   log('\n2. Testing Direct Vertex AI Prediction...', 'blue');
@@ -73,17 +88,17 @@ async function testVertexAIEndpoint() {
     const response = await googleCloudService.predictWithVertexAI(endpoint, testInstances);
     const latency = Date.now() - startTime;
 
-    log(`✅ Prediction successful in ${latency}ms`, 'green');
+    log(`âœ… Prediction successful in ${latency}ms`, 'green');
     log(`   Predictions: ${JSON.stringify(response.predictions, null, 2)}`, 'cyan');
 
     if (latency > 2000) {
-      log(`⚠️  High latency detected (${latency}ms > 2000ms)`, 'yellow');
+      log(`âš ï¸  High latency detected (${latency}ms > 2000ms)`, 'yellow');
       log('   Consider increasing replica count', 'yellow');
     }
 
     // Validate response structure
     if (!response.predictions || response.predictions.length === 0) {
-      log('❌ No predictions returned', 'red');
+      log('âŒ No predictions returned', 'red');
       process.exit(1);
     }
 
@@ -94,10 +109,10 @@ async function testVertexAIEndpoint() {
     const missingFields = expectedFields.filter((field) => !(field in prediction));
 
     if (missingFields.length > 0) {
-      log(`⚠️  Missing expected fields: ${missingFields.join(', ')}`, 'yellow');
+      log(`âš ï¸  Missing expected fields: ${missingFields.join(', ')}`, 'yellow');
     }
   } catch (error) {
-    log(`❌ Vertex AI prediction failed: ${error.message}`, 'red');
+    log(`âŒ Vertex AI prediction failed: ${error.message}`, 'red');
     if (error.code) {
       log(`   Error code: ${error.code}`, 'yellow');
     }
@@ -113,7 +128,7 @@ async function testVertexAIEndpoint() {
       horizonMinutes: 20,
     });
 
-    log(`✅ Generated ${forecasts.length} forecasts`, 'green');
+    log(`âœ… Generated ${forecasts.length} forecasts`, 'green');
 
     forecasts.forEach((forecast, index) => {
       log(
@@ -126,13 +141,13 @@ async function testVertexAIEndpoint() {
     const avgConfidence = forecasts.reduce((sum, f) => sum + f.confidence, 0) / forecasts.length;
 
     if (avgConfidence >= 0.75) {
-      log(`\n✅ Accuracy target met: ${(avgConfidence * 100).toFixed(1)}% ≥ 75%`, 'green');
+      log(`\nâœ… Accuracy target met: ${(avgConfidence * 100).toFixed(1)}% â‰¥ 75%`, 'green');
     } else {
-      log(`\n⚠️  Accuracy below target: ${(avgConfidence * 100).toFixed(1)}% < 75%`, 'yellow');
+      log(`\nâš ï¸  Accuracy below target: ${(avgConfidence * 100).toFixed(1)}% < 75%`, 'yellow');
       log('   Consider retraining model with more data', 'yellow');
     }
   } catch (error) {
-    log(`❌ Predictive analytics failed: ${error.message}`, 'red');
+    log(`âŒ Predictive analytics failed: ${error.message}`, 'red');
     process.exit(1);
   }
 
@@ -155,17 +170,17 @@ async function testVertexAIEndpoint() {
       ],
     });
 
-    log('✅ BigQuery insert successful', 'green');
+    log('âœ… BigQuery insert successful', 'green');
   } catch (error) {
-    log(`⚠️  BigQuery insert failed: ${error.message}`, 'yellow');
+    log(`âš ï¸  BigQuery insert failed: ${error.message}`, 'yellow');
     log('   This is optional - predictions will still work', 'yellow');
   }
 
   // Summary
   log('\n=== Test Summary ===\n', 'cyan');
-  log('✅ Vertex AI endpoint is operational', 'green');
-  log('✅ Forecasting service is working', 'green');
-  log('✅ Ready for production use', 'green');
+  log('âœ… Vertex AI endpoint is operational', 'green');
+  log('âœ… Forecasting service is working', 'green');
+  log('âœ… Ready for production use', 'green');
   log('\nNext steps:', 'blue');
   log('  1. Monitor prediction latency and accuracy', 'cyan');
   log('  2. Set up Cloud Monitoring alerts', 'cyan');
@@ -175,7 +190,7 @@ async function testVertexAIEndpoint() {
 
 // Run tests
 testVertexAIEndpoint().catch((error) => {
-  log(`\n❌ Test failed: ${error.message}`, 'red');
+  log(`\nâŒ Test failed: ${error.message}`, 'red');
   console.error(error);
   process.exit(1);
 });

@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * GCP Services Initialization Script
  * 
  * This script sets up all required Google Cloud Platform services:
@@ -49,21 +64,21 @@ function log(message: string, color: keyof typeof colors = 'reset') {
 }
 
 function success(message: string) {
-  console.log(`${colors.green}✓${colors.reset} ${message}`);
+  console.log(`${colors.green}âœ“${colors.reset} ${message}`);
 }
 
 function warning(message: string) {
-  console.log(`${colors.yellow}⚠${colors.reset} ${message}`);
+  console.log(`${colors.yellow}âš ${colors.reset} ${message}`);
 }
 
 function error(message: string) {
-  console.log(`${colors.red}✗${colors.reset} ${message}`);
+  console.log(`${colors.red}âœ—${colors.reset} ${message}`);
 }
 
 function header(title: string) {
-  console.log(`\n${colors.bright}${colors.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`);
+  console.log(`\n${colors.bright}${colors.cyan}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}${title}${colors.reset}`);
-  console.log(`${colors.bright}${colors.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}\n`);
+  console.log(`${colors.bright}${colors.cyan}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${colors.reset}\n`);
 }
 
 // Initialize clients
@@ -211,12 +226,12 @@ async function createPubSubTopicsAndSubscriptions() {
           },
         });
 
-        success(`  └─ Subscription: ${subscriptionName}`);
+        success(`  â””â”€ Subscription: ${subscriptionName}`);
       } catch (subErr: any) {
         if (subErr.code === 6) {
-          success(`  └─ Subscription: ${subscriptionName} (already exists)`);
+          success(`  â””â”€ Subscription: ${subscriptionName} (already exists)`);
         } else {
-          warning(`  └─ Failed to create subscription: ${subErr.message}`);
+          warning(`  â””â”€ Failed to create subscription: ${subErr.message}`);
         }
       }
     } catch (err: any) {
@@ -348,12 +363,12 @@ async function createBigQueryDatasets() {
           schema: { fields: tableConfig.schema },
         });
 
-        success(`  └─ Table: ${tableConfig.name}`);
+        success(`  â””â”€ Table: ${tableConfig.name}`);
       } catch (err: any) {
         if (err.code === 6) {
-          success(`  └─ Table: ${tableConfig.name} (already exists)`);
+          success(`  â””â”€ Table: ${tableConfig.name} (already exists)`);
         } else {
-          warning(`  └─ Failed to create table ${tableConfig.name}: ${err.message}`);
+          warning(`  â””â”€ Failed to create table ${tableConfig.name}: ${err.message}`);
         }
       }
     }
@@ -412,7 +427,7 @@ async function createCloudStorageBuckets() {
         await bucket.setMetadata({
           versioning: { enabled: true },
         });
-        log(`        ✓ Versioning enabled`, 'green');
+        log(`        âœ“ Versioning enabled`, 'green');
       }
 
       // Set lifecycle rules for videos bucket (delete after 90 days)
@@ -427,7 +442,7 @@ async function createCloudStorageBuckets() {
             ],
           },
         });
-        log(`        ✓ Lifecycle: Delete after 90 days`, 'green');
+        log(`        âœ“ Lifecycle: Delete after 90 days`, 'green');
       }
     } catch (err: any) {
       if (err.code === 409) {
@@ -522,16 +537,16 @@ async function createServiceAccountRoles() {
   header('7. Verifying Service Account Permissions');
 
   log('Required IAM Roles:', 'cyan');
-  log('  • Pub/Sub Publisher', 'reset');
-  log('  • Pub/Sub Subscriber', 'reset');
-  log('  • BigQuery Data Editor', 'reset');
-  log('  • BigQuery Job User', 'reset');
-  log('  • Storage Object Admin', 'reset');
-  log('  • Firebase Admin', 'reset');
-  log('  • Vertex AI User', 'reset');
-  log('  • AI Platform Developer', 'reset');
-  log('  • Logging Writer', 'reset');
-  log('  • Monitoring Metric Writer', 'reset');
+  log('  â€¢ Pub/Sub Publisher', 'reset');
+  log('  â€¢ Pub/Sub Subscriber', 'reset');
+  log('  â€¢ BigQuery Data Editor', 'reset');
+  log('  â€¢ BigQuery Job User', 'reset');
+  log('  â€¢ Storage Object Admin', 'reset');
+  log('  â€¢ Firebase Admin', 'reset');
+  log('  â€¢ Vertex AI User', 'reset');
+  log('  â€¢ AI Platform Developer', 'reset');
+  log('  â€¢ Logging Writer', 'reset');
+  log('  â€¢ Monitoring Metric Writer', 'reset');
   log('', 'reset');
 
   warning('Grant these roles manually in GCP Console:');
@@ -547,12 +562,12 @@ async function displaySummary() {
   success('All GCP services have been initialized!');
   log('', 'reset');
 
-  log('✓ Pub/Sub Topics: 9 topics created', 'green');
-  log('✓ Pub/Sub Subscriptions: 9 subscriptions created', 'green');
-  log('✓ BigQuery Dataset: drishtix_analytics', 'green');
-  log('✓ BigQuery Tables: 6 tables created', 'green');
-  log('✓ Cloud Storage Buckets: 4 buckets created', 'green');
-  log('✓ Firestore Collections: 4 collections initialized', 'green');
+  log('âœ“ Pub/Sub Topics: 9 topics created', 'green');
+  log('âœ“ Pub/Sub Subscriptions: 9 subscriptions created', 'green');
+  log('âœ“ BigQuery Dataset: drishtix_analytics', 'green');
+  log('âœ“ BigQuery Tables: 6 tables created', 'green');
+  log('âœ“ Cloud Storage Buckets: 4 buckets created', 'green');
+  log('âœ“ Firestore Collections: 4 collections initialized', 'green');
   log('', 'reset');
 
   log('Next Steps:', 'cyan');
@@ -566,14 +581,14 @@ async function displaySummary() {
   log('  6. Start the backend server: npm run dev (in server directory)', 'reset');
   log('', 'reset');
 
-  log('🎯 DrishtiX Platform is ready for deployment!', 'bright');
+  log('ðŸŽ¯ DrishtiX Platform is ready for deployment!', 'bright');
 }
 
 async function main() {
   try {
-    log('\n╔════════════════════════════════════════════════════════════════╗', 'bright');
-    log('║         DrishtiX - GCP Services Initialization Script         ║', 'bright');
-    log('╚════════════════════════════════════════════════════════════════╝\n', 'bright');
+    log('\nâ•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—', 'bright');
+    log('â•‘         DrishtiX - GCP Services Initialization Script         â•‘', 'bright');
+    log('â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n', 'bright');
 
     // Step 1: Validate prerequisites
     const valid = await validatePrerequisites();

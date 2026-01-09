@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Azure Monitor & Application Insights Service
  * Comprehensive logging, monitoring, and alerting for security and performance
  * 
@@ -71,13 +86,13 @@ class CloudLoggingMonitoringService {
       // Use @azure/monitor-opentelemetry or Application Insights SDK
       this.initialized = true;
 
-      console.log('✓ Azure Monitor initialized (SDK integration pending)');
+      console.log('âœ“ Azure Monitor initialized (SDK integration pending)');
 
       // Start periodic monitoring
       this.startPeriodicMonitoring();
     } catch (error) {
       console.error('Error initializing Azure Monitor:', error);
-      console.warn('⚠️ Azure Monitor not available - falling back to console');
+      console.warn('âš ï¸ Azure Monitor not available - falling back to console');
     }
   }
 
@@ -430,7 +445,7 @@ class CloudLoggingMonitoringService {
       // - Cloud Monitoring Alerting
       // - Pub/Sub for notification system
       // - PagerDuty/OpsGenie for on-call
-      console.log(`🚨 ALERT: ${alert.title} - ${alert.description}`);
+      console.log(`ðŸš¨ ALERT: ${alert.title} - ${alert.description}`);
     } catch (error) {
       console.error('Error sending alert:', error);
     }

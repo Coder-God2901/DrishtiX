@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * End-to-End Integration Test for Venue Mapping & Dynamic Event Creator
  * 
  * Tests the complete flow:
@@ -41,11 +56,11 @@ async function runTest(name: string, testFn: () => Promise<void>): Promise<void>
     await testFn();
     const duration = Date.now() - startTime;
     results.push({ name, passed: true, message: 'Success', duration });
-    console.log(`✅ ${name} (${duration}ms)`);
+    console.log(`âœ… ${name} (${duration}ms)`);
   } catch (error: any) {
     const duration = Date.now() - startTime;
     results.push({ name, passed: false, message: error.message, duration });
-    console.error(`❌ ${name} (${duration}ms): ${error.message}`);
+    console.error(`âŒ ${name} (${duration}ms): ${error.message}`);
   }
 }
 
@@ -480,7 +495,7 @@ async function cleanup(): Promise<void> {
  * Main test runner
  */
 async function runAllTests(): Promise<void> {
-  console.log('\n🚀 Starting Venue Mapping & Dynamic Event Creator Integration Tests\n');
+  console.log('\nðŸš€ Starting Venue Mapping & Dynamic Event Creator Integration Tests\n');
   console.log('='.repeat(80));
 
   await runTest('1. Get all event templates', testGetTemplates);
@@ -502,14 +517,14 @@ async function runAllTests(): Promise<void> {
   const failed = results.filter(r => !r.passed).length;
   const totalTime = results.reduce((sum, r) => sum + r.duration, 0);
 
-  console.log(`\n📊 Test Summary:`);
+  console.log(`\nðŸ“Š Test Summary:`);
   console.log(`   Total: ${results.length}`);
-  console.log(`   Passed: ${passed} ✅`);
-  console.log(`   Failed: ${failed} ❌`);
+  console.log(`   Passed: ${passed} âœ…`);
+  console.log(`   Failed: ${failed} âŒ`);
   console.log(`   Total Time: ${totalTime}ms`);
 
   if (failed > 0) {
-    console.log(`\n❌ Failed Tests:`);
+    console.log(`\nâŒ Failed Tests:`);
     results.filter(r => !r.passed).forEach(r => {
       console.log(`   - ${r.name}: ${r.message}`);
     });
@@ -519,7 +534,7 @@ async function runAllTests(): Promise<void> {
   await cleanup();
 
   console.log('\n' + '='.repeat(80));
-  console.log(failed === 0 ? '✅ All tests passed!' : `❌ ${failed} test(s) failed`);
+  console.log(failed === 0 ? 'âœ… All tests passed!' : `âŒ ${failed} test(s) failed`);
   console.log('='.repeat(80) + '\n');
 
   process.exit(failed === 0 ? 0 : 1);
@@ -527,6 +542,6 @@ async function runAllTests(): Promise<void> {
 
 // Run tests
 runAllTests().catch(error => {
-  console.error('❌ Test runner error:', error);
+  console.error('âŒ Test runner error:', error);
   process.exit(1);
 });

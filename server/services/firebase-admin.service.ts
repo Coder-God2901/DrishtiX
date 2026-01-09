@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Firebase Admin SDK Service
  * Server-side Firebase integration for authentication, FCM, and Firestore
  * 
@@ -85,7 +100,7 @@ class FirebaseAdminService {
         ignoreUndefinedProperties: true,
       });
 
-      console.log('✓ Firebase Admin SDK initialized successfully');
+      console.log('âœ“ Firebase Admin SDK initialized successfully');
     } catch (error) {
       console.error('Error initializing Firebase Admin:', error);
       throw error;
@@ -314,7 +329,7 @@ class FirebaseAdminService {
 
       await this.sendBulkNotifications({
         tokens: deviceTokens,
-        title: `🚨 ${alert.type}: ${alert.title}`,
+        title: `ðŸš¨ ${alert.type}: ${alert.title}`,
         body: alert.message,
         priority: priorityMap[alert.type],
         sound: alert.type === 'CRITICAL' ? 'alert' : 'default',

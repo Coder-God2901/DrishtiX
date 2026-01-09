@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Test Script for Gemini Vision Anomaly Detection
  *
  * Prerequisites:
@@ -18,13 +33,13 @@ const API_KEY = process.env.VITE_GEMINI_API_KEY;
 const VISION_ENABLED = process.env.VITE_GEMINI_VISION_ENABLED === 'true';
 
 if (!API_KEY) {
-  console.error('❌ VITE_GEMINI_API_KEY not set in .env file');
+  console.error('âŒ VITE_GEMINI_API_KEY not set in .env file');
   console.error('   Get API key from: https://makersuite.google.com/app/apikey');
   process.exit(1);
 }
 
 if (!VISION_ENABLED) {
-  console.warn('⚠️  VITE_GEMINI_VISION_ENABLED is false');
+  console.warn('âš ï¸  VITE_GEMINI_VISION_ENABLED is false');
   console.warn('   Set to true in .env to enable vision analysis');
 }
 
@@ -32,7 +47,7 @@ if (!VISION_ENABLED) {
  * Analyze image with Gemini Vision
  */
 async function analyzeImage(imagePath, scenario) {
-  console.log(`\n📷 Analyzing: ${scenario}`);
+  console.log(`\nðŸ“· Analyzing: ${scenario}`);
   console.log(`   Image: ${imagePath}`);
 
   // Read and encode image
@@ -41,12 +56,12 @@ async function analyzeImage(imagePath, scenario) {
     if (fs.existsSync(imagePath)) {
       imageBase64 = fs.readFileSync(imagePath, 'base64');
     } else {
-      console.warn(`   ⚠️  Image not found, using placeholder`);
+      console.warn(`   âš ï¸  Image not found, using placeholder`);
       // Create a small placeholder image
       imageBase64 = createPlaceholderImage();
     }
   } catch (error) {
-    console.error(`   ❌ Failed to read image:`, error.message);
+    console.error(`   âŒ Failed to read image:`, error.message);
     return null;
   }
 
@@ -101,7 +116,7 @@ Be very precise - false alarms can cause unnecessary evacuations.
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      console.error('   ❌ Could not parse Gemini response');
+      console.error('   âŒ Could not parse Gemini response');
       console.log('   Raw response:', text.substring(0, 200));
       return null;
     }
@@ -109,21 +124,21 @@ Be very precise - false alarms can cause unnecessary evacuations.
     const result = JSON.parse(jsonMatch[0]);
 
     // Display results
-    console.log('   ✅ Analysis complete');
+    console.log('   âœ… Analysis complete');
     console.log(`   Confidence: ${(result.confidence * 100).toFixed(1)}%`);
     console.log(`   Description: ${result.description}`);
 
     // Check for anomalies
     const anomalies = [];
-    if (result.hasSmoke) anomalies.push('🌫️  SMOKE');
-    if (result.hasFire) anomalies.push('🔥 FIRE');
-    if (result.hasPanic) anomalies.push('😱 PANIC');
-    if (result.hasCrowdCrush) anomalies.push('⚠️  CRUSH');
+    if (result.hasSmoke) anomalies.push('ðŸŒ«ï¸  SMOKE');
+    if (result.hasFire) anomalies.push('ðŸ”¥ FIRE');
+    if (result.hasPanic) anomalies.push('ðŸ˜± PANIC');
+    if (result.hasCrowdCrush) anomalies.push('âš ï¸  CRUSH');
 
     if (anomalies.length > 0) {
-      console.log(`   ⚠️  ANOMALIES DETECTED: ${anomalies.join(', ')}`);
+      console.log(`   âš ï¸  ANOMALIES DETECTED: ${anomalies.join(', ')}`);
     } else {
-      console.log('   ✅ No anomalies detected');
+      console.log('   âœ… No anomalies detected');
     }
 
     if (result.objects && result.objects.length > 0) {
@@ -133,11 +148,11 @@ Be very precise - false alarms can cause unnecessary evacuations.
     return result;
   } catch (error) {
     if (error.response?.status === 429) {
-      console.error('   ❌ Rate limit exceeded - wait 60 seconds');
+      console.error('   âŒ Rate limit exceeded - wait 60 seconds');
     } else if (error.response?.status === 400) {
-      console.error('   ❌ Bad request:', error.response.data.error?.message);
+      console.error('   âŒ Bad request:', error.response.data.error?.message);
     } else {
-      console.error('   ❌ API error:', error.message);
+      console.error('   âŒ API error:', error.message);
     }
     return null;
   }
@@ -155,7 +170,7 @@ function createPlaceholderImage() {
  * Test different scenarios
  */
 async function runTests() {
-  console.log('🚀 Gemini Vision Anomaly Detection Test');
+  console.log('ðŸš€ Gemini Vision Anomaly Detection Test');
   console.log('='.repeat(60));
   console.log('API Key:', API_KEY.substring(0, 20) + '...');
   console.log('Vision Enabled:', VISION_ENABLED);
@@ -213,10 +228,10 @@ async function runTests() {
 
       if (correct) {
         results.correct++;
-        console.log('   ✅ Prediction matches expected outcome');
+        console.log('   âœ… Prediction matches expected outcome');
       } else {
         results.incorrect++;
-        console.log('   ⚠️  Prediction differs from expected');
+        console.log('   âš ï¸  Prediction differs from expected');
         console.log('   Expected:', scenario.expected);
         console.log('   Got:', {
           smoke: result.hasSmoke,
@@ -234,14 +249,14 @@ async function runTests() {
 
     // Wait between requests to avoid rate limits
     if (testScenarios.indexOf(scenario) < testScenarios.length - 1) {
-      console.log('   ⏳ Waiting 2 seconds...');
+      console.log('   â³ Waiting 2 seconds...');
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
 
   // Summary
   console.log('\n' + '='.repeat(60));
-  console.log('📊 Test Results Summary');
+  console.log('ðŸ“Š Test Results Summary');
   console.log('='.repeat(60));
   console.log(`Total Tests:       ${results.total}`);
   console.log(`Successful:        ${results.successful} / ${results.total}`);
@@ -252,15 +267,15 @@ async function runTests() {
   console.log('='.repeat(60));
 
   if (results.successful === results.total && results.correct === results.successful) {
-    console.log('\n✅ All tests passed! Gemini Vision is working correctly.');
+    console.log('\nâœ… All tests passed! Gemini Vision is working correctly.');
   } else if (results.failed > 0) {
-    console.log('\n⚠️  Some tests failed. Check API configuration.');
+    console.log('\nâš ï¸  Some tests failed. Check API configuration.');
   } else {
-    console.log('\n⚠️  Tests completed but accuracy may need tuning.');
+    console.log('\nâš ï¸  Tests completed but accuracy may need tuning.');
   }
 
   // Recommendations
-  console.log('\n📋 Recommendations:');
+  console.log('\nðŸ“‹ Recommendations:');
   if (results.correct < results.successful) {
     console.log('   - Adjust confidence thresholds in anomaly-detection.service.ts');
     console.log('   - Review prompt engineering for better accuracy');
@@ -282,7 +297,7 @@ function setupTestImages() {
   const testDir = './test-images';
   if (!fs.existsSync(testDir)) {
     fs.mkdirSync(testDir, { recursive: true });
-    console.log(`\n📁 Created ${testDir} directory`);
+    console.log(`\nðŸ“ Created ${testDir} directory`);
     console.log('   Please add test images:');
     console.log('   - normal-crowd.jpg');
     console.log('   - smoke-scene.jpg');
@@ -303,6 +318,6 @@ async function main() {
 
 // Run tests
 main().catch((error) => {
-  console.error('\n❌ Test execution failed:', error.message);
+  console.error('\nâŒ Test execution failed:', error.message);
   process.exit(1);
 });

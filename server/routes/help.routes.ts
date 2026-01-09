@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Help System Routes
  * Handles find person, medical assistance, SOS alerts, and general help requests
  */
@@ -288,7 +303,7 @@ router.post('/sos', authenticate, async (req: Request, res: Response) => {
             eventId,
             type: 'EMERGENCY',
             priority: 'URGENT',
-            title: '🚨 SOS ALERT',
+            title: 'ðŸš¨ SOS ALERT',
             message: `${issueType}: ${description} - Location: ${JSON.stringify(location)}`,
             channels: ['push', 'sms'],
             actionUrl: `/sos/${sosRequest.id}`

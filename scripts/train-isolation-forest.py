@@ -1,3 +1,16 @@
+# Copyright Â© 2025 DrishtiX. All Rights Reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL
+#
+# This software is the proprietary information of DrishtiX.
+# Unauthorized copying, distribution, modification, or use of this software,
+# via any medium, is strictly prohibited without the express written permission
+# of DrishtiX.
+#
+# This software is provided "as is" without warranty of any kind, express or implied.
+#
+# For licensing inquiries: licensing@drishtix.com
+# License: See LICENSE file in the project root
 """
 Isolation Forest Training Pipeline for L2 Anomaly Detection
 Trains an Isolation Forest model on historical crowd density patterns
@@ -70,7 +83,7 @@ def setup_directories():
     try:
         os.makedirs(MODEL_DIR, exist_ok=True)
         os.makedirs(DATA_DIR, exist_ok=True)
-        logger.info(f"✓ Directories created: {MODEL_DIR}, {DATA_DIR}")
+        logger.info(f"âœ“ Directories created: {MODEL_DIR}, {DATA_DIR}")
     except Exception as e:
         logger.error(f"Failed to create directories: {e}")
         raise
@@ -91,7 +104,7 @@ def fetch_bigquery_data(days_back=90) -> pd.DataFrame:
         return generate_synthetic_data()
 
     logger.info(
-        f"\n📊 Fetching {days_back} days of historical data from BigQuery...")
+        f"\nðŸ“Š Fetching {days_back} days of historical data from BigQuery...")
 
     client = bigquery.Client(project=PROJECT_ID)
 
@@ -134,7 +147,7 @@ def fetch_bigquery_data(days_back=90) -> pd.DataFrame:
 
     try:
         df = client.query(query).to_dataframe()
-        print(f"✓ Fetched {len(df)} records from BigQuery")
+        print(f"âœ“ Fetched {len(df)} records from BigQuery")
 
         # Check anomaly distribution
         anomaly_count = df['is_anomaly'].sum()
@@ -144,13 +157,13 @@ def fetch_bigquery_data(days_back=90) -> pd.DataFrame:
         # Save raw data
         data_path = os.path.join(DATA_DIR, 'raw_data.csv')
         df.to_csv(data_path, index=False)
-        print(f"✓ Saved raw data to {data_path}")
+        print(f"âœ“ Saved raw data to {data_path}")
 
         return df
 
     except Exception as e:
-        print(f"⚠️  BigQuery fetch failed: {e}")
-        print("⚠️  Using synthetic data for training demonstration...")
+        print(f"âš ï¸  BigQuery fetch failed: {e}")
+        print("âš ï¸  Using synthetic data for training demonstration...")
         return generate_synthetic_data()
 
 
@@ -167,7 +180,7 @@ def generate_synthetic_data(num_samples=10000):
     Returns:
         DataFrame with synthetic crowd features
     """
-    print(f"\n🔧 Generating {num_samples} synthetic samples...")
+    print(f"\nðŸ”§ Generating {num_samples} synthetic samples...")
 
     np.random.seed(RANDOM_STATE)
 
@@ -229,10 +242,10 @@ def generate_synthetic_data(num_samples=10000):
     # Save synthetic data
     data_path = os.path.join(DATA_DIR, 'synthetic_data.csv')
     df.to_csv(data_path, index=False)
-    print(f"✓ Generated {len(df)} synthetic records")
+    print(f"âœ“ Generated {len(df)} synthetic records")
     print(
         f"   Anomalies: {anomaly_samples} ({100*anomaly_samples/num_samples:.1f}%)")
-    print(f"✓ Saved to {data_path}")
+    print(f"âœ“ Saved to {data_path}")
 
     return df
 
@@ -250,7 +263,7 @@ def prepare_features(df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, List[str
         feature_names: List of feature names
         scaler: Fitted StandardScaler
     """
-    logger.info(f"\n🔄 Preparing features for Isolation Forest...")
+    logger.info(f"\nðŸ”„ Preparing features for Isolation Forest...")
 
     # Validate required columns
     required_cols = ['density_norm', 'delta_t1', 'delta_t5', 'delta_t15',
@@ -292,7 +305,7 @@ def prepare_features(df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, List[str
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    print(f"✓ Feature matrix: {X_scaled.shape}")
+    print(f"âœ“ Feature matrix: {X_scaled.shape}")
     print(f"   Features: {', '.join(feature_cols)}")
     print(f"   Anomaly rate: {100 * y.mean():.2f}%")
 
@@ -310,7 +323,7 @@ def train_model(X_train, y_train, X_test, y_test):
     Returns:
         Trained model
     """
-    print(f"\n🚀 Training Isolation Forest...")
+    print(f"\nðŸš€ Training Isolation Forest...")
     print(f"   Training samples: {len(X_train)}")
     print(f"   Test samples: {len(X_test)}")
     print(f"   Hyperparameters:")
@@ -330,10 +343,10 @@ def train_model(X_train, y_train, X_test, y_test):
 
     model.fit(X_train)
 
-    print(f"✓ Training complete")
+    print(f"âœ“ Training complete")
 
     # Evaluate on test set
-    print(f"\n📊 Evaluating on test set...")
+    print(f"\nðŸ“Š Evaluating on test set...")
 
     # Predict anomalies (-1 = anomaly, 1 = normal)
     y_pred = model.predict(X_test)
@@ -355,7 +368,7 @@ def train_model(X_train, y_train, X_test, y_test):
     print(f"    [FN={cm[1, 0]}, TP={cm[1, 1]}]]")
 
     # Feature importance (not directly available, but can use contamination impact)
-    print(f"\n✓ Model trained with {N_ESTIMATORS} trees")
+    print(f"\nâœ“ Model trained with {N_ESTIMATORS} trees")
 
     return model, anomaly_scores
 
@@ -369,17 +382,17 @@ def save_model(model, scaler, feature_names):
         scaler: Fitted StandardScaler
         feature_names: List of feature names
     """
-    print(f"\n💾 Saving model artifacts...")
+    print(f"\nðŸ’¾ Saving model artifacts...")
 
     # Save model
     model_path = os.path.join(MODEL_DIR, 'isolation_forest.joblib')
     joblib.dump(model, model_path)
-    print(f"✓ Model saved to {model_path}")
+    print(f"âœ“ Model saved to {model_path}")
 
     # Save scaler
     scaler_path = os.path.join(MODEL_DIR, 'scaler.joblib')
     joblib.dump(scaler, scaler_path)
-    print(f"✓ Scaler saved to {scaler_path}")
+    print(f"âœ“ Scaler saved to {scaler_path}")
 
     # Save feature names
     metadata = {
@@ -394,14 +407,14 @@ def save_model(model, scaler, feature_names):
     metadata_path = os.path.join(MODEL_DIR, 'metadata.json')
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
-    print(f"✓ Metadata saved to {metadata_path}")
+    print(f"âœ“ Metadata saved to {metadata_path}")
 
 
 def upload_to_gcs():
     """
     Upload trained model to Google Cloud Storage
     """
-    print(f"\n☁️  Uploading model to GCS...")
+    print(f"\nâ˜ï¸  Uploading model to GCS...")
 
     try:
         storage_client = storage.Client(project=PROJECT_ID)
@@ -420,9 +433,9 @@ def upload_to_gcs():
 
             blob = bucket.blob(gcs_path)
             blob.upload_from_filename(local_path)
-            print(f"✓ Uploaded {filename} to gs://{BUCKET_NAME}/{gcs_path}")
+            print(f"âœ“ Uploaded {filename} to gs://{BUCKET_NAME}/{gcs_path}")
 
-        print(f"\n✅ Model uploaded to GCS successfully!")
+        print(f"\nâœ… Model uploaded to GCS successfully!")
         print(f"   Bucket: gs://{BUCKET_NAME}/models/isolation-forest/")
         print(f"   Update your .env file:")
         print(f"   GCS_ISOLATION_FOREST_MODEL_PATH=models/isolation-forest/isolation_forest.joblib")
@@ -442,15 +455,15 @@ def upload_to_gcs():
 
             blob = bucket.blob(gcs_path)
             blob.upload_from_filename(local_path)
-            print(f"✓ Uploaded {filename} to gs://{BUCKET_NAME}/{gcs_path}")
+            print(f"âœ“ Uploaded {filename} to gs://{BUCKET_NAME}/{gcs_path}")
 
-        print(f"\n✅ Model uploaded to GCS successfully!")
+        print(f"\nâœ… Model uploaded to GCS successfully!")
         print(f"   Bucket: gs://{BUCKET_NAME}/models/isolation-forest/")
         print(f"   Update your .env file:")
         print(f"   GCS_ISOLATION_FOREST_MODEL_PATH=models/isolation-forest/isolation_forest.joblib")
 
     except Exception as e:
-        print(f"\n❌ Upload failed: {e}")
+        print(f"\nâŒ Upload failed: {e}")
         print("   Make sure you have:")
         print("   1. GCS bucket created")
         print("   2. Proper IAM permissions (Storage Object Admin)")
@@ -501,10 +514,10 @@ def main():
         joblib.dump(scaler, os.path.join(DATA_DIR, 'scaler_temp.joblib'))
         joblib.dump(feature_names, os.path.join(
             DATA_DIR, 'feature_names.joblib'))
-        print(f"✓ Saved prepared data to {DATA_DIR}")
+        print(f"âœ“ Saved prepared data to {DATA_DIR}")
 
         if args.mode == 'fetch-data':
-            print("\n✅ Data preparation complete. Run with --mode train to train model.")
+            print("\nâœ… Data preparation complete. Run with --mode train to train model.")
             return
 
     # Step 2: Train Model
@@ -524,7 +537,7 @@ def main():
         save_model(model, scaler, feature_names)
 
         if args.mode == 'train':
-            print("\n✅ Training complete. Run with --mode upload to upload to GCS.")
+            print("\nâœ… Training complete. Run with --mode upload to upload to GCS.")
             return
 
     # Step 3: Upload to GCS
@@ -551,10 +564,10 @@ def main():
         joblib.dump(scaler, os.path.join(DATA_DIR, 'scaler_temp.joblib'))
         joblib.dump(feature_names, os.path.join(
             DATA_DIR, 'feature_names.joblib'))
-        print(f"✓ Saved prepared data to {DATA_DIR}")
+        print(f"âœ“ Saved prepared data to {DATA_DIR}")
 
         if args.mode == 'fetch-data':
-            print("\n✅ Data preparation complete. Run with --mode train to train model.")
+            print("\nâœ… Data preparation complete. Run with --mode train to train model.")
             return
 
     # Step 2: Train Model
@@ -574,7 +587,7 @@ def main():
         save_model(model, scaler, feature_names)
 
         if args.mode == 'train':
-            print("\n✅ Training complete. Run with --mode upload to upload to GCS.")
+            print("\nâœ… Training complete. Run with --mode upload to upload to GCS.")
             return
 
     # Step 3: Upload to GCS
@@ -582,7 +595,7 @@ def main():
         upload_to_gcs()
 
     print("\n" + "=" * 60)
-    print("✅ Pipeline complete!")
+    print("âœ… Pipeline complete!")
     print("=" * 60)
 
 

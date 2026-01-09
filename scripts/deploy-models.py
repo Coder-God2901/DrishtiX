@@ -1,3 +1,16 @@
+# Copyright Â© 2025 DrishtiX. All Rights Reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL
+#
+# This software is the proprietary information of DrishtiX.
+# Unauthorized copying, distribution, modification, or use of this software,
+# via any medium, is strictly prohibited without the express written permission
+# of DrishtiX.
+#
+# This software is provided "as is" without warranty of any kind, express or implied.
+#
+# For licensing inquiries: licensing@drishtix.com
+# License: See LICENSE file in the project root
 """
 Automated Model Deployment to Vertex AI
 Deploys trained ML models to Vertex AI endpoints for inference
@@ -130,7 +143,7 @@ def upload_model_to_gcs(model_path: str, model_name: str) -> str:
             metadata_blob.upload_from_filename(str(metadata_file))
 
     gcs_uri = f"gs://{BUCKET_NAME}/{gcs_model_dir}"
-    print(f"   ✓ Model uploaded to {gcs_uri}")
+    print(f"   âœ“ Model uploaded to {gcs_uri}")
     return gcs_uri
 
 
@@ -166,7 +179,7 @@ def register_model_to_vertex(model_name: str, gcs_uri: str) -> Any:
         sync=True,
     )
 
-    print(f"   ✓ Model registered: {model.resource_name}")
+    print(f"   âœ“ Model registered: {model.resource_name}")
     return model
 
 
@@ -199,7 +212,7 @@ def create_endpoint(model_name: str) -> Any:
 
     if endpoints:
         endpoint = endpoints[0]
-        print(f"   ℹ Using existing endpoint: {endpoint.display_name}")
+        print(f"   â„¹ Using existing endpoint: {endpoint.display_name}")
     else:
         # Create new endpoint
         endpoint = aiplatform.Endpoint.create(
@@ -207,7 +220,7 @@ def create_endpoint(model_name: str) -> Any:
             description=f"Endpoint for {config['description']}",
             sync=True,
         )
-        print(f"   ✓ Endpoint created: {endpoint.resource_name}")
+        print(f"   âœ“ Endpoint created: {endpoint.resource_name}")
 
     return endpoint
 
@@ -236,7 +249,7 @@ def deploy_model_to_endpoint(model: Any, endpoint: Any, model_name: str):
         sync=True,
     )
 
-    print(f"   ✓ Model deployed to endpoint")
+    print(f"   âœ“ Model deployed to endpoint")
 
 
 def validate_deployment(endpoint: Any, model_name: str):
@@ -281,11 +294,11 @@ def validate_deployment(endpoint: Any, model_name: str):
     try:
         # Make prediction
         response = endpoint.predict(instances=test_data["instances"])
-        print(f"   ✓ Endpoint health check passed")
+        print(f"   âœ“ Endpoint health check passed")
         print(f"   Sample prediction shape: {len(response.predictions)}")
         return True
     except Exception as e:
-        print(f"   ✗ Endpoint health check failed: {str(e)}")
+        print(f"   âœ— Endpoint health check failed: {str(e)}")
         return False
 
 
@@ -339,7 +352,7 @@ def deploy_single_model(model_name: str, model_path: Optional[str] = None):
 
     # Validate model file exists
     if not Path(model_path).exists():
-        print(f"✗ Model file not found: {model_path}")
+        print(f"âœ— Model file not found: {model_path}")
         print(
             f"  Please train the model first using: python scripts/train-{model_name}.py --mode train")
         return False
@@ -365,7 +378,7 @@ def deploy_single_model(model_name: str, model_path: Optional[str] = None):
 
         if is_valid:
             print(f"\n{'='*60}")
-            print(f"✓ {model_name.upper()} Model Deployed Successfully!")
+            print(f"âœ“ {model_name.upper()} Model Deployed Successfully!")
             print(f"{'='*60}")
             print(f"Model ID: {model.name}")
             print(f"Endpoint ID: {endpoint.name}")
@@ -373,11 +386,11 @@ def deploy_single_model(model_name: str, model_path: Optional[str] = None):
                 f"Endpoint URL: https://{LOCATION}-aiplatform.googleapis.com/v1/{endpoint.resource_name}")
             return True
         else:
-            print(f"\n✗ Deployment completed but validation failed")
+            print(f"\nâœ— Deployment completed but validation failed")
             return False
 
     except Exception as e:
-        print(f"\n✗ Deployment failed: {str(e)}")
+        print(f"\nâœ— Deployment failed: {str(e)}")
         import traceback
         traceback.print_exc()
         return False
@@ -402,14 +415,14 @@ def deploy_all_models():
     print(f"Deployment Summary")
     print(f"{'='*60}")
     for model_name, success in results.items():
-        status = "✓ SUCCESS" if success else "✗ FAILED"
+        status = "âœ“ SUCCESS" if success else "âœ— FAILED"
         print(f"{model_name:20} {status}")
 
     all_success = all(results.values())
     if all_success:
-        print(f"\n✓ All models deployed successfully!")
+        print(f"\nâœ“ All models deployed successfully!")
     else:
-        print(f"\n✗ Some deployments failed. Check logs above.")
+        print(f"\nâœ— Some deployments failed. Check logs above.")
 
     return all_success
 
@@ -438,13 +451,13 @@ def main():
 
     # Validate environment variables
     if PROJECT_ID == 'your-gcp-project-id':
-        print("✗ Error: GOOGLE_CLOUD_PROJECT_ID environment variable not set")
+        print("âœ— Error: GOOGLE_CLOUD_PROJECT_ID environment variable not set")
         print("  Please set it in your .env file or export it:")
         print("  export GOOGLE_CLOUD_PROJECT_ID=your-actual-project-id")
         sys.exit(1)
 
     if BUCKET_NAME == 'drishtix-data-storage':
-        print("⚠ Warning: Using default GCS bucket name. Set GCS_BUCKET_NAME in .env if different.")
+        print("âš  Warning: Using default GCS bucket name. Set GCS_BUCKET_NAME in .env if different.")
 
     # Execute deployment
     if args.all:
@@ -452,7 +465,7 @@ def main():
     elif args.model:
         success = deploy_single_model(args.model, args.model_path)
     else:
-        print("✗ Error: Please specify --model or --all")
+        print("âœ— Error: Please specify --model or --all")
         parser.print_help()
         sys.exit(1)
 

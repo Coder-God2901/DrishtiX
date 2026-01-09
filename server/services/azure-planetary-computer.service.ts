@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Azure Planetary Computer Service
  * Satellite imagery, venue mapping, and synthetic training data generation
  * 
@@ -75,10 +90,10 @@ class AzurePlanetaryComputerService {
     this.stacApiUrl = azureConfig.planetaryComputer.endpoint;
 
     if (azureConfig.planetaryComputer.enabled) {
-      console.log('🌍 Azure Planetary Computer service configured');
+      console.log('ðŸŒ Azure Planetary Computer service configured');
       this.initialized = true;
     } else {
-      console.warn('⚠️ Azure Planetary Computer disabled in config - using fallback mode');
+      console.warn('âš ï¸ Azure Planetary Computer disabled in config - using fallback mode');
     }
   }
 
@@ -167,7 +182,7 @@ class AzurePlanetaryComputerService {
         return '/api/fallback-imagery';
       }
 
-      console.log(`✅ Generated Planetary Computer imagery for event ${request.eventId}`);
+      console.log(`âœ… Generated Planetary Computer imagery for event ${request.eventId}`);
       return visualAsset.href;
     } catch (error) {
       console.error('Planetary Computer imagery error:', error);
@@ -216,7 +231,7 @@ class AzurePlanetaryComputerService {
 
       // In production, you would process the DEM data using GeoTIFF libraries
       // For now, return placeholder data
-      console.log('✅ Retrieved terrain data from Planetary Computer');
+      console.log('âœ… Retrieved terrain data from Planetary Computer');
 
       return {
         elevation: Array(100).fill(0).map(() => Math.random() * 500),
@@ -261,7 +276,7 @@ class AzurePlanetaryComputerService {
         return { landCover: 'urban' };
       }
 
-      console.log('✅ Retrieved land cover data from Planetary Computer');
+      console.log('âœ… Retrieved land cover data from Planetary Computer');
 
       // Return classification (would be processed from raster data in production)
       return {
@@ -286,7 +301,7 @@ class AzurePlanetaryComputerService {
     scenario: SyntheticCrowdData['scenario'] = 'NORMAL'
   ): Promise<SyntheticCrowdData> {
     try {
-      console.log(`📊 Generating synthetic crowd data for ${eventId} - Scenario: ${scenario}`);
+      console.log(`ðŸ“Š Generating synthetic crowd data for ${eventId} - Scenario: ${scenario}`);
 
       // Get terrain and land cover for realistic distribution
       const terrain = await this.getTerrainData(venueBounds);
@@ -345,7 +360,7 @@ class AzurePlanetaryComputerService {
         }
       }
 
-      console.log(`✅ Generated ${gridCells.length} synthetic grid cells with ${totalCount} people`);
+      console.log(`âœ… Generated ${gridCells.length} synthetic grid cells with ${totalCount} people`);
 
       return {
         gridCells,
@@ -385,7 +400,7 @@ class AzurePlanetaryComputerService {
       }
 
       // In production, calculate NDVI from NIR and Red bands
-      console.log('✅ Retrieved vegetation index data');
+      console.log('âœ… Retrieved vegetation index data');
 
       return {
         ndvi: 0.6 + Math.random() * 0.3, // Simulated NDVI

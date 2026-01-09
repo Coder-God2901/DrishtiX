@@ -1,3 +1,16 @@
+# Copyright Â© 2025 DrishtiX. All Rights Reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL
+#
+# This software is the proprietary information of DrishtiX.
+# Unauthorized copying, distribution, modification, or use of this software,
+# via any medium, is strictly prohibited without the express written permission
+# of DrishtiX.
+#
+# This software is provided "as is" without warranty of any kind, express or implied.
+#
+# For licensing inquiries: licensing@drishtix.com
+# License: See LICENSE file in the project root
 """
 ML Model Training - Local Replacement for Vertex AI Training Jobs
 Trains ConvLSTM, Autoencoder, and Isolation Forest models using local compute
@@ -219,7 +232,7 @@ class ConvLSTMTrainer:
         if self.model is not None:
             model_path = MODEL_DIR / f"convlstm_{self.mode.lower()}.h5"
             self.model.save(str(model_path))
-            logger.info(f"✓ Model saved: {model_path}")
+            logger.info(f"âœ“ Model saved: {model_path}")
         else:
             logger.error("Model is None, cannot save")
 
@@ -347,7 +360,7 @@ class AutoencoderTrainer:
         if self.model is not None:
             model_path = MODEL_DIR / "autoencoder.h5"
             self.model.save(str(model_path))
-            logger.info(f"✓ Model saved: {model_path}")
+            logger.info(f"âœ“ Model saved: {model_path}")
         else:
             logger.error("Model is None, cannot save")
 
@@ -425,7 +438,7 @@ class IsolationForestTrainer:
         with open(model_path, "wb") as f:
             pickle.dump(self.model, f)
 
-        logger.info(f"✓ Model saved: {model_path}")
+        logger.info(f"âœ“ Model saved: {model_path}")
         return self.model
 
 
@@ -438,25 +451,25 @@ def train_all_models() -> None:
     # Train ConvLSTM models for each event mode
     modes = ["GENERAL", "SPORTS", "CONCERT", "ENTRY_EXIT"]
     for mode in modes:
-        logger.info(f"\n📊 Training ConvLSTM for {mode}...")
+        logger.info(f"\nðŸ“Š Training ConvLSTM for {mode}...")
         trainer = ConvLSTMTrainer(mode=mode)
         trainer.train(epochs=50, batch_size=32)
 
     # Train Autoencoder
-    logger.info("\n🔍 Training Autoencoder for anomaly detection...")
+    logger.info("\nðŸ” Training Autoencoder for anomaly detection...")
     autoencoder_trainer = AutoencoderTrainer()
     autoencoder_trainer.train(epochs=50, batch_size=32)
 
     # Train Isolation Forest
-    logger.info("\n🌲 Training Isolation Forest for outlier detection...")
+    logger.info("\nðŸŒ² Training Isolation Forest for outlier detection...")
     forest_trainer = IsolationForestTrainer()
     forest_trainer.train(contamination=0.1)
 
     logger.info("\n" + "=" * 60)
-    logger.info("✅ All models trained successfully!")
+    logger.info("âœ… All models trained successfully!")
     logger.info("=" * 60)
     logger.info(f"Models saved to: {MODEL_DIR}")
-    logger.info("Cost savings: $100/month (Vertex AI) → $10/month (Docker)")
+    logger.info("Cost savings: $100/month (Vertex AI) â†’ $10/month (Docker)")
 
 
 if __name__ == "__main__":

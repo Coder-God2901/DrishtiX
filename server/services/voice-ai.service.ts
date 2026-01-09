@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Voice AI Service
  * Hands-free command center interaction using Azure OpenAI and Azure Speech Services
  */
@@ -39,7 +54,7 @@ class VoiceAIService {
 
   constructor() {
     this.conversationHistory = new Map();
-    console.log('✓ Voice AI Service initialized with Azure OpenAI and Azure Speech Services');
+    console.log('âœ“ Voice AI Service initialized with Azure OpenAI and Azure Speech Services');
   }
 
   /**
@@ -56,14 +71,14 @@ CAPABILITIES:
 - Support multi-language queries (English, Hindi, Spanish, French, Arabic)
 
 COMMAND TYPES YOU CAN HANDLE:
-1. "Show risk zones near [location]" → Display risk heatmap
-2. "What's the crowd density at [location]?" → Query current density
-3. "Show predictions for next 15 minutes" → Display forecast
-4. "Dispatch emergency team to [location]" → Initiate dispatch
-5. "Show all active alerts" → Display alert list
-6. "What's the ETA for responder [ID]?" → Query responder status
-7. "Show evacuation routes from [location]" → Display routes
-8. "How many people at [gate/zone]?" → Query crowd count
+1. "Show risk zones near [location]" â†’ Display risk heatmap
+2. "What's the crowd density at [location]?" â†’ Query current density
+3. "Show predictions for next 15 minutes" â†’ Display forecast
+4. "Dispatch emergency team to [location]" â†’ Initiate dispatch
+5. "Show all active alerts" â†’ Display alert list
+6. "What's the ETA for responder [ID]?" â†’ Query responder status
+7. "Show evacuation routes from [location]" â†’ Display routes
+8. "How many people at [gate/zone]?" â†’ Query crowd count
 
 RESPONSE FORMAT:
 Always respond in JSON with this structure:
@@ -249,7 +264,7 @@ GUIDELINES:
     if (this.recognizeStream) {
       this.recognizeStream.destroy();
       this.recognizeStream = null;
-      console.log('✓ Stopped speech recognition');
+      console.log('âœ“ Stopped speech recognition');
     }
   }
 

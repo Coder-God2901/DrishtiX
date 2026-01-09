@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Attendee API Routes
  * Handles attendee-specific functionalities like event joining, navigation, SOS, feedback
  */
@@ -533,12 +548,12 @@ router.post('/reports/:id/validate', async (req: Request, res: Response) => {
 // Utility functions for navigation (USP 4)
 function calculateDistance(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {
   const R = 6371e3;
-  const φ1 = (from.lat * Math.PI) / 180;
-  const φ2 = (to.lat * Math.PI) / 180;
-  const Δφ = ((to.lat - from.lat) * Math.PI) / 180;
-  const Δλ = ((to.lng - from.lng) * Math.PI) / 180;
+  const Ï†1 = (from.lat * Math.PI) / 180;
+  const Ï†2 = (to.lat * Math.PI) / 180;
+  const Î”Ï† = ((to.lat - from.lat) * Math.PI) / 180;
+  const Î”Î» = ((to.lng - from.lng) * Math.PI) / 180;
 
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const a = Math.sin(Î”Ï† / 2) * Math.sin(Î”Ï† / 2) + Math.cos(Ï†1) * Math.cos(Ï†2) * Math.sin(Î”Î» / 2) * Math.sin(Î”Î» / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c;

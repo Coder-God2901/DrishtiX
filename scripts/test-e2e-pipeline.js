@@ -1,8 +1,23 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * End-to-End Pipeline Test
  * 
  * Tests complete data flow:
- * Video → Vertex AI Vision → Pub/Sub → Cloud Functions → BigQuery → Dashboard
+ * Video â†’ Vertex AI Vision â†’ Pub/Sub â†’ Cloud Functions â†’ BigQuery â†’ Dashboard
  * 
  * Usage: node scripts/test-e2e-pipeline.js
  */
@@ -39,7 +54,7 @@ const metrics = {
  * Test 1: Video Analysis Pipeline
  */
 async function testVideoAnalysisPipeline() {
-  console.log('\n📹 Testing Video Analysis Pipeline...');
+  console.log('\nðŸ“¹ Testing Video Analysis Pipeline...');
   
   try {
     const startTime = Date.now();
@@ -67,7 +82,7 @@ async function testVideoAnalysisPipeline() {
     metrics.videoAnalysisCount++;
     metrics.latencies.push({ pipeline: 'video', latency });
 
-    console.log(`✅ Video analysis published (${latency}ms)`);
+    console.log(`âœ… Video analysis published (${latency}ms)`);
     console.log(`   Message ID: ${messageId}`);
     console.log(`   People Count: ${videoAnalysisData.people_count}`);
     console.log(`   Density: ${videoAnalysisData.density_level}`);
@@ -75,7 +90,7 @@ async function testVideoAnalysisPipeline() {
     return videoAnalysisData;
 
   } catch (error) {
-    console.error('❌ Video analysis test failed:', error.message);
+    console.error('âŒ Video analysis test failed:', error.message);
     metrics.errors.push({ pipeline: 'video', error: error.message });
     throw error;
   }
@@ -85,7 +100,7 @@ async function testVideoAnalysisPipeline() {
  * Test 2: Social Signals Pipeline
  */
 async function testSocialSignalsPipeline() {
-  console.log('\n🐦 Testing Social Signals Pipeline...');
+  console.log('\nðŸ¦ Testing Social Signals Pipeline...');
   
   try {
     const startTime = Date.now();
@@ -117,7 +132,7 @@ async function testSocialSignalsPipeline() {
     metrics.socialSignalsCount++;
     metrics.latencies.push({ pipeline: 'social', latency });
 
-    console.log(`✅ Social signal published (${latency}ms)`);
+    console.log(`âœ… Social signal published (${latency}ms)`);
     console.log(`   Message ID: ${messageId}`);
     console.log(`   Sentiment: ${socialSignalData.sentiment}`);
     console.log(`   Panic Level: ${socialSignalData.panic_level}`);
@@ -125,7 +140,7 @@ async function testSocialSignalsPipeline() {
     return socialSignalData;
 
   } catch (error) {
-    console.error('❌ Social signals test failed:', error.message);
+    console.error('âŒ Social signals test failed:', error.message);
     metrics.errors.push({ pipeline: 'social', error: error.message });
     throw error;
   }
@@ -135,7 +150,7 @@ async function testSocialSignalsPipeline() {
  * Test 3: GPS Tracking Pipeline
  */
 async function testGPSTrackingPipeline() {
-  console.log('\n📍 Testing GPS Tracking Pipeline...');
+  console.log('\nðŸ“ Testing GPS Tracking Pipeline...');
   
   try {
     const startTime = Date.now();
@@ -166,7 +181,7 @@ async function testGPSTrackingPipeline() {
     metrics.gpsTrackingCount++;
     metrics.latencies.push({ pipeline: 'gps', latency });
 
-    console.log(`✅ GPS tracking published (${latency}ms)`);
+    console.log(`âœ… GPS tracking published (${latency}ms)`);
     console.log(`   Message ID: ${messageId}`);
     console.log(`   Location: (${gpsData.location.lat.toFixed(6)}, ${gpsData.location.lng.toFixed(6)})`);
     console.log(`   Battery: ${gpsData.battery_level}%`);
@@ -174,7 +189,7 @@ async function testGPSTrackingPipeline() {
     return gpsData;
 
   } catch (error) {
-    console.error('❌ GPS tracking test failed:', error.message);
+    console.error('âŒ GPS tracking test failed:', error.message);
     metrics.errors.push({ pipeline: 'gps', error: error.message });
     throw error;
   }
@@ -184,7 +199,7 @@ async function testGPSTrackingPipeline() {
  * Test 4: Incident Alert Pipeline
  */
 async function testIncidentAlertPipeline() {
-  console.log('\n🚨 Testing Incident Alert Pipeline...');
+  console.log('\nðŸš¨ Testing Incident Alert Pipeline...');
   
   try {
     const startTime = Date.now();
@@ -216,7 +231,7 @@ async function testIncidentAlertPipeline() {
     metrics.incidentAlertsCount++;
     metrics.latencies.push({ pipeline: 'incident', latency });
 
-    console.log(`✅ Incident alert published (${latency}ms)`);
+    console.log(`âœ… Incident alert published (${latency}ms)`);
     console.log(`   Message ID: ${messageId}`);
     console.log(`   Type: ${incidentData.incident_type}`);
     console.log(`   Severity: ${incidentData.severity}`);
@@ -227,7 +242,7 @@ async function testIncidentAlertPipeline() {
     return incidentData;
 
   } catch (error) {
-    console.error('❌ Incident alert test failed:', error.message);
+    console.error('âŒ Incident alert test failed:', error.message);
     metrics.errors.push({ pipeline: 'incident', error: error.message });
     throw error;
   }
@@ -237,7 +252,7 @@ async function testIncidentAlertPipeline() {
  * Test 5: Crowd Prediction Pipeline
  */
 async function testCrowdPredictionPipeline() {
-  console.log('\n🔮 Testing Crowd Prediction Pipeline...');
+  console.log('\nðŸ”® Testing Crowd Prediction Pipeline...');
   
   try {
     const startTime = Date.now();
@@ -264,7 +279,7 @@ async function testCrowdPredictionPipeline() {
     const latency = Date.now() - startTime;
     metrics.latencies.push({ pipeline: 'prediction', latency });
 
-    console.log(`✅ Crowd prediction published (${latency}ms)`);
+    console.log(`âœ… Crowd prediction published (${latency}ms)`);
     console.log(`   Message ID: ${messageId}`);
     console.log(`   Predicted Count: ${predictionData.predicted_count}`);
     console.log(`   Risk Level: ${predictionData.risk_level}`);
@@ -272,7 +287,7 @@ async function testCrowdPredictionPipeline() {
     return predictionData;
 
   } catch (error) {
-    console.error('❌ Crowd prediction test failed:', error.message);
+    console.error('âŒ Crowd prediction test failed:', error.message);
     metrics.errors.push({ pipeline: 'prediction', error: error.message });
     throw error;
   }
@@ -282,10 +297,10 @@ async function testCrowdPredictionPipeline() {
  * Test 6: BigQuery Data Validation
  */
 async function testBigQueryData() {
-  console.log('\n💾 Testing BigQuery Data Insertion...');
+  console.log('\nðŸ’¾ Testing BigQuery Data Insertion...');
   
   try {
-    // Wait a few seconds for Pub/Sub → BigQuery to process
+    // Wait a few seconds for Pub/Sub â†’ BigQuery to process
     console.log('   Waiting 10 seconds for data to flow to BigQuery...');
     await new Promise(resolve => setTimeout(resolve, 10000));
 
@@ -303,16 +318,16 @@ async function testBigQueryData() {
         const [rows] = await bigqueryClient.query({ query, location: 'US' });
         const count = rows[0].count;
         
-        console.log(`✅ ${table}: ${count} records found`);
+        console.log(`âœ… ${table}: ${count} records found`);
         metrics.bigqueryInserts += count;
 
       } catch (error) {
-        console.warn(`⚠️  ${table}: ${error.message}`);
+        console.warn(`âš ï¸  ${table}: ${error.message}`);
       }
     }
 
   } catch (error) {
-    console.error('❌ BigQuery validation failed:', error.message);
+    console.error('âŒ BigQuery validation failed:', error.message);
     metrics.errors.push({ pipeline: 'bigquery', error: error.message });
   }
 }
@@ -321,7 +336,7 @@ async function testBigQueryData() {
  * Test 7: Latency Measurement
  */
 function analyzeLat encies() {
-  console.log('\n⏱️  Latency Analysis:');
+  console.log('\nâ±ï¸  Latency Analysis:');
   
   const byPipeline = {};
   metrics.latencies.forEach(({ pipeline, latency }) => {
@@ -343,7 +358,7 @@ function analyzeLat encies() {
   const overallAvg = allLatencies.reduce((a, b) => a + b, 0) / allLatencies.length;
   
   console.log(`\n   Overall Average: ${overallAvg.toFixed(0)}ms`);
-  console.log(`   Target: <500ms ${overallAvg < 500 ? '✅' : '❌'}`);
+  console.log(`   Target: <500ms ${overallAvg < 500 ? 'âœ…' : 'âŒ'}`);
 }
 
 /**
@@ -351,38 +366,38 @@ function analyzeLat encies() {
  */
 function generateReport() {
   console.log('\n' + '='.repeat(60));
-  console.log('📊 END-TO-END PIPELINE TEST REPORT');
+  console.log('ðŸ“Š END-TO-END PIPELINE TEST REPORT');
   console.log('='.repeat(60));
   
   const duration = Date.now() - metrics.startTime;
   
-  console.log(`\n🕒 Test Duration: ${(duration / 1000).toFixed(1)} seconds`);
-  console.log(`\n📈 Messages Published:`);
+  console.log(`\nðŸ•’ Test Duration: ${(duration / 1000).toFixed(1)} seconds`);
+  console.log(`\nðŸ“ˆ Messages Published:`);
   console.log(`   Video Analysis:     ${metrics.videoAnalysisCount}`);
   console.log(`   Social Signals:     ${metrics.socialSignalsCount}`);
   console.log(`   GPS Tracking:       ${metrics.gpsTrackingCount}`);
   console.log(`   Incident Alerts:    ${metrics.incidentAlertsCount}`);
   console.log(`   Total:              ${metrics.videoAnalysisCount + metrics.socialSignalsCount + metrics.gpsTrackingCount + metrics.incidentAlertsCount}`);
   
-  console.log(`\n⚡ Cloud Functions:`);
+  console.log(`\nâš¡ Cloud Functions:`);
   console.log(`   Invocations:        ${metrics.cloudFunctionInvocations}`);
   
-  console.log(`\n💾 BigQuery:`);
+  console.log(`\nðŸ’¾ BigQuery:`);
   console.log(`   Records Inserted:   ${metrics.bigqueryInserts}`);
   
   analyzeLat encies();
   
   if (metrics.errors.length > 0) {
-    console.log(`\n❌ Errors (${metrics.errors.length}):`);
+    console.log(`\nâŒ Errors (${metrics.errors.length}):`);
     metrics.errors.forEach((err, i) => {
       console.log(`   ${i + 1}. [${err.pipeline}] ${err.error}`);
     });
   } else {
-    console.log(`\n✅ No errors detected`);
+    console.log(`\nâœ… No errors detected`);
   }
   
   console.log('\n' + '='.repeat(60));
-  console.log('✅ PIPELINE TEST COMPLETED');
+  console.log('âœ… PIPELINE TEST COMPLETED');
   console.log('='.repeat(60) + '\n');
 }
 
@@ -390,7 +405,7 @@ function generateReport() {
  * Run all tests
  */
 async function runAllTests() {
-  console.log('🚀 Starting End-to-End Pipeline Test...');
+  console.log('ðŸš€ Starting End-to-End Pipeline Test...');
   console.log(`   Project ID: ${PROJECT_ID}`);
   console.log(`   Event ID: ${EVENT_ID}`);
   console.log(`   Test Duration: ${TEST_DURATION_MS / 1000} seconds\n`);
@@ -400,9 +415,9 @@ async function runAllTests() {
     const iterations = 5;
     
     for (let i = 0; i < iterations; i++) {
-      console.log(`\n${'─'.repeat(60)}`);
+      console.log(`\n${'â”€'.repeat(60)}`);
       console.log(`Iteration ${i + 1}/${iterations}`);
-      console.log('─'.repeat(60));
+      console.log('â”€'.repeat(60));
       
       await testVideoAnalysisPipeline();
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -431,7 +446,7 @@ async function runAllTests() {
     process.exit(0);
 
   } catch (error) {
-    console.error('\n💥 Test suite failed:', error);
+    console.error('\nðŸ’¥ Test suite failed:', error);
     generateReport();
     process.exit(1);
   }

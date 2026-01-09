@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Traffic & Mobility Monitoring Service
  * Real-time traffic data integration with Waze and Google Maps
  * 
@@ -92,7 +107,7 @@ class TrafficMobilityService {
     if (!this.initialized) {
       console.warn('[Traffic] Google Maps API not configured');
     } else {
-      console.log('✓ Traffic & Mobility Service initialized');
+      console.log('âœ“ Traffic & Mobility Service initialized');
     }
   }
 
@@ -126,7 +141,7 @@ class TrafficMobilityService {
     }, 5 * 60 * 1000);
 
     this.monitoringIntervals.set(eventId, interval);
-    console.log(`✓ Traffic monitoring active for event ${eventId}`);
+    console.log(`âœ“ Traffic monitoring active for event ${eventId}`);
   }
 
   /**
@@ -137,7 +152,7 @@ class TrafficMobilityService {
     if (interval) {
       clearInterval(interval);
       this.monitoringIntervals.delete(eventId);
-      console.log(`✓ Stopped traffic monitoring for event ${eventId}`);
+      console.log(`âœ“ Stopped traffic monitoring for event ${eventId}`);
     }
   }
 

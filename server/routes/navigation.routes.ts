@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Navigation and Routing Routes
  * Handles route calculation, POIs, emergency exits, and crowd-aware navigation
  */
@@ -360,14 +375,14 @@ router.patch('/routes/:id/complete', authenticate, async (req: Request, res: Res
 function calculateDistance(point1: any, point2: any): number {
   // Haversine formula for distance calculation
   const R = 6371e3; // Earth radius in meters
-  const φ1 = point1.lat * Math.PI / 180;
-  const φ2 = point2.lat * Math.PI / 180;
-  const Δφ = (point2.lat - point1.lat) * Math.PI / 180;
-  const Δλ = (point2.lng - point1.lng) * Math.PI / 180;
+  const Ï†1 = point1.lat * Math.PI / 180;
+  const Ï†2 = point2.lat * Math.PI / 180;
+  const Î”Ï† = (point2.lat - point1.lat) * Math.PI / 180;
+  const Î”Î» = (point2.lng - point1.lng) * Math.PI / 180;
 
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const a = Math.sin(Î”Ï† / 2) * Math.sin(Î”Ï† / 2) +
+    Math.cos(Ï†1) * Math.cos(Ï†2) *
+    Math.sin(Î”Î» / 2) * Math.sin(Î”Î» / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c; // Distance in meters

@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * DrishtiX Setup Script
  * Validates and initializes Google Cloud services
  */
@@ -10,9 +25,9 @@ import { BigQuery } from '@google-cloud/bigquery';
 
 async function setupDrishtiX() {
   console.log(`
-╔════════════════════════════════════════════════════════════════╗
-║              🎯 DrishtiX Platform Setup                       ║
-╚════════════════════════════════════════════════════════════════╝
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘              ðŸŽ¯ DrishtiX Platform Setup                       â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   `);
 
   // Step 1: Validate configuration
@@ -20,13 +35,13 @@ async function setupDrishtiX() {
   const validation = validateGCPConfig();
 
   if (!validation.valid) {
-    console.error('❌ Configuration validation failed:');
+    console.error('âŒ Configuration validation failed:');
     validation.errors.forEach(err => console.error(`   - ${err}`));
     console.log('\nPlease update your .env file with the required values.');
     console.log('See .env.example for reference.');
     return;
   }
-  console.log('✓ Configuration valid');
+  console.log('âœ“ Configuration valid');
 
   // Step 2: Test GCP credentials
   console.log('\nStep 2: Testing GCP credentials...');
@@ -38,9 +53,9 @@ async function setupDrishtiX() {
 
     // Try to list topics (requires basic permissions)
     await pubsub.getTopics();
-    console.log('✓ GCP credentials valid');
+    console.log('âœ“ GCP credentials valid');
   } catch (error) {
-    console.error('❌ GCP credentials invalid:', error);
+    console.error('âŒ GCP credentials invalid:', error);
     console.log('\nPlease check:');
     console.log('  1. GOOGLE_APPLICATION_CREDENTIALS path is correct');
     console.log('  2. Service account has necessary permissions');
@@ -70,13 +85,13 @@ async function setupDrishtiX() {
 
       if (!exists) {
         await topic.create();
-        console.log(`  ✓ Created topic: ${topicName}`);
+        console.log(`  âœ“ Created topic: ${topicName}`);
       } else {
-        console.log(`  ✓ Topic exists: ${topicName}`);
+        console.log(`  âœ“ Topic exists: ${topicName}`);
       }
     }
   } catch (error) {
-    console.error('❌ Error creating Pub/Sub topics:', error);
+    console.error('âŒ Error creating Pub/Sub topics:', error);
   }
 
   // Step 4: Create Cloud Storage buckets
@@ -102,13 +117,13 @@ async function setupDrishtiX() {
           location: gcpConfig.location,
           storageClass: 'STANDARD',
         });
-        console.log(`  ✓ Created bucket: ${bucketName}`);
+        console.log(`  âœ“ Created bucket: ${bucketName}`);
       } else {
-        console.log(`  ✓ Bucket exists: ${bucketName}`);
+        console.log(`  âœ“ Bucket exists: ${bucketName}`);
       }
     }
   } catch (error) {
-    console.error('❌ Error creating storage buckets:', error);
+    console.error('âŒ Error creating storage buckets:', error);
   }
 
   // Step 5: Create BigQuery dataset
@@ -126,9 +141,9 @@ async function setupDrishtiX() {
       await bigquery.createDataset(gcpConfig.bigquery.dataset, {
         location: gcpConfig.location,
       });
-      console.log(`  ✓ Created dataset: ${gcpConfig.bigquery.dataset}`);
+      console.log(`  âœ“ Created dataset: ${gcpConfig.bigquery.dataset}`);
     } else {
-      console.log(`  ✓ Dataset exists: ${gcpConfig.bigquery.dataset}`);
+      console.log(`  âœ“ Dataset exists: ${gcpConfig.bigquery.dataset}`);
     }
 
     // Create tables
@@ -165,13 +180,13 @@ async function setupDrishtiX() {
         await dataset.createTable(tableConfig.name, {
           schema: tableConfig.schema,
         });
-        console.log(`  ✓ Created table: ${tableConfig.name}`);
+        console.log(`  âœ“ Created table: ${tableConfig.name}`);
       } else {
-        console.log(`  ✓ Table exists: ${tableConfig.name}`);
+        console.log(`  âœ“ Table exists: ${tableConfig.name}`);
       }
     }
   } catch (error) {
-    console.error('❌ Error creating BigQuery dataset:', error);
+    console.error('âŒ Error creating BigQuery dataset:', error);
   }
 
   // Step 6: Test Gemini API
@@ -185,32 +200,32 @@ async function setupDrishtiX() {
     const response = await result.response;
 
     if (response.text()) {
-      console.log('✓ Gemini API working');
+      console.log('âœ“ Gemini API working');
     }
   } catch (error) {
-    console.error('❌ Gemini API test failed:', error);
+    console.error('âŒ Gemini API test failed:', error);
     console.log('   Please check your GEMINI_API_KEY in .env');
   }
 
   // Step 7: Summary
   console.log(`
-╔════════════════════════════════════════════════════════════════╗
-║                  ✅ DrishtiX Setup Complete                   ║
-╠════════════════════════════════════════════════════════════════╣
-║  Next steps:                                                   ║
-║                                                                ║
-║  1. Run migrations:                                            ║
-║     pnpm db:migrate                                            ║
-║                                                                ║
-║  2. Start the development server:                             ║
-║     pnpm dev:all                                               ║
-║                                                                ║
-║  3. Visit the dashboard:                                       ║
-║     http://localhost:5173                                      ║
-║                                                                ║
-║  4. Test the API:                                              ║
-║     http://localhost:3001/health                               ║
-╚════════════════════════════════════════════════════════════════╝
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘                  âœ… DrishtiX Setup Complete                   â•‘
+â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
+â•‘  Next steps:                                                   â•‘
+â•‘                                                                â•‘
+â•‘  1. Run migrations:                                            â•‘
+â•‘     pnpm db:migrate                                            â•‘
+â•‘                                                                â•‘
+â•‘  2. Start the development server:                             â•‘
+â•‘     pnpm dev:all                                               â•‘
+â•‘                                                                â•‘
+â•‘  3. Visit the dashboard:                                       â•‘
+â•‘     http://localhost:5173                                      â•‘
+â•‘                                                                â•‘
+â•‘  4. Test the API:                                              â•‘
+â•‘     http://localhost:3001/health                               â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   `);
 }
 

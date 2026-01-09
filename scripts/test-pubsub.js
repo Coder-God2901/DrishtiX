@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Test Script for Google Cloud Pub/Sub Integration
  *
  * Prerequisites:
@@ -17,12 +32,12 @@ const PROJECT_ID = process.env.VITE_GOOGLE_CLOUD_PROJECT_ID;
 const PUBSUB_ENABLED = process.env.VITE_ENABLE_PUBSUB === 'true';
 
 if (!PROJECT_ID) {
-  console.error('❌ VITE_GOOGLE_CLOUD_PROJECT_ID not set in .env file');
+  console.error('âŒ VITE_GOOGLE_CLOUD_PROJECT_ID not set in .env file');
   process.exit(1);
 }
 
 if (!PUBSUB_ENABLED) {
-  console.warn('⚠️  VITE_ENABLE_PUBSUB is false');
+  console.warn('âš ï¸  VITE_ENABLE_PUBSUB is false');
   console.warn('   Set to true in .env to enable Pub/Sub');
 }
 
@@ -49,11 +64,11 @@ let pubsub;
 function initializePubSub() {
   try {
     pubsub = new PubSub({ projectId: PROJECT_ID });
-    console.log('✅ Pub/Sub client initialized');
+    console.log('âœ… Pub/Sub client initialized');
     console.log('   Project ID:', PROJECT_ID);
     return true;
   } catch (error) {
-    console.error('❌ Failed to initialize Pub/Sub:', error.message);
+    console.error('âŒ Failed to initialize Pub/Sub:', error.message);
     return false;
   }
 }
@@ -62,7 +77,7 @@ function initializePubSub() {
  * Test: Create topics
  */
 async function testCreateTopics() {
-  console.log('\n📋 Testing Topic Creation...\n');
+  console.log('\nðŸ“‹ Testing Topic Creation...\n');
 
   const results = {
     created: [],
@@ -76,15 +91,15 @@ async function testCreateTopics() {
       const [exists] = await topic.exists();
 
       if (exists) {
-        console.log(`✅ Topic exists: ${topicName}`);
+        console.log(`âœ… Topic exists: ${topicName}`);
         results.existing.push(topicName);
       } else {
         await topic.create();
-        console.log(`✅ Created topic: ${topicName}`);
+        console.log(`âœ… Created topic: ${topicName}`);
         results.created.push(topicName);
       }
     } catch (error) {
-      console.error(`❌ Failed to create topic ${topicName}:`, error.message);
+      console.error(`âŒ Failed to create topic ${topicName}:`, error.message);
       results.failed.push(topicName);
     }
   }
@@ -100,7 +115,7 @@ async function testCreateTopics() {
  * Test: Create subscriptions
  */
 async function testCreateSubscriptions() {
-  console.log('\n📋 Testing Subscription Creation...\n');
+  console.log('\nðŸ“‹ Testing Subscription Creation...\n');
 
   const results = {
     created: [],
@@ -120,17 +135,17 @@ async function testCreateSubscriptions() {
       const [exists] = await subscription.exists();
 
       if (exists) {
-        console.log(`✅ Subscription exists: ${config.sub}`);
+        console.log(`âœ… Subscription exists: ${config.sub}`);
         results.existing.push(config.sub);
       } else {
         await subscription.create({
           ackDeadlineSeconds: 60,
         });
-        console.log(`✅ Created subscription: ${config.sub}`);
+        console.log(`âœ… Created subscription: ${config.sub}`);
         results.created.push(config.sub);
       }
     } catch (error) {
-      console.error(`❌ Failed to create subscription ${config.sub}:`, error.message);
+      console.error(`âŒ Failed to create subscription ${config.sub}:`, error.message);
       results.failed.push(config.sub);
     }
   }
@@ -146,7 +161,7 @@ async function testCreateSubscriptions() {
  * Test: Publish message
  */
 async function testPublish() {
-  console.log('\n📤 Testing Message Publishing...\n');
+  console.log('\nðŸ“¤ Testing Message Publishing...\n');
 
   const testMessages = [
     {
@@ -195,11 +210,11 @@ async function testPublish() {
         },
       });
 
-      console.log(`✅ Published to ${msg.topic}`);
+      console.log(`âœ… Published to ${msg.topic}`);
       console.log(`   Message ID: ${messageId}`);
       results.push({ topic: msg.topic, messageId, success: true });
     } catch (error) {
-      console.error(`❌ Failed to publish to ${msg.topic}:`, error.message);
+      console.error(`âŒ Failed to publish to ${msg.topic}:`, error.message);
       results.push({ topic: msg.topic, success: false, error: error.message });
     }
   }
@@ -211,7 +226,7 @@ async function testPublish() {
  * Test: Pull messages
  */
 async function testPull() {
-  console.log('\n📥 Testing Message Pulling...\n');
+  console.log('\nðŸ“¥ Testing Message Pulling...\n');
 
   const results = [];
 
@@ -222,7 +237,7 @@ async function testPull() {
       // Pull up to 10 messages
       const [messages] = await subscription.pull({ maxMessages: 10 });
 
-      console.log(`✅ Pulled ${messages.length} messages from ${subName}`);
+      console.log(`âœ… Pulled ${messages.length} messages from ${subName}`);
 
       if (messages.length > 0) {
         console.log(`   First message data:`, messages[0].data.toString().substring(0, 100) + '...');
@@ -238,7 +253,7 @@ async function testPull() {
         success: true,
       });
     } catch (error) {
-      console.error(`❌ Failed to pull from ${subName}:`, error.message);
+      console.error(`âŒ Failed to pull from ${subName}:`, error.message);
       results.push({
         subscription: subName,
         success: false,
@@ -254,18 +269,18 @@ async function testPull() {
  * Test: Get topic statistics
  */
 async function testGetStats() {
-  console.log('\n📊 Testing Statistics Retrieval...\n');
+  console.log('\nðŸ“Š Testing Statistics Retrieval...\n');
 
   for (const [name, topicName] of Object.entries(TOPICS)) {
     try {
       const topic = pubsub.topic(topicName);
       const [metadata] = await topic.getMetadata();
 
-      console.log(`✅ Topic: ${topicName}`);
+      console.log(`âœ… Topic: ${topicName}`);
       console.log(`   Name: ${metadata.name}`);
       console.log(`   Retention: ${metadata.messageRetentionDuration || 'default (7 days)'}`);
     } catch (error) {
-      console.error(`❌ Failed to get stats for ${topicName}:`, error.message);
+      console.error(`âŒ Failed to get stats for ${topicName}:`, error.message);
     }
   }
 }
@@ -274,7 +289,7 @@ async function testGetStats() {
  * Test: Batch publish
  */
 async function testBatchPublish() {
-  console.log('\n📦 Testing Batch Publishing...\n');
+  console.log('\nðŸ“¦ Testing Batch Publishing...\n');
 
   try {
     const topic = pubsub.topic(TOPICS.GPS_TRACKING);
@@ -303,13 +318,13 @@ async function testBatchPublish() {
     // Publish batch
     const messageIds = await Promise.all(messages.map((msg) => topic.publishMessage(msg)));
 
-    console.log(`✅ Batch published ${messageIds.length} GPS tracking messages`);
+    console.log(`âœ… Batch published ${messageIds.length} GPS tracking messages`);
     console.log(`   First message ID: ${messageIds[0]}`);
     console.log(`   Last message ID: ${messageIds[messageIds.length - 1]}`);
 
     return { success: true, count: messageIds.length };
   } catch (error) {
-    console.error('❌ Batch publish failed:', error.message);
+    console.error('âŒ Batch publish failed:', error.message);
     return { success: false, error: error.message };
   }
 }
@@ -318,16 +333,16 @@ async function testBatchPublish() {
  * Test: Health check
  */
 async function testHealthCheck() {
-  console.log('\n🏥 Testing Health Check...\n');
+  console.log('\nðŸ¥ Testing Health Check...\n');
 
   try {
     // Try to list topics as health check
     const [topics] = await pubsub.getTopics({ pageSize: 1 });
-    console.log('✅ Pub/Sub service is healthy');
+    console.log('âœ… Pub/Sub service is healthy');
     console.log(`   Can access ${topics.length > 0 ? 'topics' : 'project'}`);
     return true;
   } catch (error) {
-    console.error('❌ Health check failed:', error.message);
+    console.error('âŒ Health check failed:', error.message);
     return false;
   }
 }
@@ -336,7 +351,7 @@ async function testHealthCheck() {
  * Main test execution
  */
 async function main() {
-  console.log('🚀 Cloud Pub/Sub Integration Test');
+  console.log('ðŸš€ Cloud Pub/Sub Integration Test');
   console.log('='.repeat(60));
   console.log('Project ID:', PROJECT_ID);
   console.log('Pub/Sub Enabled:', PUBSUB_ENABLED);
@@ -356,7 +371,7 @@ async function main() {
   // Initialize
   results.initialization = initializePubSub();
   if (!results.initialization) {
-    console.error('\n❌ Initialization failed. Exiting...');
+    console.error('\nâŒ Initialization failed. Exiting...');
     process.exit(1);
   }
 
@@ -369,57 +384,57 @@ async function main() {
     results.batchPublish = await testBatchPublish();
 
     // Wait a bit for messages to propagate
-    console.log('\n⏳ Waiting 3 seconds for message propagation...');
+    console.log('\nâ³ Waiting 3 seconds for message propagation...');
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     results.pull = await testPull();
     await testGetStats();
   } catch (error) {
-    console.error('\n❌ Test execution failed:', error);
+    console.error('\nâŒ Test execution failed:', error);
   }
 
   // Summary
   console.log('\n' + '='.repeat(60));
-  console.log('📊 Test Results Summary');
+  console.log('ðŸ“Š Test Results Summary');
   console.log('='.repeat(60));
 
-  console.log(`Initialization:         ${results.initialization ? '✅ PASSED' : '❌ FAILED'}`);
-  console.log(`Health Check:           ${results.healthCheck ? '✅ PASSED' : '❌ FAILED'}`);
+  console.log(`Initialization:         ${results.initialization ? 'âœ… PASSED' : 'âŒ FAILED'}`);
+  console.log(`Health Check:           ${results.healthCheck ? 'âœ… PASSED' : 'âŒ FAILED'}`);
 
   if (results.topicCreation) {
     const topicsPassed = results.topicCreation.failed.length === 0;
     console.log(
-      `Topic Creation:         ${topicsPassed ? '✅ PASSED' : '⚠️  PARTIAL'} (${results.topicCreation.created.length + results.topicCreation.existing.length}/${Object.keys(TOPICS).length})`
+      `Topic Creation:         ${topicsPassed ? 'âœ… PASSED' : 'âš ï¸  PARTIAL'} (${results.topicCreation.created.length + results.topicCreation.existing.length}/${Object.keys(TOPICS).length})`
     );
   }
 
   if (results.subscriptionCreation) {
     const subsPassed = results.subscriptionCreation.failed.length === 0;
     console.log(
-      `Subscription Creation:  ${subsPassed ? '✅ PASSED' : '⚠️  PARTIAL'} (${results.subscriptionCreation.created.length + results.subscriptionCreation.existing.length}/${Object.keys(SUBSCRIPTIONS).length})`
+      `Subscription Creation:  ${subsPassed ? 'âœ… PASSED' : 'âš ï¸  PARTIAL'} (${results.subscriptionCreation.created.length + results.subscriptionCreation.existing.length}/${Object.keys(SUBSCRIPTIONS).length})`
     );
   }
 
   if (results.publish) {
     const publishPassed = results.publish.every((r) => r.success);
     console.log(
-      `Message Publishing:     ${publishPassed ? '✅ PASSED' : '❌ FAILED'} (${results.publish.filter((r) => r.success).length}/${results.publish.length})`
+      `Message Publishing:     ${publishPassed ? 'âœ… PASSED' : 'âŒ FAILED'} (${results.publish.filter((r) => r.success).length}/${results.publish.length})`
     );
   }
 
   if (results.batchPublish) {
     console.log(
-      `Batch Publishing:       ${results.batchPublish.success ? '✅ PASSED' : '❌ FAILED'} (${results.batchPublish.count || 0} messages)`
+      `Batch Publishing:       ${results.batchPublish.success ? 'âœ… PASSED' : 'âŒ FAILED'} (${results.batchPublish.count || 0} messages)`
     );
   }
 
   if (results.pull) {
     const pullPassed = results.pull.every((r) => r.success);
     const totalMessages = results.pull.reduce((sum, r) => sum + (r.messageCount || 0), 0);
-    console.log(`Message Pulling:        ${pullPassed ? '✅ PASSED' : '⚠️  PARTIAL'} (${totalMessages} messages)`);
+    console.log(`Message Pulling:        ${pullPassed ? 'âœ… PASSED' : 'âš ï¸  PARTIAL'} (${totalMessages} messages)`);
   }
 
-  console.log(`Statistics Retrieval:   ${results.stats ? '✅ PASSED' : '❌ FAILED'}`);
+  console.log(`Statistics Retrieval:   ${results.stats ? 'âœ… PASSED' : 'âŒ FAILED'}`);
 
   console.log('='.repeat(60));
 
@@ -430,15 +445,15 @@ async function main() {
     results.subscriptionCreation?.failed.length === 0;
 
   if (allPassed) {
-    console.log('\n✅ All critical tests passed! Pub/Sub is ready for production.');
-    console.log('\n📋 Next Steps:');
+    console.log('\nâœ… All critical tests passed! Pub/Sub is ready for production.');
+    console.log('\nðŸ“‹ Next Steps:');
     console.log('   1. Integrate Pub/Sub into video analytics service');
     console.log('   2. Connect anomaly detection to incident alerts topic');
     console.log('   3. Setup BigQuery subscriptions for data warehousing');
     console.log('   4. Configure Cloud Functions for automated processing');
   } else {
-    console.log('\n⚠️  Some tests failed. Review errors above.');
-    console.log('\n🔧 Troubleshooting:');
+    console.log('\nâš ï¸  Some tests failed. Review errors above.');
+    console.log('\nðŸ”§ Troubleshooting:');
     console.log('   - Check GOOGLE_APPLICATION_CREDENTIALS is set correctly');
     console.log('   - Verify service account has Pub/Sub Admin role');
     console.log('   - Ensure Pub/Sub API is enabled in GCP project');
@@ -448,6 +463,6 @@ async function main() {
 
 // Run tests
 main().catch((error) => {
-  console.error('\n❌ Fatal error:', error);
+  console.error('\nâŒ Fatal error:', error);
   process.exit(1);
 });

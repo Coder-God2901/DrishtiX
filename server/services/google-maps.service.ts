@@ -1,4 +1,19 @@
 /**
+ * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * 
+ * This software is the proprietary information of DrishtiX.
+ * Unauthorized copying, distribution, modification, or use of this software,
+ * via any medium, is strictly prohibited without the express written permission
+ * of DrishtiX.
+ * 
+ * This software is provided "as is" without warranty of any kind, express or implied.
+ * 
+ * For licensing inquiries: licensing@drishtix.com
+ * License: See LICENSE file in the project root
+ */
+/**
  * Google Maps Platform Integration Service
  * Handles navigation, routing, safe paths, and venue mapping
  * 
@@ -77,7 +92,7 @@ class GoogleMapsService {
     this.apiKey = gcpConfig.maps.apiKey;
     this.client = new Client({});
     this.initialized = true;
-    console.log('✓ Google Maps Service initialized');
+    console.log('âœ“ Google Maps Service initialized');
   }
 
   // ==================== ROUTING & NAVIGATION ====================
@@ -413,14 +428,14 @@ class GoogleMapsService {
     const lng1 = this.getLngFromLatLng(point1);
     const lng2 = this.getLngFromLatLng(point2);
 
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+    const Ï†1 = (lat1 * Math.PI) / 180;
+    const Ï†2 = (lat2 * Math.PI) / 180;
+    const Î”Ï† = ((lat2 - lat1) * Math.PI) / 180;
+    const Î”Î» = ((lng2 - lng1) * Math.PI) / 180;
 
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) *
-      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const a = Math.sin(Î”Ï† / 2) * Math.sin(Î”Ï† / 2) +
+      Math.cos(Ï†1) * Math.cos(Ï†2) *
+      Math.sin(Î”Î» / 2) * Math.sin(Î”Î» / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -473,13 +488,13 @@ class GoogleMapsService {
 
     routes.forEach(route => {
       if (route.crowdLevel === 'CRITICAL') {
-        warnings.push('⚠️ Route passes through critically crowded area');
+        warnings.push('âš ï¸ Route passes through critically crowded area');
       } else if (route.crowdLevel === 'HIGH') {
-        warnings.push('⚠️ Route may experience high crowd density');
+        warnings.push('âš ï¸ Route may experience high crowd density');
       }
 
       if (route.safetyScore < 50) {
-        warnings.push('⚠️ Low safety score - consider alternative route');
+        warnings.push('âš ï¸ Low safety score - consider alternative route');
       }
     });
 
@@ -594,7 +609,7 @@ class GoogleMapsService {
         }
       }
 
-      console.log(`✅ Discovered ${discovered.length} POIs near venue`);
+      console.log(`âœ… Discovered ${discovered.length} POIs near venue`);
 
       return {
         discovered,
@@ -644,7 +659,7 @@ class GoogleMapsService {
         };
       });
 
-      console.log(`✅ Found ${pois.length} ${poiType} POIs`);
+      console.log(`âœ… Found ${pois.length} ${poiType} POIs`);
       return pois;
     } catch (error) {
       console.error('Error searching venue POI:', error);
