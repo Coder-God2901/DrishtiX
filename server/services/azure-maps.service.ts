@@ -159,13 +159,13 @@ class AzureMapsService {
 
       // Build coordinates string: origin:waypoint1:waypoint2:destination
       let coordinates = `${origin.lat},${origin.lon}`;
-      
+
       if (waypoints && waypoints.length > 0) {
         waypoints.forEach(wp => {
           coordinates += `:${wp.lat},${wp.lon}`;
         });
       }
-      
+
       coordinates += `:${destination.lat},${destination.lon}`;
 
       const params = {
@@ -212,7 +212,7 @@ class AzureMapsService {
       return {
         distance: summary.lengthInMeters,
         duration: summary.travelTimeInSeconds,
-        polyline: route.legs[0]?.points?.map((p: any) => 
+        polyline: route.legs[0]?.points?.map((p: any) =>
           `${p.latitude},${p.longitude}`
         ).join('|') || '',
         steps,
@@ -354,7 +354,7 @@ class AzureMapsService {
 
       for (const origin of origins) {
         const row: number[] = [];
-        
+
         for (const destination of destinations) {
           try {
             const route = await this.calculateRoute({ origin, destination });
@@ -363,7 +363,7 @@ class AzureMapsService {
             row.push(Infinity);
           }
         }
-        
+
         matrix.push(row);
       }
 

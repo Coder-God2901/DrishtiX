@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@azure/ai-vision-image-analysis": "^1.0.0-beta.1",
+    "@azure/cognitiveservices-computervision": "^8.2.0",
     "@azure/communication-common": "^2.3.0",
     "@azure/cosmos": "^4.0.0",
     "@azure/event-hubs": "^5.11.0",
@@ -16,6 +18,7 @@
     "@azure/openai": "^1.0.0-beta.11",
     "@azure/service-bus": "^7.9.3",
     "@azure/storage-blob": "^12.17.0",
+    "@azure/video-analyzer-edge": "^1.0.0-beta.6",
     "@prisma/client": "6.19.0",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",

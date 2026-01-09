@@ -9,10 +9,10 @@
  */
 
 import { CosmosClient, Container, Database } from '@azure/cosmos';
-import { 
-  NotificationHubsClient, 
+import {
+  NotificationHubsClient,
   createAppleNotification,
-  createFcmLegacyNotification 
+  createFcmLegacyNotification
 } from '@azure/notification-hubs';
 import { ConfidentialClientApplication } from '@azure/msal-node';
 import { azureConfig } from '../config/azure.config';
@@ -149,7 +149,7 @@ class AzureService {
       const decoded = JSON.parse(
         Buffer.from(idToken.split('.')[1], 'base64').toString()
       );
-      
+
       // Validate token expiration
       if (decoded.exp && decoded.exp < Date.now() / 1000) {
         throw new Error('Token expired');
@@ -244,7 +244,7 @@ class AzureService {
       if (!container) throw new Error('Users container not initialized');
 
       const { resource: user } = await container.item(uid, uid).read();
-      
+
       if (!user) {
         throw new Error('User not found');
       }
@@ -415,7 +415,7 @@ class AzureService {
 
       // Send to alert topic
       await this.sendToTopic(`event-${alert.eventId}`, notification);
-      
+
       // If critical, send to all emergency responders
       if (alert.type === 'CRITICAL') {
         await this.sendToTopic('emergency-responders', notification);
@@ -481,7 +481,7 @@ class AzureService {
       if (!containerObj) throw new Error(`Container ${container} not found`);
 
       const { resource: existingDoc } = await containerObj.item(docId, partitionKey).read();
-      
+
       if (!existingDoc) {
         throw new Error('Document not found');
       }
