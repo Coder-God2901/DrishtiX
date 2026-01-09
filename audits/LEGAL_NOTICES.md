@@ -1,10 +1,10 @@
-# ⚖️ LEGAL NOTICES & COMPLIANCE
+# 👁️⚖️ LEGAL NOTICES & COMPLIANCE
 
-**DrishtiX™ Platform - Enterprise Crowd Management System**
+**DrishtiX™ Platform - Enterprise Crowd Safety System**
 
 **Version**: 3.0.0  
-**Effective Date**: January 2025  
-**Copyright**: © 2025 DrishtiX. All Rights Reserved.
+**Effective Date**: January 2026  
+**Copyright**: © 2026 DrishtiX. All Rights Reserved.
 
 ---
 
@@ -32,7 +32,7 @@
 ### 1.1 General Copyright
 
 ```
-Copyright © 2025 DrishtiX. All Rights Reserved.
+Copyright © 2026 DrishtiX. All Rights Reserved.
 
 This software and all associated materials, including but not limited to
 source code, object code, documentation, databases, algorithms, designs,
@@ -687,27 +687,30 @@ Complete third-party acknowledgments are available in:
 
 ### 14.2 Department-Specific Contacts
 
+**Primary Contact**:
+
+- Email: jaganhotta357@outlook.com
+- GitHub: https://github.com/techySPHINX/DrishtiX
+
 **Licensing & Sales**:
 
-- Email: licensing@drishtix.com
+- Email: jaganhotta357@outlook.com
 
 **Legal & Compliance**:
 
-- Email: legal@drishtix.com
+- Email: jaganhotta357@outlook.com
 
 **Security & Privacy**:
 
-- Email: security@drishtix.com
-- Email: privacy@drishtix.com
+- Email: jaganhotta357@outlook.com
 
 **DMCA & Intellectual Property**:
 
-- Email: dmca@drishtix.com
-- Email: trademarks@drishtix.com
+- Email: jaganhotta357@outlook.com
 
 **Support** (Licensed Users Only):
 
-- Email: support@drishtix.com
+- Email: jaganhotta357@outlook.com
 - Portal: https://support.drishtix.com
 
 **Whistleblower / Compliance Violations**:

@@ -73,10 +73,10 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // DrishtiX Services
-import { pubSubService } from './services/pubsub.service';
-import { gcpConfig, validateGCPConfig } from './config/gcp.config';
+import { azureServiceBusMessagingService as pubSubService } from './services/azure-service-bus-messaging.service';
+import { azureAdvancedConfig as gcpConfig, validateAzureAdvancedConfig as validateGCPConfig } from './config/azure-advanced.config';
 import { riskEngineService } from './services/risk-engine.service';
-import { gcpOrchestrator } from './services/gcp-orchestrator.service';
+import { azureOrchestrator as gcpOrchestrator } from './services/azure-orchestrator.service';
 
 // Real-time Workers (Frontend V2)
 import { metricsWorker } from './workers/metrics.worker';
@@ -89,11 +89,11 @@ import alertRoutes from './routes/alert.routes';
 import predictionRoutes from './routes/prediction.routes';
 import responderRoutes from './routes/responder.routes';
 import attendeeRoutes from './routes/attendee.routes';
-import gcpAnalyticsRoutes from './routes/gcp-analytics.routes';
-import bigQueryRoutes from './routes/bigquery.routes';
+import gcpAnalyticsRoutes from './routes/azure-analytics.routes';
+import bigQueryRoutes from './routes/azure-synapse.routes';
 import weatherRoutes from './routes/weather.routes';
 import cameraRoutes from './routes/camera.routes';
-import earthEngineMapsRoutes from './routes/earth-engine-maps.routes';
+import earthEngineMapsRoutes from './routes/azure-maps-advanced.routes';
 
 // DrishtiX Routes
 import anomalyRoutes from './routes/anomaly.routes';

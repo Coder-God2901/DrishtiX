@@ -1,35 +1,55 @@
-# Contributing to EventSphere
+# 👁️ Contributing to DrishtiX
 
-First off, thank you for considering contributing to EventSphere! It's people like you that make EventSphere such a great tool for event safety professionals.
+**Enterprise Crowd Safety System**  
+**Last Updated**: January 10, 2026
+
+---
+
+First off, thank you for considering contributing to **DrishtiX™ Enterprise Crowd Safety System**! Your contributions help us prevent incidents and save lives through technology.
+
+## 📋 Table of Contents
+
+1. [Code of Conduct](#-code-of-conduct)
+2. [How Can I Contribute?](#-how-can-i-contribute)
+3. [Development Process](#-development-process)
+4. [Code Style Guidelines](#-code-style-guidelines)
+5. [Testing Requirements](#-testing-requirements)
+6. [Pull Request Process](#-pull-request-process)
+
+---
 
 ## 🤝 Code of Conduct
 
-This project and everyone participating in it is governed by respect, professionalism, and collaboration. By participating, you are expected to uphold this code.
+This project adheres to the Contributor Covenant Code of Conduct. See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+
+**Contact**: jaganhotta357@outlook.com
+
+---
 
 ## 🚀 How Can I Contribute?
 
-### Reporting Bugs
+### 1️⃣ Reporting Bugs
 
-Before creating bug reports, please check existing issues to avoid duplicates. When creating a bug report, include:
+**Bug Report Template:**
 
-- **Clear title and description**
-- **Steps to reproduce**
-- **Expected vs actual behavior**
-- **Screenshots** (if applicable)
-- **Environment details** (OS, browser, Node version)
-
-**Example:**
 ```markdown
-**Bug:** Command palette doesn't open with Cmd+K on Safari
+**Title:** [Component] Brief description
 
 **Steps to Reproduce:**
-1. Open app in Safari 17.x
-2. Press Cmd+K
-3. Nothing happens
 
-**Expected:** Command palette should open
-**Actual:** No response
-**Environment:** macOS 14.1, Safari 17.2
+1. Go to '...'
+2. Click on '...'
+3. See error
+
+**Expected:** What should happen
+**Actual:** What actually happens
+
+**Environment:**
+
+- OS: [e.g., Windows 11]
+- Browser: [e.g., Chrome 120]
+- Node: [e.g., 20.11.0]
+- DrishtiX Version: [e.g., 3.0.0]
 ```
 
 ### Suggesting Enhancements
@@ -92,6 +112,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 **Types:**
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation
@@ -101,6 +122,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore:` - Maintenance tasks
 
 **Examples:**
+
 ```bash
 feat(maps): add polygon drawing tool
 fix(alerts): resolve duplicate notification issue
@@ -127,6 +149,7 @@ pnpm type-check
 ```
 
 **Style Guidelines:**
+
 - Use TypeScript for all new files
 - Use functional components with hooks
 - Prefer named exports over default
@@ -151,6 +174,7 @@ pnpm test --coverage
 ```
 
 **Testing Guidelines:**
+
 - Write tests for new features
 - Update tests when modifying features
 - Aim for >80% code coverage
@@ -160,6 +184,7 @@ pnpm test --coverage
 ### Pull Request Process
 
 1. **Update your fork**
+
    ```bash
    git remote add upstream https://github.com/Coder-God2901/Eventsphere.git
    git fetch upstream
@@ -167,17 +192,20 @@ pnpm test --coverage
    ```
 
 2. **Create feature branch**
+
    ```bash
    git checkout -b feature/my-awesome-feature
    ```
 
 3. **Make changes and commit**
+
    ```bash
    git add .
    git commit -m "feat(feature): add awesome feature"
    ```
 
 4. **Push to your fork**
+
    ```bash
    git push origin feature/my-awesome-feature
    ```
@@ -228,7 +256,7 @@ src/
 // ✅ Good
 export function MyComponent({ title, onAction }: MyComponentProps) {
   const [state, setState] = useState(false);
-  
+
   return (
     <div className="flex items-center gap-2">
       <h2>{title}</h2>
@@ -303,12 +331,14 @@ export async function createEvent(event: Partial<Event>): Promise<Event> {
 ### Common Issues
 
 **Issue: TypeScript errors after pulling latest**
+
 ```bash
 # Solution: Reinstall dependencies
 pnpm install
 ```
 
 **Issue: Tests failing**
+
 ```bash
 # Solution: Clear cache and rerun
 pnpm test --clearCache
@@ -316,6 +346,7 @@ pnpm test
 ```
 
 **Issue: Lint errors**
+
 ```bash
 # Solution: Auto-fix
 pnpm lint:fix
@@ -350,6 +381,7 @@ We're especially interested in contributions for:
 ## 🏆 Recognition
 
 Contributors will be:
+
 - Listed in README.md
 - Mentioned in release notes
 - Given credit in documentation
