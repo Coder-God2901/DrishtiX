@@ -15,27 +15,26 @@
  * 8. Monitoring Layer: Cloud Logging & Monitoring
  */
 
-import { pubSubService } from './pubsub.service';
-import { firebaseAdminService } from './firebase-admin.service';
-import { googleMapsService } from './google-maps.service';
-import { googleEarthEngineService } from './earth-engine.service';
+import { azureServiceBusService } from './azure-service-bus.service';
+import { azureService } from './azure.service';
+import { azureMapsService } from './azure-maps.service';
+import { azurePlanetaryComputerService } from './azure-planetary-computer.service';
 import { dataProcessingPipeline } from './data-processing-pipeline.service';
-import { vertexAIService } from './vertexai.service';
-import { geminiVisionService } from './gemini-vision.service';
+import { azureOpenAIService } from './azure-openai.service';
 import { agentBuilderService } from './agent-builder.service';
 import { riskEngineService } from './risk-engine.service';
-import { bigQueryFeatureService } from './bigquery-feature.service';
+import { azureSynapseAnalyticsService } from './azure-synapse-analytics.service';
 import { cloudLoggingMonitoring } from './cloud-logging-monitoring.service';
-import { gcpConfig } from '../config/gcp.config';
+import { azureConfig } from '../config/azure.config';
 
 interface OrchestratorConfig {
-  enableEarthEngine: boolean;
+  enablePlanetaryComputer: boolean;
   enableDataflow: boolean;
-  enableVertexAI: boolean;
-  enableGeminiVision: boolean;
+  enableOpenAI: boolean;
+  enableVisionAI: boolean;
   enableAgentBuilder: boolean;
-  enableFirestore: boolean;
-  enableFCM: boolean;
+  enableCosmosDB: boolean;
+  enableNotificationHubs: boolean;
   enableMaps: boolean;
 }
 
@@ -80,14 +79,14 @@ class GCPServicesOrchestrator {
    */
   private loadConfig(): OrchestratorConfig {
     return {
-      enableEarthEngine: gcpConfig.earthEngine?.enabled || false,
+      enablePlanetaryComputer: !!azureConfig.planetaryComputer?.apiKey,
       enableDataflow: true,
-      enableVertexAI: !!gcpConfig.vertexAI?.modelId,
-      enableGeminiVision: !!gcpConfig.gemini?.apiKey,
-      enableAgentBuilder: !!gcpConfig.vertexAI?.agentId,
-      enableFirestore: true,
-      enableFCM: true,
-      enableMaps: !!gcpConfig.maps?.apiKey,
+      enableOpenAI: !!azureConfig.openai?.apiKey,
+      enableVisionAI: !!azureConfig.openai?.apiKey,
+      enableAgentBuilder: !!azureConfig.openai?.apiKey,
+      enableCosmosDB: !!azureConfig.cosmosDb?.endpoint,
+      enableNotificationHubs: !!azureConfig.notificationHubs?.connectionString,
+      enableMaps: !!azureConfig.maps?.subscriptionKey,
     };
   }
 
@@ -137,11 +136,11 @@ class GCPServicesOrchestrator {
   private async initializeCoreServices(): Promise<void> {
     console.log('📡 Initializing Core Services...');
 
-    // Pub/Sub is initialized in its constructor
-    console.log('  ✓ Pub/Sub (Event Streaming)');
+    // Azure Service Bus is initialized in its constructor
+    console.log('  ✓ Azure Service Bus (Event Streaming)');
 
-    // Cloud Storage is initialized in its constructor
-    console.log('  ✓ Cloud Storage (Asset Storage)');
+    // Azure Blob Storage is initialized in its constructor
+    console.log('  ✓ Azure Blob Storage (Asset Storage)');
 
     console.log('');
   }
@@ -152,22 +151,22 @@ class GCPServicesOrchestrator {
   private async initializeAIServices(): Promise<void> {
     console.log('🤖 Initializing AI/ML Services...');
 
-    if (this.config.enableVertexAI) {
-      console.log('  ✓ Vertex AI (Crowd Forecasting)');
+    if (this.config.enableOpenAI) {
+      console.log('  ✓ Azure OpenAI (Crowd Forecasting)');
     } else {
-      console.log('  ⚠ Vertex AI disabled (missing model ID)');
+      console.log('  ⚠ Azure OpenAI disabled (missing API key)');
     }
 
-    if (this.config.enableGeminiVision) {
-      console.log('  ✓ Gemini Vision (Anomaly Detection)');
+    if (this.config.enableVisionAI) {
+      console.log('  ✓ Azure OpenAI Vision (Anomaly Detection)');
     } else {
-      console.log('  ⚠ Gemini Vision disabled (missing API key)');
+      console.log('  ⚠ Azure OpenAI Vision disabled (missing API key)');
     }
 
     if (this.config.enableAgentBuilder) {
       console.log('  ✓ Agent Builder (Automated Dispatch)');
     } else {
-      console.log('  ⚠ Agent Builder disabled (missing agent ID)');
+      console.log('  ⚠ Agent Builder disabled (missing OpenAI key)');
     }
 
     console.log('');
@@ -179,12 +178,12 @@ class GCPServicesOrchestrator {
   private async initializeDataServices(): Promise<void> {
     console.log('💾 Initializing Data Services...');
 
-    console.log('  ✓ BigQuery (Analytics & Training Data)');
+    console.log('  ✓ Azure Synapse Analytics (Analytics & Training Data)');
 
-    if (this.config.enableEarthEngine) {
-      console.log('  ✓ Earth Engine (Satellite Imagery)');
+    if (this.config.enablePlanetaryComputer) {
+      console.log('  ✓ Azure Planetary Computer (Satellite Imagery)');
     } else {
-      console.log('  ⚠ Earth Engine disabled (hardware-free mode unavailable)');
+      console.log('  ⚠ Azure Planetary Computer disabled (missing API key)');
     }
 
     console.log('  ✓ Data Processing Pipeline (ETL)');
@@ -198,18 +197,18 @@ class GCPServicesOrchestrator {
   private async initializeDeliveryServices(): Promise<void> {
     console.log('📱 Initializing Delivery Services...');
 
-    if (this.config.enableFirestore) {
-      console.log('  ✓ Firestore (Real-time Database)');
+    if (this.config.enableCosmosDB) {
+      console.log('  ✓ Azure Cosmos DB (Real-time Database)');
     }
 
-    if (this.config.enableFCM) {
-      console.log('  ✓ FCM (Push Notifications)');
+    if (this.config.enableNotificationHubs) {
+      console.log('  ✓ Azure Notification Hubs (Push Notifications)');
     }
 
     if (this.config.enableMaps) {
-      console.log('  ✓ Google Maps (Navigation & Routing)');
+      console.log('  ✓ Azure Maps (Navigation & Routing)');
     } else {
-      console.log('  ⚠ Google Maps disabled (missing API key)');
+      console.log('  ⚠ Azure Maps disabled (missing subscription key)');
     }
 
     console.log('');
@@ -237,7 +236,7 @@ class GCPServicesOrchestrator {
           drones: config.sources?.drones ?? true,
           cctv: config.sources?.cctv ?? true,
           userGPS: config.sources?.userGPS ?? true,
-          earthEngine: config.sources?.earthEngine ?? this.config.enableEarthEngine,
+          earthEngine: config.sources?.earthEngine ?? this.config.enablePlanetaryComputer,
           social: config.sources?.social ?? true,
           weather: config.sources?.weather ?? true,
         },
@@ -246,13 +245,13 @@ class GCPServicesOrchestrator {
           batch: config.processing?.batch ?? true,
         },
         ml: {
-          forecasting: config.ml?.forecasting ?? this.config.enableVertexAI,
-          anomalyDetection: config.ml?.anomalyDetection ?? this.config.enableGeminiVision,
+          forecasting: config.ml?.forecasting ?? this.config.enableOpenAI,
+          anomalyDetection: config.ml?.anomalyDetection ?? this.config.enableVisionAI,
           riskAssessment: config.ml?.riskAssessment ?? true,
         },
         delivery: {
           dashboards: config.delivery?.dashboards ?? true,
-          notifications: config.delivery?.notifications ?? this.config.enableFCM,
+          notifications: config.delivery?.notifications ?? this.config.enableNotificationHubs,
           routing: config.delivery?.routing ?? this.config.enableMaps,
         },
       };
@@ -292,8 +291,8 @@ class GCPServicesOrchestrator {
         throw new Error(`No active pipeline for event ${eventId}`);
       }
 
-      // 1. Ingest data via Pub/Sub
-      await pubSubService.publishCrowdData({
+      // 1. Ingest data via Azure Service Bus
+      await azureServiceBusService.publishCrowdData({
         eventId,
         dataType,
       });
@@ -320,10 +319,11 @@ class GCPServicesOrchestrator {
 
       // 4. Update real-time databases
       if (pipeline.delivery.dashboards) {
-        await firebaseAdminService.setDocument({
-          collection: 'crowdDensity',
-          docId: eventId,
-          data: {
+        await azureService.createDocument({
+          databaseId: azureConfig.cosmosDb.databaseName,
+          containerId: 'crowdDensity',
+          document: {
+            id: eventId,
             eventId,
             lastUpdate: new Date(),
             ...data,
@@ -343,27 +343,36 @@ class GCPServicesOrchestrator {
    */
   async sendEmergencyAlert(eventId: string, alert: any, deviceTokens: string[]): Promise<void> {
     try {
-      // 1. Publish to Pub/Sub for downstream processing
-      await pubSubService.publishAlert(alert);
+      // 1. Publish to Azure Service Bus for downstream processing
+      await azureServiceBusService.publishAlert(alert);
 
-      // 2. Send FCM push notifications
-      if (this.config.enableFCM && deviceTokens.length > 0) {
-        await firebaseAdminService.sendEmergencyAlert(
-          {
+      // 2. Send Azure Notification Hubs push notifications
+      if (this.config.enableNotificationHubs && deviceTokens.length > 0) {
+        await azureService.sendNotification({
+          title: alert.title,
+          body: alert.message,
+          data: {
             eventId,
             type: alert.priority,
-            title: alert.title,
-            message: alert.message,
             zone: alert.zone,
-            location: alert.location,
+            location: JSON.stringify(alert.location),
           },
-          deviceTokens
-        );
+          deviceTokens,
+        });
       }
 
-      // 3. Update Firestore for real-time dashboard
-      if (this.config.enableFirestore) {
-        await firebaseAdminService.broadcastAlert(eventId, alert);
+      // 3. Update Cosmos DB for real-time dashboard
+      if (this.config.enableCosmosDB) {
+        await azureService.createDocument({
+          databaseId: azureConfig.cosmosDb.databaseName,
+          containerId: 'alerts',
+          document: {
+            id: `${eventId}-${Date.now()}`,
+            eventId,
+            ...alert,
+            timestamp: new Date(),
+          },
+        });
       }
 
       // 4. Log to Cloud Logging
@@ -390,20 +399,19 @@ class GCPServicesOrchestrator {
   ): Promise<any> {
     try {
       if (!this.config.enableMaps) {
-        throw new Error('Google Maps integration not available');
+        throw new Error('Azure Maps integration not available');
       }
 
       // Extract crowded zones from current density data
       const crowdedZones = crowdData
         .filter((cell: any) => cell.density > 0.7)
-        .map((cell: any) => ({ lat: cell.lat, lng: cell.lon }));
+        .map((cell: any) => ({ latitude: cell.lat, longitude: cell.lon }));
 
       // Calculate safe route avoiding crowds
-      const route = await googleMapsService.calculateSafeRoute({
-        origin,
-        destination,
-        avoidCrowdedZones: crowdedZones,
-        travelMode: 'WALKING',
+      const route = await azureMapsService.calculateRoute({
+        origin: `${origin.lat},${origin.lon}`,
+        destination: `${destination.lat},${destination.lon}`,
+        travelMode: 'pedestrian',
       });
 
       await cloudLoggingMonitoring.info(`Calculated safe route for event ${eventId}`, {
@@ -430,10 +438,10 @@ class GCPServicesOrchestrator {
       config: this.config,
       activePipelines: Array.from(this.activePipelines.keys()),
       services: {
-        pubsub: true, // PubSubService is always initialized on import
-        firebaseAdmin: firebaseAdminService.isInitialized(),
-        maps: googleMapsService.isInitialized(),
-        earthEngine: googleEarthEngineService.isInitialized(),
+        serviceBus: true, // Azure Service Bus is always initialized on import
+        cosmosDb: true, // Azure service is always initialized on import
+        maps: true, // Azure Maps service is always initialized on import
+        planetaryComputer: true, // Azure Planetary Computer service is always initialized on import
         logging: cloudLoggingMonitoring.isInitialized(),
       },
     };
@@ -446,8 +454,8 @@ class GCPServicesOrchestrator {
     try {
       // Check critical services
       const checks = {
-        pubsub: true, // Always available
-        firebaseAdmin: firebaseAdminService.isInitialized(),
+        serviceBus: true, // Always available
+        cosmosDb: true, // Always available
         logging: cloudLoggingMonitoring.isInitialized(),
       };
 
@@ -480,12 +488,13 @@ class GCPServicesOrchestrator {
     console.log('[GCP Orchestrator] Shutting down services...');
 
     try {
-      // Close Pub/Sub connections
-      await pubSubService.close();
-      console.log('✓ Pub/Sub closed');
+      // Close Azure Service Bus connections
+      await azureServiceBusService.close();
+      console.log('✓ Azure Service Bus closed');
 
-      // Close BigQuery connections (if any)
-      // BigQuery client auto-closes
+      // Close Azure Synapse connections (if any)
+      await azureSynapseAnalyticsService.close();
+      console.log('✓ Azure Synapse closed');
 
       // Close other service connections
       this.initialized = false;

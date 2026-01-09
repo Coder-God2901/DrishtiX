@@ -149,7 +149,7 @@ class AzureBlobStorageService {
       const blobClient = containerClient.getBlobClient(options.blobName);
 
       const downloadResponse = await blobClient.download();
-      
+
       if (!downloadResponse.readableStreamBody) {
         throw new Error('No readable stream available');
       }
@@ -196,7 +196,7 @@ class AzureBlobStorageService {
       };
 
       const iterator = containerClient.listBlobsFlat(listOptions);
-      
+
       let count = 0;
       for await (const blob of iterator) {
         blobs.push(blob.name);

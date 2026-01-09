@@ -73,7 +73,7 @@ class AzurePlanetaryComputerService {
 
   constructor() {
     this.stacApiUrl = azureConfig.planetaryComputer.endpoint;
-    
+
     if (azureConfig.planetaryComputer.enabled) {
       console.log('🌍 Azure Planetary Computer service configured');
       this.initialized = true;
@@ -154,14 +154,14 @@ class AzurePlanetaryComputerService {
       // Get the most recent cloud-free image
       const bestItem = items
         .filter(item => (item.properties['eo:cloud_cover'] || 100) < 20)
-        .sort((a, b) => 
-          new Date(b.properties.datetime).getTime() - 
+        .sort((a, b) =>
+          new Date(b.properties.datetime).getTime() -
           new Date(a.properties.datetime).getTime()
         )[0] || items[0];
 
       // Get visual asset (TCI - True Color Image)
       const visualAsset = bestItem.assets['visual'] || bestItem.assets['rendered_preview'];
-      
+
       if (!visualAsset) {
         console.warn('No visual asset found');
         return '/api/fallback-imagery';
@@ -213,11 +213,11 @@ class AzurePlanetaryComputerService {
       }
 
       const demItem = items[0];
-      
+
       // In production, you would process the DEM data using GeoTIFF libraries
       // For now, return placeholder data
       console.log('✅ Retrieved terrain data from Planetary Computer');
-      
+
       return {
         elevation: Array(100).fill(0).map(() => Math.random() * 500),
         slope: Array(100).fill(0).map(() => Math.random() * 45),
@@ -262,7 +262,7 @@ class AzurePlanetaryComputerService {
       }
 
       console.log('✅ Retrieved land cover data from Planetary Computer');
-      
+
       // Return classification (would be processed from raster data in production)
       return {
         landCover: 'urban',
@@ -307,12 +307,12 @@ class AzurePlanetaryComputerService {
 
           // Generate density based on scenario
           let baseDensity = Math.random() * 0.5;
-          
+
           switch (scenario) {
             case 'SURGE':
               // High density in center, decreasing outward
               const distanceFromCenter = Math.sqrt(
-                Math.pow(i - gridSize / 2, 2) + 
+                Math.pow(i - gridSize / 2, 2) +
                 Math.pow(j - gridSize / 2, 2)
               );
               baseDensity = Math.max(0, 1 - distanceFromCenter / (gridSize / 2));
@@ -386,7 +386,7 @@ class AzurePlanetaryComputerService {
 
       // In production, calculate NDVI from NIR and Red bands
       console.log('✅ Retrieved vegetation index data');
-      
+
       return {
         ndvi: 0.6 + Math.random() * 0.3, // Simulated NDVI
         vegetation: 'moderate',

@@ -134,6 +134,45 @@ export interface AzureConfig {
     workspaceName: string;
     endpoint: string;
     apiKey: string;
+    resourceGroup: string;
+    computeTargets: {
+      cpu: string;
+      gpu: string;
+    };
+  };
+
+  // Azure Computer Vision
+  computerVision: {
+    endpoint: string;
+    apiKey: string;
+    customVision: {
+      endpoint: string;
+      predictionKey: string;
+      projectId: string;
+    };
+  };
+
+  // Azure Video Analyzer (for queue detection)
+  videoAnalyzer: {
+    endpoint: string;
+    accountId: string;
+  };
+
+  // Azure Cognitive Services
+  cognitiveServices: {
+    endpoint: string;
+    apiKey: string;
+  };
+
+  // Azure Stream Analytics
+  streamAnalytics: {
+    resourceGroup: string;
+    jobs: {
+      crowdAggregation: string;
+      anomalyDetection: string;
+      queueMetrics: string;
+      predictiveAnalytics: string;
+    };
   };
 
   // Azure Purview (replaces Cloud DLP)
@@ -264,6 +303,41 @@ export const azureConfig: AzureConfig = {
     workspaceName: process.env.AZURE_ML_WORKSPACE_NAME || 'drishtix-ml',
     endpoint: process.env.AZURE_ML_ENDPOINT || '',
     apiKey: process.env.AZURE_ML_API_KEY || '',
+    resourceGroup: process.env.AZURE_ML_RESOURCE_GROUP || process.env.AZURE_RESOURCE_GROUP || 'drishtix-rg',
+    computeTargets: {
+      cpu: process.env.AZURE_ML_COMPUTE_CPU || 'cpu-cluster',
+      gpu: process.env.AZURE_ML_COMPUTE_GPU || 'gpu-cluster',
+    },
+  },
+
+  computerVision: {
+    endpoint: process.env.AZURE_COMPUTER_VISION_ENDPOINT || '',
+    apiKey: process.env.AZURE_COMPUTER_VISION_KEY || '',
+    customVision: {
+      endpoint: process.env.AZURE_CUSTOM_VISION_ENDPOINT || '',
+      predictionKey: process.env.AZURE_CUSTOM_VISION_PREDICTION_KEY || '',
+      projectId: process.env.AZURE_CUSTOM_VISION_PROJECT_ID || '',
+    },
+  },
+
+  videoAnalyzer: {
+    endpoint: process.env.AZURE_VIDEO_ANALYZER_ENDPOINT || '',
+    accountId: process.env.AZURE_VIDEO_ANALYZER_ACCOUNT_ID || '',
+  },
+
+  cognitiveServices: {
+    endpoint: process.env.AZURE_COGNITIVE_SERVICES_ENDPOINT || '',
+    apiKey: process.env.AZURE_COGNITIVE_SERVICES_KEY || '',
+  },
+
+  streamAnalytics: {
+    resourceGroup: process.env.AZURE_STREAM_ANALYTICS_RESOURCE_GROUP || process.env.AZURE_RESOURCE_GROUP || 'drishtix-rg',
+    jobs: {
+      crowdAggregation: process.env.AZURE_STREAM_ANALYTICS_JOB_CROWD || 'crowd-density-aggregation',
+      anomalyDetection: process.env.AZURE_STREAM_ANALYTICS_JOB_ANOMALY || 'anomaly-detection-stream',
+      queueMetrics: process.env.AZURE_STREAM_ANALYTICS_JOB_QUEUE || 'queue-metrics-computation',
+      predictiveAnalytics: process.env.AZURE_STREAM_ANALYTICS_JOB_PREDICT || 'predictive-analytics-stream',
+    },
   },
 
   purview: {
