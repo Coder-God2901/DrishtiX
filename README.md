@@ -1,10 +1,10 @@
-# DrishtiX™ Platform
+# 👁️ DrishtiX™ Platform
 
 <div align="center">
 
 ![DrishtiX Logo](https://via.placeholder.com/200x80?text=DrishtiX%E2%84%A2)
 
-**Enterprise Crowd Management & Safety Intelligence Platform**
+**Enterprise Crowd Safety & Intelligence Platform**
 
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-3.0.0-blue.svg)](#)
@@ -38,7 +38,7 @@ _This software is protected by copyright, patent, and trade secret laws. See [LI
 - ❌ **NO portfolio/showcase** use
 - ⚖️ **Violations will be prosecuted** under U.S. and international law
 
-**To request a license**: licensing@drishtix.com
+**To request a license**: jaganhotta357@outlook.com
 
 ---
 
@@ -60,7 +60,7 @@ _This software is protected by copyright, patent, and trade secret laws. See [LI
 
 ## 🎯 Overview
 
-**DrishtiX v3.0** is an enterprise-grade, AI-powered crowd management platform that combines real-time monitoring, predictive analytics, and automated incident response to ensure safety and optimize operations at large-scale events.
+**DrishtiX v3.0** is an enterprise-grade, AI-powered crowd safety platform that combines real-time monitoring, predictive analytics, and automated incident response to ensure safety and optimize operations at large-scale events.
 
 ### What Makes DrishtiX Unique?
 
@@ -76,10 +76,10 @@ _This software is protected by copyright, patent, and trade secret laws. See [LI
 ### Industry Applications
 
 - 🎪 **Large-Scale Events** - Concerts, festivals, conferences (10,000+ attendees)
-- ⚽ **Sports Venues** - Stadiums, arenas (real-time crowd flow management)
+- ⚽ **Sports Venues** - Stadiums, arenas (real-time crowd flow safety)
 - 🙏 **Religious Gatherings** - Pilgrimages, festivals (high-density crowd safety)
-- 🚇 **Transportation Hubs** - Airports, train stations (passenger flow optimization)
-- 🏛️ **Public Spaces** - Parks, monuments (visitor management)
+- 🚇 **Transportation Hubs** - Airports, train stations (passenger flow safety)
+- 🏛️ **Public Spaces** - Parks, monuments (visitor safety)
 
 ---
 
