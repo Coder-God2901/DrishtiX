@@ -43,6 +43,7 @@ interface CrowdAnalysisResponse {
   densityMap?: number[][];
   personCount: number;
   densityLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  crowdDensity?: number;
   detectedObjects: DetectedObject[];
   anomalies: AnomalyDetection[];
   queueInfo?: QueueDetection;
@@ -87,6 +88,7 @@ interface QueueDetection {
 interface VideoAnalysisRequest {
   videoUrl: string;
   analysisInterval: number; // seconds between frame analysis
+  frameInterval?: number; // milliseconds between frames
   duration?: number; // seconds to analyze
   zones?: Array<{
     id: string;
@@ -138,20 +140,39 @@ class AzureComputerVisionService {
       // Call Azure Computer Vision API
       const features = this.getAnalysisFeatures(request.analysisType);
 
-      // TODO: Implement actual Azure CV API call
-      // const response = await fetch(
-      //   `${this.endpoint}/computervision/imageanalysis:analyze?api-version=${this.apiVersion}&features=${features}`,
-      //   {
-      //     method: 'POST',
-      //     headers: {
-      //       'Ocp-Apim-Subscription-Key': this.apiKey,
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify(imageData),
-      //   }
-      // );
+      try {
+        const response = await fetch(
+          `${this.endpoint}/computervision/imageanalysis:analyze?api-version=${this.apiVersion}&features=${features}`,
+          {
+            method: 'POST',
+            headers: {
+              'Ocp-Apim-Subscription-Key': this.apiKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(imageData),
+          }
+        );
 
-      // For now, use enhanced local processing with Azure integration hooks
+        if (response.ok) {
+          const azureResult = await response.json();
+          // Process Azure CV response and convert to our format
+          const analysis = this.convertAzureResponse(azureResult, request);
+
+          const processingTimeMs = Date.now() - startTime;
+          console.log(`[Azure CV] Analysis completed in ${processingTimeMs}ms`);
+
+          return {
+            ...analysis,
+            processingTimeMs,
+          };
+        } else {
+          console.warn(`[Azure CV] API call failed, falling back to local processing`);
+        }
+      } catch (apiError) {
+        console.warn(`[Azure CV] API unavailable, using local processing:`, apiError);
+      }
+
+      // Fallback to local processing if Azure API unavailable
       const analysis = await this.processImageLocally(request);
 
       const processingTimeMs = Date.now() - startTime;
@@ -174,18 +195,35 @@ class AzureComputerVisionService {
     console.log('[Azure CV] Detecting people');
 
     try {
-      // TODO: Use Azure Computer Vision People Detection
-      // const response = await fetch(
-      //   `${this.endpoint}/computervision/imageanalysis:analyze?api-version=${this.apiVersion}&features=people`,
-      //   {
-      //     method: 'POST',
-      //     headers: {
-      //       'Ocp-Apim-Subscription-Key': this.apiKey,
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify({ url: imageUrl }),
-      //   }
-      // );
+      const response = await fetch(
+        `${this.endpoint}/computervision/imageanalysis:analyze?api-version=${this.apiVersion}&features=people`,
+        {
+          method: 'POST',
+          headers: {
+            'Ocp-Apim-Subscription-Key': this.apiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: imageUrl }),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        const people: DetectedObject[] = (result.peopleResult?.values || []).map((person: any) => ({
+          type: 'person',
+          confidence: person.confidence,
+          boundingBox: person.boundingBox,
+          position: {
+            x: person.boundingBox.x + person.boundingBox.w / 2,
+            y: person.boundingBox.y + person.boundingBox.h / 2,
+          },
+        }));
+
+        console.log(`[Azure CV] Detected ${people.length} people`);
+        return people;
+      } else {
+        console.warn(`[Azure CV] People detection API failed: ${response.statusText}`);
+      }
 
       return [];
     } catch (error) {
@@ -246,23 +284,41 @@ class AzureComputerVisionService {
 
     try {
       // Use Azure Custom Vision with trained model for crowd anomalies
-      // TODO: Implement Custom Vision API call
-      // const customVisionEndpoint = process.env.AZURE_CUSTOM_VISION_ENDPOINT;
-      // const predictionKey = process.env.AZURE_CUSTOM_VISION_PREDICTION_KEY;
-      // const projectId = process.env.AZURE_CUSTOM_VISION_PROJECT_ID;
-      // const publishedName = 'crowd-anomaly-detector';
+      const customVisionEndpoint = process.env.AZURE_CUSTOM_VISION_ENDPOINT;
+      const predictionKey = process.env.AZURE_CUSTOM_VISION_PREDICTION_KEY;
+      const projectId = process.env.AZURE_CUSTOM_VISION_PROJECT_ID;
+      const publishedName = 'crowd-anomaly-detector';
 
-      // const response = await fetch(
-      //   `${customVisionEndpoint}/customvision/v3.0/Prediction/${projectId}/detect/iterations/${publishedName}/url`,
-      //   {
-      //     method: 'POST',
-      //     headers: {
-      //       'Prediction-Key': predictionKey,
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify({ Url: imageUrl }),
-      //   }
-      // );
+      if (!customVisionEndpoint || !predictionKey || !projectId) {
+        console.warn('[Azure CV] Custom Vision not configured, skipping anomaly detection');
+        return [];
+      }
+
+      const response = await fetch(
+        `${customVisionEndpoint}/customvision/v3.0/Prediction/${projectId}/detect/iterations/${publishedName}/url`,
+        {
+          method: 'POST',
+          headers: {
+            'Prediction-Key': predictionKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ Url: imageUrl }),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        const anomalies: AnomalyDetection[] = (result.predictions || []).map((pred: any) => ({
+          type: pred.tagName,
+          severity: this.mapConfidenceToSeverity(pred.probability),
+          confidence: pred.probability,
+          location: pred.boundingBox,
+          description: `${pred.tagName} detected with ${Math.round(pred.probability * 100)}% confidence`,
+        }));
+
+        console.log(`[Azure CV] Detected ${anomalies.length} anomalies`);
+        return anomalies;
+      }
 
       return [];
     } catch (error) {
@@ -278,15 +334,29 @@ class AzureComputerVisionService {
     console.log('[Azure CV] Starting video analysis');
 
     try {
-      // Use Azure Video Indexer or Video Analyzer
-      // Extract frames at specified intervals and analyze each
-
+      // Use Azure Video Indexer for video analysis
       const frameAnalyses: Array<{ timestamp: number; analysis: CrowdAnalysisResponse }> = [];
 
-      // TODO: Implement video processing
-      // 1. Extract frames using Azure Media Services
-      // 2. Analyze each frame using Computer Vision
-      // 3. Aggregate results
+      // Extract frames at specified intervals
+      const frameInterval = request.frameInterval || 1000; // milliseconds
+      const totalDuration = request.duration || 60000; // default 1 minute
+
+      for (let timestamp = 0; timestamp < totalDuration; timestamp += frameInterval) {
+        try {
+          // Extract frame at timestamp
+          const frameUrl = await this.extractVideoFrame(request.videoUrl, timestamp);
+
+          // Analyze the frame using Computer Vision
+          const analysis = await this.analyzeCrowd({
+            imageUrl: frameUrl,
+            analysisType: 'density',
+          });
+
+          frameAnalyses.push({ timestamp, analysis });
+        } catch (frameError) {
+          console.warn(`[Azure CV] Failed to process frame at ${timestamp}ms:`, frameError);
+        }
+      }
 
       // Calculate summary statistics
       const summary = this.calculateVideoSummary(frameAnalyses);
@@ -351,6 +421,77 @@ class AzureComputerVisionService {
   }
 
   // Helper methods
+
+  /**
+   * Convert Azure CV response to our format
+   */
+  private convertAzureResponse(azureResult: any, request: CrowdAnalysisRequest): CrowdAnalysisResponse {
+    return {
+      crowdDensity: this.estimateDensityFromAzure(azureResult),
+      personCount: azureResult.peopleResult?.values?.length || 0,
+      densityLevel: this.calculateDensityLevel(azureResult),
+      detectedObjects: this.extractObjects(azureResult),
+      anomalies: [],
+      processingTimeMs: 0,
+      confidence: azureResult.metadata?.confidence || 0.85,
+    };
+  }
+
+  /**
+   * Map confidence to severity level
+   */
+  private mapConfidenceToSeverity(confidence: number): 'low' | 'medium' | 'high' | 'critical' {
+    if (confidence >= 0.9) return 'critical';
+    if (confidence >= 0.7) return 'high';
+    if (confidence >= 0.5) return 'medium';
+    return 'low';
+  }
+
+  /**
+   * Extract video frame at specific timestamp
+   */
+  private async extractVideoFrame(videoUrl: string, timestamp: number): Promise<string> {
+    // Use Azure Media Services or local video processing
+    // For now, return placeholder - implement actual frame extraction
+    console.log(`[Azure CV] Extracting frame at ${timestamp}ms from ${videoUrl}`);
+    return videoUrl; // Placeholder
+  }
+
+  /**
+   * Estimate density from Azure CV response
+   */
+  private estimateDensityFromAzure(result: any): number {
+    const peopleCount = result.peopleResult?.values?.length || 0;
+    const imageArea = (result.metadata?.width || 1920) * (result.metadata?.height || 1080);
+    return peopleCount / (imageArea / 1000000); // people per square meter (approximate)
+  }
+
+  /**
+   * Calculate density level from Azure result
+   */
+  private calculateDensityLevel(result: any): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
+    const density = this.estimateDensityFromAzure(result);
+    if (density >= 3.0) return 'CRITICAL';
+    if (density >= 2.0) return 'HIGH';
+    if (density >= 1.0) return 'MEDIUM';
+    return 'LOW';
+  }
+
+  /**
+   * Extract detected objects from Azure result
+   */
+  private extractObjects(result: any): DetectedObject[] {
+    return (result.objectsResult?.values || []).map((obj: any) => ({
+      type: obj.object,
+      confidence: obj.confidence,
+      boundingBox: obj.rectangle,
+      position: {
+        x: obj.rectangle.x + obj.rectangle.w / 2,
+        y: obj.rectangle.y + obj.rectangle.h / 2,
+      },
+    }));
+  }
+
 
   private getAnalysisFeatures(type: string): string {
     const featureMap: Record<string, string> = {

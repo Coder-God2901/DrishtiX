@@ -1,5 +1,5 @@
 /**
- * Copyright Â© 2025 DrishtiX. All Rights Reserved.
+ * Copyright © 2025 DrishtiX. All Rights Reserved.
  * 
  * PROPRIETARY AND CONFIDENTIAL
  * 
@@ -13,19 +13,21 @@
  * For licensing inquiries: licensing@drishtix.com
  * License: See LICENSE file in the project root
  */
+
 /**
- * Google Cloud Pub/Sub Service
+ * Azure Service Bus Messaging Service
  * Real-time event streaming and message queue with advanced error handling
+ * Replaces Google Cloud Pub/Sub with Azure Service Bus
  */
 
-import { PubSub, Message, Topic, Subscription } from '@google-cloud/pubsub';
-import { gcpConfig } from '../config/gcp.config';
+import { ServiceBusClient, ServiceBusMessage, ServiceBusSender, ServiceBusReceiver, ServiceBusReceivedMessage } from '@azure/service-bus';
+import { azureConfig } from '../config/azure.config';
 
-export interface PubSubMessage<T = any> {
+export interface ServiceBusMessageData<T = any> {
   id: string;
   data: T;
   timestamp: Date;
-  attributes?: Record<string, string>;
+  properties?: Record<string, any>;
 }
 
 interface RetryConfig {
@@ -52,158 +54,212 @@ const CIRCUIT_BREAKER_THRESHOLD = 5;
 const CIRCUIT_BREAKER_TIMEOUT = 60000; // 60 seconds
 const PUBLISH_TIMEOUT = 10000; // 10 seconds
 
-class PubSubService {
-  private client: PubSub;
-  private topics: Map<string, Topic>;
-  private subscriptions: Map<string, Subscription>;
+// Topic names (now queue names for Azure Service Bus)
+const QUEUE_NAMES = {
+  crowdData: 'crowd-data',
+  predictions: 'predictions',
+  anomalies: 'anomalies',
+  alerts: 'alerts',
+  dispatch: 'dispatch',
+  riskEngine: 'risk-engine',
+  analytics: 'analytics',
+  socialMedia: 'social-media',
+  recommendations: 'recommendations',
+  feedback: 'recommendation-feedback',
+  emergencyAlerts: 'emergency-alerts',
+};
+
+class AzureServiceBusMessagingService {
+  private client: ServiceBusClient | null;
+  private senders: Map<string, ServiceBusSender>;
+  private receivers: Map<string, ServiceBusReceiver>;
   private circuitBreakers: Map<string, CircuitBreakerState>;
   private publishMetrics: Map<string, { success: number; failure: number }>;
+  private messageHandlers: Map<string, ((message: any) => Promise<void>)[]>;
 
   constructor() {
-    this.client = new PubSub({
-      projectId: gcpConfig.projectId,
-      keyFilename: gcpConfig.credentials,
-    });
+    const connectionString = azureConfig.serviceBus?.connectionString || process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
 
-    this.topics = new Map();
-    this.subscriptions = new Map();
+    if (!connectionString) {
+      console.warn('[Azure Service Bus] Connection string not configured, service disabled');
+      this.client = null;
+      this.senders = new Map();
+      this.receivers = new Map();
+      this.circuitBreakers = new Map();
+      this.publishMetrics = new Map();
+      this.messageHandlers = new Map();
+      return;
+    }
+
+    this.client = new ServiceBusClient(connectionString);
+    this.senders = new Map();
+    this.receivers = new Map();
     this.circuitBreakers = new Map();
     this.publishMetrics = new Map();
+    this.messageHandlers = new Map();
 
-    this.initializeTopicsAndSubscriptions();
+    console.log('✓ Azure Service Bus Messaging Service initialized');
   }
 
   /**
-   * Initialize all topics and subscriptions with DLQ configuration
+   * Get or create sender for a queue
    */
-  private async initializeTopicsAndSubscriptions() {
-    try {
-      // Create/get topics
-      await this.ensureTopic(gcpConfig.pubsub.topics.crowdData);
-      await this.ensureTopic(gcpConfig.pubsub.topics.predictions);
-      await this.ensureTopic(gcpConfig.pubsub.topics.anomalies);
-      await this.ensureTopic(gcpConfig.pubsub.topics.alerts);
-      await this.ensureTopic(gcpConfig.pubsub.topics.dispatch);
-      await this.ensureTopic(gcpConfig.pubsub.topics.riskEngine);
-
-      // Create/get subscriptions with DLQ and retry policies
-      await this.ensureSubscription(
-        gcpConfig.pubsub.subscriptions.crowdData,
-        gcpConfig.pubsub.topics.crowdData
-      );
-      await this.ensureSubscription(
-        gcpConfig.pubsub.subscriptions.predictions,
-        gcpConfig.pubsub.topics.predictions
-      );
-      await this.ensureSubscription(
-        gcpConfig.pubsub.subscriptions.anomalies,
-        gcpConfig.pubsub.topics.anomalies
-      );
-      await this.ensureSubscription(
-        gcpConfig.pubsub.subscriptions.riskEngine,
-        gcpConfig.pubsub.topics.riskEngine
-      );
-
-      console.log('Pub/Sub topics and subscriptions initialized with DLQ support');
-    } catch (error) {
-      console.error('Error initializing Pub/Sub:', error);
-      // Don't throw - allow service to start even if Pub/Sub is unavailable
+  private async getSender(queueName: string): Promise<ServiceBusSender> {
+    if (!this.client) {
+      throw new Error('Azure Service Bus not configured');
     }
-  }
 
-  /**
-   * Ensure topic exists with proper configuration
-   */
-  private async ensureTopic(topicName: string): Promise<Topic> {
-    try {
-      const topic = this.client.topic(topicName);
-      const [exists] = await topic.exists();
-
-      if (!exists) {
-        await topic.create();
-        console.log(`Created topic: ${topicName}`);
-      }
-
-      this.topics.set(topicName, topic);
-      return topic;
-    } catch (error) {
-      console.error(`Error ensuring topic ${topicName}:`, error);
-      // Store topic reference anyway for future attempts
-      const topic = this.client.topic(topicName);
-      this.topics.set(topicName, topic);
-      return topic;
+    if (!this.senders.has(queueName)) {
+      const sender = this.client.createSender(queueName);
+      this.senders.set(queueName, sender);
     }
+    return this.senders.get(queueName)!;
   }
 
   /**
-   * Ensure subscription exists with DLQ and retry policy
+   * Get or create receiver for a queue
    */
-  private async ensureSubscription(
-    subscriptionName: string,
-    topicName: string
-  ): Promise<Subscription> {
+  private async getReceiver(queueName: string): Promise<ServiceBusReceiver> {
+    if (!this.client) {
+      throw new Error('Azure Service Bus not configured');
+    }
+
+    if (!this.receivers.has(queueName)) {
+      const receiver = this.client.createReceiver(queueName, {
+        receiveMode: 'peekLock',
+      });
+      this.receivers.set(queueName, receiver);
+    }
+    return this.receivers.get(queueName)!;
+  }
+
+  /**
+   * Publish message to a queue with retry logic and circuit breaker
+   */
+  private async publish<T>(
+    queueName: string,
+    data: T,
+    properties?: Record<string, any>,
+    retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG
+  ): Promise<string> {
+    if (!this.client) {
+      console.warn(`[Azure Service Bus] Skipping publish to ${queueName} - service not configured`);
+      return 'mock-message-id';
+    }
+
+    // Check circuit breaker
+    if (this.isCircuitOpen(queueName)) {
+      throw new Error(`Circuit breaker OPEN for queue: ${queueName}`);
+    }
+
+    const messageId = this.generateMessageId();
+    const message: ServiceBusMessage = {
+      messageId,
+      body: data,
+      applicationProperties: {
+        ...properties,
+        timestamp: new Date().toISOString(),
+      },
+    };
+
     try {
-      const topic = this.topics.get(topicName) || this.client.topic(topicName);
-      const subscription = topic.subscription(subscriptionName);
-      const [exists] = await subscription.exists();
+      const sender = await this.getSender(queueName);
 
-      if (!exists) {
-        // Create DLQ topic for this subscription
-        const dlqTopicName = `${subscriptionName}-dlq`;
-        const dlqTopic = await this.ensureTopic(dlqTopicName);
+      // Publish with timeout
+      await Promise.race([
+        sender.sendMessages(message),
+        this.timeout(PUBLISH_TIMEOUT),
+      ]);
 
-        // Create subscription with DLQ and retry policy
-        await subscription.create({
-          ackDeadlineSeconds: 60,
-          flowControl: {
-            maxMessages: 100,
-            maxBytes: 10 * 1024 * 1024, // 10MB
-          },
-          deadLetterPolicy: {
-            deadLetterTopic: dlqTopic.name,
-            maxDeliveryAttempts: 5,
-          },
-          retryPolicy: {
-            minimumBackoff: { seconds: 10 },
-            maximumBackoff: { seconds: 600 },
-          },
-          enableMessageOrdering: false,
-          enableExactlyOnceDelivery: false, // Set to true for exactly-once semantics if needed
+      this.recordSuccess(queueName);
+      return messageId;
+    } catch (error) {
+      this.recordFailure(queueName);
+
+      // Retry logic
+      if (retryConfig.maxRetries > 0) {
+        const delay = Math.min(
+          retryConfig.initialDelay * Math.pow(retryConfig.backoffMultiplier, DEFAULT_RETRY_CONFIG.maxRetries - retryConfig.maxRetries),
+          retryConfig.maxDelay
+        );
+
+        await this.sleep(delay);
+
+        return this.publish(queueName, data, properties, {
+          ...retryConfig,
+          maxRetries: retryConfig.maxRetries - 1,
         });
-
-        console.log(`Created subscription: ${subscriptionName} with DLQ: ${dlqTopicName}`);
       }
 
-      this.subscriptions.set(subscriptionName, subscription);
-      return subscription;
-    } catch (error) {
-      console.error(`Error ensuring subscription ${subscriptionName}:`, error);
-      // Store subscription reference anyway for future attempts
-      const topic = this.topics.get(topicName) || this.client.topic(topicName);
-      const subscription = topic.subscription(subscriptionName);
-      this.subscriptions.set(subscriptionName, subscription);
-      return subscription;
+      console.error(`[Azure Service Bus] Failed to publish to ${queueName}:`, error);
+      throw error;
     }
   }
 
   /**
-   * Publish crowd density data
+   * Subscribe to messages from a queue
+   */
+  async subscribe<T>(
+    queueName: string,
+    handler: (message: ServiceBusMessageData<T>) => Promise<void>
+  ): Promise<void> {
+    if (!this.client) {
+      console.warn(`[Azure Service Bus] Skipping subscribe to ${queueName} - service not configured`);
+      return;
+    }
+
+    const receiver = await this.getReceiver(queueName);
+
+    const messageHandler = async (receivedMessage: ServiceBusReceivedMessage) => {
+      try {
+        const messageData: ServiceBusMessageData<T> = {
+          id: String(receivedMessage.messageId) || this.generateMessageId(),
+          data: receivedMessage.body,
+          timestamp: new Date(receivedMessage.enqueuedTimeUtc || Date.now()),
+          properties: receivedMessage.applicationProperties,
+        };
+
+        await handler(messageData);
+
+        // Complete the message (remove from queue)
+        await receiver.completeMessage(receivedMessage);
+      } catch (error: any) {
+        console.error(`[Azure Service Bus] Error processing message from ${queueName}:`, error);
+
+        // Abandon message (return to queue for redelivery)
+        await receiver.abandonMessage(receivedMessage);
+      }
+    };
+
+    const errorHandler = async (args: { error: Error }) => {
+      console.error(`[Azure Service Bus] Error in receiver for ${queueName}:`, args.error);
+    };
+
+    receiver.subscribe({
+      processMessage: messageHandler,
+      processError: errorHandler,
+    });
+
+    console.log(`[Azure Service Bus] Subscribed to queue: ${queueName}`);
+  }
+
+  /**
+   * Publish crowd data
    */
   async publishCrowdData(data: any): Promise<string> {
-    return this.publish(gcpConfig.pubsub.topics.crowdData, data, {
-      type: 'crowd-density',
-      eventId: data.eventId,
+    return this.publish(QUEUE_NAMES.crowdData, data, {
+      type: 'crowd-data',
+      source: 'video-analytics',
     });
   }
 
   /**
-   * Publish prediction results
+   * Publish prediction
    */
   async publishPrediction(prediction: any): Promise<string> {
-    return this.publish(gcpConfig.pubsub.topics.predictions, prediction, {
+    return this.publish(QUEUE_NAMES.predictions, prediction, {
       type: 'prediction',
-      eventId: prediction.eventId,
-      riskLevel: prediction.riskLevel,
+      source: 'ml-service',
     });
   }
 
@@ -211,10 +267,9 @@ class PubSubService {
    * Publish anomaly detection
    */
   async publishAnomaly(anomaly: any): Promise<string> {
-    return this.publish(gcpConfig.pubsub.topics.anomalies, anomaly, {
+    return this.publish(QUEUE_NAMES.anomalies, anomaly, {
       type: 'anomaly',
-      eventId: anomaly.eventId,
-      severity: anomaly.overallSeverity,
+      priority: anomaly.severity === 'CRITICAL' ? 'high' : 'normal',
     });
   }
 
@@ -222,410 +277,186 @@ class PubSubService {
    * Publish alert
    */
   async publishAlert(alert: any): Promise<string> {
-    return this.publish(gcpConfig.pubsub.topics.alerts, alert, {
+    return this.publish(QUEUE_NAMES.alerts, alert, {
       type: 'alert',
-      eventId: alert.eventId,
-      severity: alert.severity,
-      alertType: alert.type,
+      priority: alert.priority || 'medium',
     });
   }
 
   /**
-   * Publish dispatch order
+   * Publish dispatch command
    */
   async publishDispatch(dispatch: any): Promise<string> {
-    return this.publish(gcpConfig.pubsub.topics.dispatch, dispatch, {
-      type: 'dispatch',
-      eventId: dispatch.eventId,
-      responderId: dispatch.responderId,
+    return this.publish(QUEUE_NAMES.dispatch, dispatch, {
+      type: 'dispatch-command',
+      priority: 'high',
     });
   }
 
   /**
-   * Publish video analytics data (camera frames + ML analysis)
+   * Publish analytics data
    */
-  async publishVideoAnalytics(analytics: any): Promise<string> {
-    return this.publish(gcpConfig.pubsub.topics.crowdData, analytics, {
-      type: 'video-analytics',
-      cameraId: analytics.cameraId,
-      eventId: analytics.eventId || 'unknown',
+  async publishAnalytics(analytics: any): Promise<string> {
+    return this.publish(QUEUE_NAMES.analytics, analytics, {
+      type: 'analytics',
     });
   }
 
   /**
-   * Public method to publish message to any topic
+   * Publish message to any queue
    */
-  async publishMessage(
-    topicName: string,
-    data: any,
-    attributes: Record<string, string> = {}
-  ): Promise<string> {
-    return this.publish(topicName, data, attributes);
+  async publishMessage(queueName: string, data: any, properties?: Record<string, any>): Promise<string> {
+    return this.publish(queueName, data, properties);
   }
 
   /**
-   * Generic publish method with retry logic and circuit breaker
+   * Subscribe to crowd data
    */
-  private async publish(
-    topicName: string,
-    data: any,
-    attributes: Record<string, string> = {},
-    retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG
-  ): Promise<string> {
-    // Check circuit breaker
-    if (!this.isCircuitBreakerClosed(topicName)) {
-      const error = new Error(`Circuit breaker OPEN for topic ${topicName}`);
-      console.error(error.message);
-      throw error;
+  onCrowdData(handler: (message: any) => Promise<void>): void {
+    this.subscribe(QUEUE_NAMES.crowdData, handler);
+  }
+
+  /**
+   * Subscribe to predictions
+   */
+  onPredictions(handler: (message: any) => Promise<void>): void {
+    this.subscribe(QUEUE_NAMES.predictions, handler);
+  }
+
+  /**
+   * Subscribe to anomalies
+   */
+  onAnomalies(handler: (message: any) => Promise<void>): void {
+    this.subscribe(QUEUE_NAMES.anomalies, handler);
+  }
+
+  /**
+   * Subscribe to risk engine events
+   */
+  onRiskEngine(handler: (message: any) => Promise<void>): void {
+    this.subscribe(QUEUE_NAMES.riskEngine, handler);
+  }
+
+  /**
+   * Get queue metrics
+   */
+  getMetrics(queueName: string) {
+    return this.publishMetrics.get(queueName) || { success: 0, failure: 0 };
+  }
+
+  /**
+   * Close all connections
+   */
+  async shutdown(): Promise<void> {
+    if (!this.client) {
+      return;
     }
 
-    let lastError: Error | null = null;
-    let delay = retryConfig.initialDelay;
+    console.log('[Azure Service Bus] Shutting down...');
 
-    for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+    // Close all senders
+    for (const [name, sender] of this.senders.entries()) {
       try {
-        const topic = this.topics.get(topicName) || this.client.topic(topicName);
-
-        const message = {
-          data: Buffer.from(JSON.stringify(data)),
-          attributes: {
-            ...attributes,
-            timestamp: new Date().toISOString(),
-            attempt: attempt.toString(),
-          },
-        };
-
-        // Publish with timeout
-        const messageId = await this.publishWithTimeout(topic, message, PUBLISH_TIMEOUT);
-
-        console.log(`Published message ${messageId} to ${topicName} (attempt ${attempt + 1})`);
-
-        // Record success metrics
-        this.recordPublishSuccess(topicName);
-
-        // Reset circuit breaker on success
-        this.resetCircuitBreaker(topicName);
-
-        return messageId;
-      } catch (error: any) {
-        lastError = error;
-        console.error(`Error publishing to ${topicName} (attempt ${attempt + 1}/${retryConfig.maxRetries + 1}):`, error.message);
-
-        // Record failure metrics
-        this.recordPublishFailure(topicName);
-
-        // Check if we should retry
-        if (attempt < retryConfig.maxRetries) {
-          // Exponential backoff with jitter
-          const jitter = Math.random() * 0.3 * delay; // 0-30% jitter
-          const waitTime = Math.min(delay + jitter, retryConfig.maxDelay);
-
-          console.log(`Retrying in ${Math.round(waitTime)}ms...`);
-          await this.sleep(waitTime);
-
-          delay *= retryConfig.backoffMultiplier;
-        } else {
-          // Max retries exceeded, trip circuit breaker
-          this.tripCircuitBreaker(topicName);
-        }
+        await sender.close();
+        console.log(`[Azure Service Bus] Closed sender: ${name}`);
+      } catch (error) {
+        console.error(`[Azure Service Bus] Error closing sender ${name}:`, error);
       }
     }
 
-    // All retries failed
-    const error = new Error(
-      `Failed to publish to ${topicName} after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message}`
-    );
-    console.error(error.message);
-    throw error;
+    // Close all receivers
+    for (const [name, receiver] of this.receivers.entries()) {
+      try {
+        await receiver.close();
+        console.log(`[Azure Service Bus] Closed receiver: ${name}`);
+      } catch (error) {
+        console.error(`[Azure Service Bus] Error closing receiver ${name}:`, error);
+      }
+    }
+
+    // Close client
+    try {
+      await this.client.close();
+      console.log('[Azure Service Bus] Client closed');
+    } catch (error) {
+      console.error('[Azure Service Bus] Error closing client:', error);
+    }
   }
 
-  /**
-   * Publish with timeout to prevent hanging
-   */
-  private async publishWithTimeout(
-    topic: Topic,
-    message: any,
-    timeoutMs: number
-  ): Promise<string> {
-    return Promise.race([
-      topic.publishMessage(message),
-      new Promise<string>((_, reject) =>
-        setTimeout(() => reject(new Error('Publish timeout')), timeoutMs)
-      ),
-    ]);
-  }
+  // Circuit Breaker Implementation
+  private isCircuitOpen(queueName: string): boolean {
+    const breaker = this.circuitBreakers.get(queueName);
+    if (!breaker) return false;
 
-  /**
-   * Circuit breaker check
-   */
-  private isCircuitBreakerClosed(topicName: string): boolean {
-    const breaker = this.circuitBreakers.get(topicName);
-
-    if (!breaker || breaker.state === 'CLOSED') {
+    if (breaker.state === 'OPEN') {
+      if (Date.now() - breaker.lastFailureTime > CIRCUIT_BREAKER_TIMEOUT) {
+        breaker.state = 'HALF_OPEN';
+        return false;
+      }
       return true;
     }
 
-    if (breaker.state === 'OPEN') {
-      // Check if timeout has elapsed
-      const now = Date.now();
-      if (now - breaker.lastFailureTime >= CIRCUIT_BREAKER_TIMEOUT) {
-        // Transition to half-open
-        breaker.state = 'HALF_OPEN';
-        console.log(`Circuit breaker for ${topicName} transitioning to HALF_OPEN`);
-        return true;
-      }
-      return false;
-    }
-
-    // HALF_OPEN state - allow one attempt
-    return true;
+    return false;
   }
 
-  /**
-   * Trip circuit breaker after repeated failures
-   */
-  private tripCircuitBreaker(topicName: string): void {
-    let breaker = this.circuitBreakers.get(topicName);
+  private recordSuccess(queueName: string): void {
+    const breaker = this.circuitBreakers.get(queueName) || {
+      failures: 0,
+      lastFailureTime: 0,
+      state: 'CLOSED' as const,
+    };
 
-    if (!breaker) {
-      breaker = { failures: 0, lastFailureTime: 0, state: 'CLOSED' };
-      this.circuitBreakers.set(topicName, breaker);
-    }
+    breaker.failures = 0;
+    breaker.state = 'CLOSED';
+    this.circuitBreakers.set(queueName, breaker);
+
+    const metrics = this.publishMetrics.get(queueName) || { success: 0, failure: 0 };
+    metrics.success++;
+    this.publishMetrics.set(queueName, metrics);
+  }
+
+  private recordFailure(queueName: string): void {
+    const breaker = this.circuitBreakers.get(queueName) || {
+      failures: 0,
+      lastFailureTime: 0,
+      state: 'CLOSED' as const,
+    };
 
     breaker.failures++;
     breaker.lastFailureTime = Date.now();
 
     if (breaker.failures >= CIRCUIT_BREAKER_THRESHOLD) {
       breaker.state = 'OPEN';
-      console.error(`Circuit breaker OPEN for topic ${topicName} after ${breaker.failures} failures`);
+      console.warn(`[Azure Service Bus] Circuit breaker OPENED for queue: ${queueName}`);
     }
-  }
 
-  /**
-   * Reset circuit breaker after successful publish
-   */
-  private resetCircuitBreaker(topicName: string): void {
-    const breaker = this.circuitBreakers.get(topicName);
-    if (breaker) {
-      breaker.failures = 0;
-      breaker.state = 'CLOSED';
-    }
-  }
+    this.circuitBreakers.set(queueName, breaker);
 
-  /**
-   * Record publish success metrics
-   */
-  private recordPublishSuccess(topicName: string): void {
-    const metrics = this.publishMetrics.get(topicName) || { success: 0, failure: 0 };
-    metrics.success++;
-    this.publishMetrics.set(topicName, metrics);
-  }
-
-  /**
-   * Record publish failure metrics
-   */
-  private recordPublishFailure(topicName: string): void {
-    const metrics = this.publishMetrics.get(topicName) || { success: 0, failure: 0 };
+    const metrics = this.publishMetrics.get(queueName) || { success: 0, failure: 0 };
     metrics.failure++;
-    this.publishMetrics.set(topicName, metrics);
+    this.publishMetrics.set(queueName, metrics);
   }
 
-  /**
-   * Get publish metrics for monitoring
-   */
-  getPublishMetrics(topicName?: string): Record<string, { success: number; failure: number }> {
-    if (topicName) {
-      return { [topicName]: this.publishMetrics.get(topicName) || { success: 0, failure: 0 } };
-    }
-    return Object.fromEntries(this.publishMetrics);
+  // Utility Methods
+  private generateMessageId(): string {
+    return `msg-${Date.now()}-${Math.random().toString(36).substring(7)}`;
   }
 
-  /**
-   * Sleep utility for retry delays
-   */
+  private timeout(ms: number): Promise<never> {
+    return new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Operation timeout')), ms)
+    );
+  }
+
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Subscribe to crowd data updates
-   */
-  subscribeToCrowdData(handler: (message: PubSubMessage) => void | Promise<void>): void {
-    this.subscribe(gcpConfig.pubsub.subscriptions.crowdData, handler);
-  }
-
-  /**
-   * Subscribe to prediction results
-   */
-  subscribeToPredictions(handler: (message: PubSubMessage) => void | Promise<void>): void {
-    this.subscribe(gcpConfig.pubsub.subscriptions.predictions, handler);
-  }
-
-  /**
-   * Subscribe to anomaly detections
-   */
-  subscribeToAnomalies(handler: (message: PubSubMessage) => void | Promise<void>): void {
-    this.subscribe(gcpConfig.pubsub.subscriptions.anomalies, handler);
-  }
-
-  /**
-   * Subscribe to risk engine outputs
-   */
-  subscribeToRiskEngine(handler: (message: PubSubMessage) => void | Promise<void>): void {
-    this.subscribe(gcpConfig.pubsub.subscriptions.riskEngine, handler);
-  }
-
-  /**
-   * Generic subscribe method with enhanced error handling
-   */
-  private subscribe(
-    subscriptionName: string,
-    handler: (message: PubSubMessage) => void | Promise<void>
-  ): void {
-    try {
-      const subscription = this.subscriptions.get(subscriptionName) ||
-        this.client.subscription(subscriptionName);
-
-      // Enhanced subscription configuration
-      subscription.on('message', async (message: Message) => {
-        const startTime = Date.now();
-        let retries = 0;
-        const maxRetries = 3;
-
-        while (retries <= maxRetries) {
-          try {
-            const data = JSON.parse(message.data.toString());
-            const pubsubMessage: PubSubMessage = {
-              id: message.id,
-              data,
-              timestamp: new Date(message.attributes.timestamp || message.publishTime),
-              attributes: message.attributes,
-            };
-
-            // Execute handler with timeout
-            await Promise.race([
-              handler(pubsubMessage),
-              new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Handler timeout')), 30000) // 30s timeout
-              ),
-            ]);
-
-            // Acknowledge successful processing
-            message.ack();
-
-            const processingTime = Date.now() - startTime;
-            console.log(`Processed message ${message.id} in ${processingTime}ms (${retries} retries)`);
-
-            break; // Success, exit retry loop
-          } catch (error: any) {
-            retries++;
-            console.error(
-              `Error processing message ${message.id} (attempt ${retries}/${maxRetries + 1}):`,
-              error.message
-            );
-
-            if (retries > maxRetries) {
-              // Max retries exceeded, nack and send to dead letter queue
-              console.error(
-                `Message ${message.id} failed after ${maxRetries + 1} attempts, sending to DLQ`
-              );
-              message.nack();
-
-              // Optionally publish to dead letter queue for manual inspection
-              try {
-                await this.publishToDeadLetterQueue(subscriptionName, {
-                  originalMessageId: message.id,
-                  data: message.data.toString(),
-                  attributes: message.attributes,
-                  error: error.message,
-                  attempts: retries,
-                  timestamp: new Date().toISOString(),
-                });
-              } catch (dlqError) {
-                console.error('Failed to publish to DLQ:', dlqError);
-              }
-
-              break;
-            } else {
-              // Wait before retry with exponential backoff
-              const backoff = Math.min(1000 * Math.pow(2, retries - 1), 5000);
-              await this.sleep(backoff);
-            }
-          }
-        }
-      });
-
-      // Handle subscription errors
-      subscription.on('error', (error) => {
-        console.error(`Subscription ${subscriptionName} error:`, error);
-
-        // Implement reconnection logic
-        setTimeout(() => {
-          console.log(`Attempting to reconnect subscription ${subscriptionName}...`);
-          this.subscribe(subscriptionName, handler);
-        }, 5000);
-      });
-
-      // Handle subscription close
-      subscription.on('close', () => {
-        console.log(`Subscription ${subscriptionName} closed`);
-      });
-
-      console.log(`Subscribed to ${subscriptionName}`);
-    } catch (error) {
-      console.error(`Error subscribing to ${subscriptionName}:`, error);
-
-      // Retry subscription after delay
-      setTimeout(() => {
-        console.log(`Retrying subscription to ${subscriptionName}...`);
-        this.subscribe(subscriptionName, handler);
-      }, 10000);
-    }
-  }
-
-  /**
-   * Publish failed messages to dead letter queue for inspection
-   */
-  private async publishToDeadLetterQueue(
-    subscriptionName: string,
-    failedMessage: any
-  ): Promise<void> {
-    const dlqTopicName = `${subscriptionName}-dlq`;
-
-    try {
-      // Ensure DLQ topic exists
-      const [dlqTopic] = await this.client.topic(dlqTopicName).get({ autoCreate: true });
-
-      const message = {
-        data: Buffer.from(JSON.stringify(failedMessage)),
-        attributes: {
-          source: subscriptionName,
-          failureTime: new Date().toISOString(),
-        },
-      };
-
-      await dlqTopic.publishMessage(message);
-      console.log(`Published failed message to DLQ: ${dlqTopicName}`);
-    } catch (error) {
-      console.error(`Error publishing to DLQ ${dlqTopicName}:`, error);
-      // Don't throw - DLQ is best-effort
-    }
-  }
-
-  /**
-   * Close all subscriptions
-   */
-  async close(): Promise<void> {
-    for (const [name, subscription] of this.subscriptions) {
-      try {
-        await subscription.close();
-        console.log(`Closed subscription: ${name}`);
-      } catch (error) {
-        console.error(`Error closing subscription ${name}:`, error);
-      }
-    }
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
-export const pubSubService = new PubSubService();
-export default pubSubService;
+// Export singleton instance
+export const azureServiceBusMessagingService = new AzureServiceBusMessagingService();
+
+// Backward compatibility alias
+export const pubSubService = azureServiceBusMessagingService;
+
+export default azureServiceBusMessagingService;

@@ -39,7 +39,7 @@ import { azureOpenAIService } from './azure-openai.service';
 import { agentBuilderService } from './agent-builder.service';
 import { riskEngineService } from './risk-engine.service';
 import { azureSynapseAnalyticsService } from './azure-synapse-analytics.service';
-import { cloudLoggingMonitoring } from './cloud-logging-monitoring.service';
+// Removed: cloudLoggingMonitoring - Now using Azure Monitor and Application Insights
 import { azureConfig } from '../config/azure.config';
 
 interface OrchestratorConfig {

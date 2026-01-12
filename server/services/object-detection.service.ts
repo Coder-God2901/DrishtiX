@@ -26,7 +26,7 @@
  */
 
 import cv from '@u4/opencv4nodejs';
-import { pubSubService } from './pubsub.service';
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
 import { yoloDetectionService } from './yolo-detection.service';
 import { io } from '../index';
 import * as tf from '@tensorflow/tfjs-node';

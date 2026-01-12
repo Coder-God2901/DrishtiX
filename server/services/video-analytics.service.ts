@@ -29,7 +29,7 @@ import cv from '@u4/opencv4nodejs';
 import { yoloVisionService } from './yolo-vision.service';
 import { anomalyDetectionService } from './anomaly-detection.service';
 import { pubSubService } from './pubsub.service';
-import { cloudRunETLService } from './cloudrun-etl.service';
+// Removed: cloudRunETLService - ETL now handled by Azure Stream Analytics
 import { io } from '../index';
 import { yoloDetectionService } from './yolo-detection.service';
 import { facialRecognitionService } from './facial-recognition.service';

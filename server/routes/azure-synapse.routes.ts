@@ -19,7 +19,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { bigQueryAnalyticsService } from '../services/bigquery-analytics.service';
+import { azureSynapseAnalyticsService } from '../services/azure-synapse-analytics.service';
 
 const router = Router();
 

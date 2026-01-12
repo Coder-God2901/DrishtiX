@@ -21,7 +21,7 @@
 
 import { prisma } from '../index';
 import { io } from '../index';
-import { pubSubService } from './pubsub.service';
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
 
 export interface RiskContext {
   eventId: string;
@@ -309,13 +309,16 @@ class RecommendationEngineService {
         data: {
           eventId: context.eventId,
           type: 'RECOMMENDATION',
-          severity: context.riskLevel,
-          title: `${context.riskLevel} Risk - ${recommendations.length} Actions Recommended`,
-          message: recommendations.map((r) => `${r.rank}. ${r.action.title}`).join('\n'),
+          priority: context.riskLevel === 'CRITICAL' ? 'CRITICAL' : context.riskLevel === 'HIGH' ? 'HIGH' : 'MEDIUM',
           status: 'ACTIVE',
-          actionRequired: true,
-          metadata: {
+          title: `${context.riskLevel} Risk - ${recommendations.length} Actions Recommended`,
+          summary: recommendations.map((r) => `${r.rank}. ${r.action.title}`).join('\n'),
+          confidence: recommendations[0]?.confidence || 0.5,
+          suggestedActions: recommendations.map((r) => r.action.title),
+          assignedTo: [],
+          description: JSON.stringify({
             zoneId: context.zoneId,
+            riskLevel: context.riskLevel,
             recommendations: recommendations.map((r) => ({
               actionId: r.action.id,
               rank: r.rank,
@@ -327,7 +330,7 @@ class RecommendationEngineService {
               anomalyScore: context.anomalyScore,
               trend: context.trend,
             },
-          },
+          }),
         },
       });
     } catch (error) {
@@ -364,16 +367,15 @@ class RecommendationEngineService {
       data: {
         userId: userId || 'system',
         action: `RECOMMENDATION_${decision}`,
-        resource: 'RECOMMENDATION',
-        resourceId: actionId,
-        details: feedbackData,
+        entityType: 'recommendation',
+        entityId: actionId,
+        metadata: feedbackData,
         ipAddress: '0.0.0.0',
       },
     });
 
-    // Publish to Pub/Sub for BigQuery ETL (future ML retraining)
-    // TODO: Uncomment when Pub/Sub topic is configured
-    // await pubSubService.publishFeedback('recommendation-feedback', feedbackData);
+    // Publish to Service Bus for analytics
+    await pubSubService.publishMessage('recommendation-feedback', feedbackData);
 
     console.log(`Recommendation feedback recorded: ${actionId} - ${decision}`);
   }
@@ -401,7 +403,7 @@ class RecommendationEngineService {
       where: filters,
       select: {
         action: true,
-        details: true,
+        metadata: true,
       },
     });
 
@@ -413,7 +415,7 @@ class RecommendationEngineService {
     const actionStats = new Map<string, { approved: number; rejected: number; totalImpact: number }>();
 
     logs.forEach((log: any) => {
-      const details = log.details as any;
+      const details = log.metadata as any;
       const actionId = details?.actionId || 'UNKNOWN';
 
       if (!actionStats.has(actionId)) {

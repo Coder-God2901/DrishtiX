@@ -14,7 +14,7 @@
  * License: See LICENSE file in the project root
  */
 import { auditLoggerService } from './audit-logger.service'
-import { pubSubService } from './pubsub.service'
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
 
 interface FailedLoginAttempt {
   count: number

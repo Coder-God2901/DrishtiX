@@ -28,10 +28,9 @@
  */
 
 import axios from 'axios';
-import { Client } from '@googlemaps/google-maps-services-js';
-import { gcpConfig } from '../config/gcp.config';
-import { pubSubService } from './pubsub.service';
-import { bigQueryAnalyticsService } from './bigquery-analytics.service';
+import { azureMapsService } from './azure-maps.service';
+import { azureSynapseAnalyticsService } from './azure-synapse-analytics.service';
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
 import { io } from '../index';
 
 // Waze API Configuration

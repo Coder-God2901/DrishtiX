@@ -510,29 +510,29 @@ class DataProcessingPipelineService {
         heatIndex: heatStress.value,
       };
     } catch (error) {
-      console.warn('Weather data unavailable, using defaults:', error);
-      // Fallback to mock data if weather service fails
-      return {
-        timestamp: new Date(),
-        temperature: 25,
-        humidity: 60,
-        windSpeed: 10,
-        condition: 'clear',
-        heatIndex: 0.4,
-      };
+      console.error('Weather data unavailable - weather service required for production:', error);
+      throw new Error('Weather service unavailable. Configure Azure Weather Service or OpenWeather API.');
     }
   }
 
   private async getSocialData(eventId: string): Promise<SocialData> {
-    // Mock - integrate with social monitoring
-    return {
-      platform: 'twitter',
-      timestamp: new Date(),
-      sentimentScore: 0.7,
-      volumeSpike: false,
-      keywords: [],
-      panicLevel: 0.1,
-    };
+    try {
+      // Integrate with social media monitoring service
+      const socialMonitoring = await import('./social-media-monitoring.service');
+      const data = await socialMonitoring.default.getEventSentiment(eventId);
+
+      return {
+        platform: 'aggregated',
+        timestamp: new Date(),
+        sentimentScore: data.overallSentiment,
+        volumeSpike: data.volumeSpike,
+        keywords: data.trendingKeywords,
+        panicLevel: data.panicScore,
+      };
+    } catch (error) {
+      console.error('Social media data unavailable:', error);
+      throw new Error('Social media monitoring service unavailable. Configure social-media-monitoring.service.ts');
+    }
   }
 
   private getHistoricalData(eventId: string, gridId: string): ProcessedFeatures[] {

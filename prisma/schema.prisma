@@ -1,4 +1,3 @@
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
@@ -12,31 +11,31 @@ datasource db {
 
 // Events
 model Event {
-  id              String   @id @default(uuid())
-  name            String
-  description     String?
-  venue           String
-  location        Json
-  startTime       DateTime
-  endTime         DateTime
+  id                String      @id @default(uuid())
+  name              String
+  description       String?
+  venue             String
+  location          Json
+  startTime         DateTime
+  endTime           DateTime
   expectedAttendees Int
-  actualAttendees Int?
-  status          EventStatus @default(UPCOMING)
-  organizerId     String
-  
+  actualAttendees   Int?
+  status            EventStatus @default(UPCOMING)
+  organizerId       String
+
   // Relations
-  predictions     Prediction[]
-  incidents       Incident[]
-  alerts          Alert[]
-  crowdDensity    CrowdDensity[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  @@index([status, startTime])
-  @@index([organizerId])
+  predictions  Prediction[]
+  incidents    Incident[]
+  alerts       Alert[]
+  crowdDensity CrowdDensity[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   eventConfigs EventConfig[]
   venueLayouts VenueLayout[]
+
+  @@index([status, startTime])
+  @@index([organizerId])
 }
 
 enum EventStatus {
@@ -48,58 +47,58 @@ enum EventStatus {
 
 // Predictions
 model Prediction {
-  id              String   @id @default(uuid())
-  eventId         String
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
+  id      String @id @default(uuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
   timestamp       DateTime
   forecastTime    DateTime
   forecastHorizon Int
-  
+
   // Prediction metrics
-  predictedCount  Int
+  predictedCount   Int
   predictedDensity Float
-  densityLevel    DensityLevel
-  confidence      Float
-  
+  densityLevel     DensityLevel
+  confidence       Float
+
   // Grid-based predictions (ConvLSTM output)
   gridPredictions Json[]
-  
+
   // Hotspots
-  hotspots        Json[]
-  
+  hotspots Json[]
+
   // Risk assessment
-  riskLevel       RiskLevel
-  riskFactors     String[]
-  
+  riskLevel   RiskLevel
+  riskFactors String[]
+
   // Multi-signal inputs (what data was used)
-  signals         Json
-  
+  signals Json
+
   // Anomaly detection results
-  anomalies       Json[]
+  anomalies        Json[]
   violenceDetected Boolean @default(false)
-  fireDetected    Boolean @default(false)
-  panicDetected   Boolean @default(false)
-  surgDetected    Boolean @default(false)
-  
+  fireDetected     Boolean @default(false)
+  panicDetected    Boolean @default(false)
+  surgDetected     Boolean @default(false)
+
   // Panic metrics
-  panicLevel      Float @default(0)
+  panicLevel      Float   @default(0)
   socialSentiment String? // POSITIVE, NEUTRAL, NEGATIVE, PANIC
-  
+
   // Weather impact
   weatherConditions Json?
-  heatStressIndex Float?
-  
+  heatStressIndex   Float?
+
   // Alerts generated
-  alerts          Json[]
-  
+  alerts Json[]
+
   // Model metadata
-  modelVersion    String
-  modelType       String @default("ConvLSTM")
-  accuracy        Float?
-  
-  createdAt       DateTime @default(now())
-  
+  modelVersion String
+  modelType    String @default("ConvLSTM")
+  accuracy     Float?
+
+  createdAt DateTime @default(now())
+
   @@index([eventId, forecastTime])
   @@index([densityLevel, riskLevel])
   @@index([violenceDetected, fireDetected, panicDetected])
@@ -121,37 +120,37 @@ enum RiskLevel {
 
 // Incidents
 model Incident {
-  id              String   @id @default(uuid())
-  eventId         String
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  type            IncidentType
-  severity        Severity
-  status          IncidentStatus @default(ACTIVE)
-  
-  location        Json
-  zone            String?
-  description     String
-  
+  id      String @id @default(uuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  type     IncidentType
+  severity Severity
+  status   IncidentStatus @default(ACTIVE)
+
+  location    Json
+  zone        String?
+  description String
+
   // Detection metadata
-  detectedBy      String
-  confidence      Float
-  
+  detectedBy String
+  confidence Float
+
   // Response tracking
   assignedResponders String[]
-  dispatchedAt    DateTime?
-  respondedAt     DateTime?
-  resolvedAt      DateTime?
-  
-  aiSummary       String?
-  
-  escalated       Boolean @default(false)
-  escalatedTo     String?
+  dispatchedAt       DateTime?
+  respondedAt        DateTime?
+  resolvedAt         DateTime?
+
+  aiSummary String?
+
+  escalated        Boolean @default(false)
+  escalatedTo      String?
   escalationReason String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, status])
   @@index([severity, status])
   @@index([type])
@@ -185,28 +184,28 @@ enum IncidentStatus {
 
 // Responders
 model Responder {
-  id              String   @id @default(uuid())
-  name            String
-  type            ResponderType
-  
+  id   String        @id @default(uuid())
+  name String
+  type ResponderType
+
   // Current state
-  status          ResponderStatus @default(AVAILABLE)
-  location        Json?
-  lastUpdate      DateTime @default(now())
-  
-  skills          String[]
-  equipment       String[]
-  
+  status     ResponderStatus @default(AVAILABLE)
+  location   Json?
+  lastUpdate DateTime        @default(now())
+
+  skills    String[]
+  equipment String[]
+
   currentIncidentId String?
-  assignedAt      DateTime?
-  eta             Int?
-  
-  phone           String?
-  email           String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  assignedAt        DateTime?
+  eta               Int?
+
+  phone String?
+  email String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([status, type])
   @@index([currentIncidentId])
 }
@@ -231,32 +230,32 @@ enum ResponderStatus {
 
 // Alerts
 model Alert {
-  id              String   @id @default(uuid())
-  eventId         String
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  type            String
-  priority        AlertPriority
-  status          AlertStatus @default(ACTIVE)
-  
-  title           String
-  summary         String
-  description     String?
-  
-  zone            String?
-  location        Json?
-  
-  confidence      Float
-  
+  id      String @id @default(uuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  type     String
+  priority AlertPriority
+  status   AlertStatus   @default(ACTIVE)
+
+  title       String
+  summary     String
+  description String?
+
+  zone     String?
+  location Json?
+
+  confidence Float
+
   suggestedActions String[]
-  assignedTo      String[]
-  
+  assignedTo       String[]
+
   // Timestamps
-  createdAt       DateTime @default(now())
-  acknowledgedAt  DateTime?
-  resolvedAt      DateTime?
-  dismissedAt     DateTime?
-  
+  createdAt      DateTime  @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
+  dismissedAt    DateTime?
+
   @@index([eventId, status])
   @@index([priority, status])
 }
@@ -278,52 +277,52 @@ enum AlertStatus {
 
 // Crowd Density (Time-series data)
 model CrowdDensity {
-  id              String   @id @default(uuid())
-  eventId         String
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  timestamp       DateTime
-  
-  totalCount      Int
-  averageDensity  Float
-  
-  zones           Json[]
-  
-  cameraData      Json[]
-  
-  source          String
-  
-  createdAt       DateTime @default(now())
-  
+  id      String @id @default(uuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  timestamp DateTime
+
+  totalCount     Int
+  averageDensity Float
+
+  zones Json[]
+
+  cameraData Json[]
+
+  source String
+
+  createdAt DateTime @default(now())
+
   @@index([eventId, timestamp])
   @@index([timestamp])
 }
 
 // Traffic Incidents
 model TrafficIncident {
-  id              String   @id @default(uuid())
-  
-  source          TrafficSource
-  sourceId        String // Original ID from source API
-  
-  type            TrafficIncidentType
-  severity        Severity
-  
-  location        Json // { lat: number, lon: number }
-  description     String
-  
+  id String @id @default(uuid())
+
+  source   TrafficSource
+  sourceId String // Original ID from source API
+
+  type     TrafficIncidentType
+  severity Severity
+
+  location    Json // { lat: number, lon: number }
+  description String
+
   // Time range
-  startTime       DateTime
-  endTime         DateTime?
-  
-  affectedRoads   String[]
-  confidence      Float
-  
-  metadata        Json?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  startTime DateTime
+  endTime   DateTime?
+
+  affectedRoads String[]
+  confidence    Float
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([source, sourceId])
   @@index([type, severity])
   @@index([startTime, endTime])
@@ -348,25 +347,25 @@ enum TrafficIncidentType {
 
 // Social Signals (Aggregated)
 model SocialSignal {
-  id              String   @id @default(uuid())
-  eventId         String?
-  
-  platform        String // 'twitter', 'facebook', 'instagram'
-  timestamp       DateTime
-  
-  postCount       Int
-  sentiment       Sentiment
-  panicLevel      Float
-  
-  keywords        String[]
-  hashtags        String[]
-  
-  location        Json?
-  
-  samplePosts     Json[]
-  
-  createdAt       DateTime @default(now())
-  
+  id      String  @id @default(uuid())
+  eventId String?
+
+  platform  String // 'twitter', 'facebook', 'instagram'
+  timestamp DateTime
+
+  postCount  Int
+  sentiment  Sentiment
+  panicLevel Float
+
+  keywords String[]
+  hashtags String[]
+
+  location Json?
+
+  samplePosts Json[]
+
+  createdAt DateTime @default(now())
+
   @@index([eventId, timestamp])
   @@index([sentiment, panicLevel])
 }
@@ -380,25 +379,25 @@ enum Sentiment {
 
 // Video Analytics Data
 model VideoFrame {
-  id              String   @id @default(uuid())
-  cameraId        String
-  eventId         String?
-  
-  timestamp       DateTime
-  frameUrl        String
-  
-  peopleCount     Int
-  densityLevel    DensityLevel
-  
-  anomalies       Json[]
-  
-  heatmap         Json?
-  
-  isFlagged       Boolean @default(false)
-  flagReason      String?
-  
-  createdAt       DateTime @default(now())
-  
+  id       String  @id @default(uuid())
+  cameraId String
+  eventId  String?
+
+  timestamp DateTime
+  frameUrl  String
+
+  peopleCount  Int
+  densityLevel DensityLevel
+
+  anomalies Json[]
+
+  heatmap Json?
+
+  isFlagged  Boolean @default(false)
+  flagReason String?
+
+  createdAt DateTime @default(now())
+
   @@index([cameraId, timestamp])
   @@index([eventId, timestamp])
   @@index([isFlagged])
@@ -406,27 +405,27 @@ model VideoFrame {
 
 // AI Summaries
 model AISummary {
-  id              String   @id @default(uuid())
-  eventId         String?
-  incidentId      String?
-  
-  type            SummaryType
-  
+  id         String  @id @default(uuid())
+  eventId    String?
+  incidentId String?
+
+  type SummaryType
+
   briefing        String
   keyPoints       String[]
   recommendations String[]
   timeline        String[]
-  
-  riskLevel       String
-  riskFactors     String[]
-  
-  incidents       Json[]
-  alerts          Json[]
-  cameraFeeds     Json[]
-  socialFeeds     Json[]
-  
-  generatedAt     DateTime @default(now())
-  
+
+  riskLevel   String
+  riskFactors String[]
+
+  incidents   Json[]
+  alerts      Json[]
+  cameraFeeds Json[]
+  socialFeeds Json[]
+
+  generatedAt DateTime @default(now())
+
   @@index([eventId, type, generatedAt])
 }
 
@@ -439,45 +438,45 @@ enum SummaryType {
 
 // Attendee Reports (User-submitted anomaly reports)
 model AttendeeReport {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  reporterId      String
-  reporterName    String?
+  id      String @id @default(uuid())
+  eventId String
+
+  reporterId       String
+  reporterName     String?
   reporterLocation Json?
-  
-  type            ReportType
-  severity        Severity
-  description     String
-  location        Json
-  
-  imageUrls       String[]
-  videoUrls       String[]
-  
-  status          ReportStatus @default(PENDING)
+
+  type        ReportType
+  severity    Severity
+  description String
+  location    Json
+
+  imageUrls String[]
+  videoUrls String[]
+
+  status          ReportStatus       @default(PENDING)
   validations     ReportValidation[]
-  validationCount Int @default(0)
-  validatedCount  Int @default(0)
-  rejectedCount   Int @default(0)
-  
+  validationCount Int                @default(0)
+  validatedCount  Int                @default(0)
+  rejectedCount   Int                @default(0)
+
   nearbyAttendeesCount Int?
   validationThreshold  Float @default(0.3)
-  
-  similarReportsCount Int @default(0)
-  isAutoConfirmed     Boolean @default(false)
+
+  similarReportsCount Int       @default(0)
+  isAutoConfirmed     Boolean   @default(false)
   confirmedAt         DateTime?
-  
-  assignedStaffId     String?
-  reviewedBy          String?
-  reviewedAt          DateTime?
-  actionTaken         String?
-  
+
+  assignedStaffId String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  actionTaken     String?
+
   incidentId          String?
   convertedToIncident Boolean @default(false)
-  
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, status])
   @@index([type, severity])
   @@index([reporterId])
@@ -508,26 +507,26 @@ enum ReportStatus {
 
 // Validation by staff or nearby attendees
 model ReportValidation {
-  id              String   @id @default(uuid())
-  reportId        String
-  report          AttendeeReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  
-  validatorId     String
-  validatorType   ValidatorType
-  validatorName   String?
-  
-  decision        ValidationDecision
-  confidence      Float?
-  notes           String?
-  
-  validatorLocation Json?
+  id       String         @id @default(uuid())
+  reportId String
+  report   AttendeeReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  validatorId   String
+  validatorType ValidatorType
+  validatorName String?
+
+  decision   ValidationDecision
+  confidence Float?
+  notes      String?
+
+  validatorLocation  Json?
   distanceFromReport Float?
-  
-  createdAt       DateTime @default(now())
-  
+
+  createdAt DateTime @default(now())
+
+  @@unique([reportId, validatorId])
   @@index([reportId])
   @@index([validatorId])
-  @@unique([reportId, validatorId])
 }
 
 enum ValidatorType {
@@ -546,45 +545,45 @@ enum ValidationDecision {
 
 // Enhanced user roles for Firebase Auth
 model User {
-  id              String   @id @default(uuid())
-  firebaseUid     String?  @unique
-  email           String   @unique
-  password        String?  // Hashed password for JWT auth
-  name            String
-  phone           String?
-  avatar          String?  // Profile picture URL
-  
-  role            UserRole
-  roles           String[] @default(["ATTENDEE"]) // Multiple roles support
-  
+  id          String  @id @default(uuid())
+  firebaseUid String? @unique
+  email       String  @unique
+  password    String? // Hashed password for JWT auth
+  name        String
+  phone       String?
+  avatar      String? // Profile picture URL
+
+  role  UserRole
+  roles String[] @default(["ATTENDEE"]) // Multiple roles support
+
   // Permissions
-  permissions     String[]
-  
+  permissions String[]
+
   // OAuth Support
-  authProvider    String?  // 'google', 'facebook', 'github', 'microsoft', null for email/password
-  authProviderId  String?  // Provider-specific user ID
-  emailVerified   Boolean @default(false)
-  
+  authProvider   String? // 'google', 'facebook', 'github', 'microsoft', null for email/password
+  authProviderId String? // Provider-specific user ID
+  emailVerified  Boolean @default(false)
+
   // MFA Support
-  mfaEnabled      Boolean @default(false)
-  mfaMethod       String?  // 'totp', 'sms'
-  mfaSecret       String?
-  backupCodes     String[]
-  
+  mfaEnabled  Boolean  @default(false)
+  mfaMethod   String? // 'totp', 'sms'
+  mfaSecret   String?
+  backupCodes String[]
+
   // Firebase Cloud Messaging
-  fcmToken        String?  // Device token for push notifications
-  fcmTopics       String[] @default([]) // Subscribed topics for role-based notifications
-  
-  organizationId  String?
-  eventAccess     String[]
-  
-  isActive        Boolean @default(true)
-  lastLogin       DateTime?
-  lastIpAddress   String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  fcmToken  String? // Device token for push notifications
+  fcmTopics String[] @default([]) // Subscribed topics for role-based notifications
+
+  organizationId String?
+  eventAccess    String[]
+
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+  lastIpAddress String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([role, isActive])
   @@index([organizationId])
   @@index([authProvider, authProviderId])
@@ -604,27 +603,27 @@ enum UserRole {
 
 // Audit Log
 model AuditLog {
-  id              String   @id @default(uuid())
-  
-  action          String
-  entityType      String
-  entityId        String
-  
-  userId          String?
-  userName        String?
-  userRole        String?
-  
-  changes         Json?
-  metadata        Json?
-  
-  ipAddress       String?
-  userAgent       String?
-  
+  id String @id @default(uuid())
+
+  action     String
+  entityType String
+  entityId   String
+
+  userId   String?
+  userName String?
+  userRole String?
+
+  changes  Json?
+  metadata Json?
+
+  ipAddress String?
+  userAgent String?
+
   isSuspicious    Boolean @default(false)
   suspicionReason String?
-  
-  createdAt       DateTime @default(now())
-  
+
+  createdAt DateTime @default(now())
+
   @@index([entityType, entityId])
   @@index([userId, createdAt])
   @@index([isSuspicious])
@@ -632,46 +631,46 @@ model AuditLog {
 }
 
 model EventConfig {
-  id          String   @id @default(uuid())
-  eventId     String   @unique
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id      String @id @default(uuid())
+  eventId String @unique
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   dynamicFields Json
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model VenueLayout {
-  id          String   @id @default(uuid())
-  eventId     String   @unique
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id      String @id @default(uuid())
+  eventId String @unique
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  boundary    Json
-  zones       Json[]
-  gates       Json[]
-  routes      Json[]
-  navGraph    Json?
-  metadata    Json?
+  boundary Json
+  zones    Json[]
+  gates    Json[]
+  routes   Json[]
+  navGraph Json?
+  metadata Json?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Event Registration for Attendees
 model EventRegistration {
-  id              String   @id @default(uuid())
-  eventId         String
-  attendeeId      String
-  
-  registeredAt    DateTime @default(now())
-  checkedInAt     DateTime?
-  checkedOutAt    DateTime?
-  
-  ticketVerified  Boolean @default(false)
+  id         String @id @default(uuid())
+  eventId    String
+  attendeeId String
+
+  registeredAt DateTime  @default(now())
+  checkedInAt  DateTime?
+  checkedOutAt DateTime?
+
+  ticketVerified    Boolean @default(false)
   feedbackSubmitted Boolean @default(false)
-  
-  joinMethod      JoinMethod @default(BROWSE)
-  
+
+  joinMethod JoinMethod @default(BROWSE)
+
   @@unique([eventId, attendeeId])
   @@index([eventId])
   @@index([attendeeId])
@@ -686,27 +685,27 @@ enum JoinMethod {
 
 // Event Feedback (USP 6: Self-learning system)
 model EventFeedback {
-  id              String   @id @default(uuid())
-  eventId         String
-  attendeeId      String
-  
-  overallRating   Int       // 1-5 stars
-  safetyRating    Int       // 1-5 stars
-  navigationRating Int      // 1-5 stars
-  facilitiesRating Int      // 1-5 stars
-  managementRating Int      // 1-5 stars
-  
+  id         String @id @default(uuid())
+  eventId    String
+  attendeeId String
+
+  overallRating    Int // 1-5 stars
+  safetyRating     Int // 1-5 stars
+  navigationRating Int // 1-5 stars
+  facilitiesRating Int // 1-5 stars
+  managementRating Int // 1-5 stars
+
   wouldAttendAgain Boolean
-  wouldRecommend  Boolean
-  
-  crowdManagementRating Int?  // For USP 6 learning
-  alertUsefulnessRating Int?  // For USP 6 learning
-  
-  comments        String?
-  suggestions     String?
-  
-  createdAt       DateTime @default(now())
-  
+  wouldRecommend   Boolean
+
+  crowdManagementRating Int? // For USP 6 learning
+  alertUsefulnessRating Int? // For USP 6 learning
+
+  comments    String?
+  suggestions String?
+
+  createdAt DateTime @default(now())
+
   @@unique([eventId, attendeeId])
   @@index([eventId])
   @@index([createdAt])
@@ -714,38 +713,38 @@ model EventFeedback {
 
 // SOS Emergency Requests
 model SOSRequest {
-  id              String   @id @default(uuid())
-  eventId         String
-  attendeeId      String
-  attendeeName    String?
-  
-  issueType       SOSIssueType
-  description     String
-  location        Json
-  
-  status          SOSStatus @default(PENDING)
-  priority        AlertPriority @default(HIGH)
-  
+  id           String  @id @default(uuid())
+  eventId      String
+  attendeeId   String
+  attendeeName String?
+
+  issueType   SOSIssueType
+  description String
+  location    Json
+
+  status   SOSStatus     @default(PENDING)
+  priority AlertPriority @default(HIGH)
+
   assignedResponders String[]
-  dispatchedAt    DateTime?
-  acknowledgedAt  DateTime?
-  arrivedAt       DateTime?
-  resolvedAt      DateTime?
-  
-  eta             Int?
-  
+  dispatchedAt       DateTime?
+  acknowledgedAt     DateTime?
+  arrivedAt          DateTime?
+  resolvedAt         DateTime?
+
+  eta Int?
+
   // Media attachments
-  imageUrls       String[]
-  videoUrls       String[]
-  audioNote       String?
-  
+  imageUrls String[]
+  videoUrls String[]
+  audioNote String?
+
   // Response tracking
-  responderNotes  String?
+  responderNotes    String?
   resolutionSummary String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, status])
   @@index([attendeeId])
   @@index([priority, status])
@@ -773,25 +772,25 @@ enum SOSStatus {
 
 // ML Mode Configuration (USP 5: Multi-model switching)
 model MLModeConfig {
-  id              String   @id @default(uuid())
-  eventId         String   @unique
-  
-  mode            MLMode
-  confidence      Float @default(0.85)
-  
+  id      String @id @default(uuid())
+  eventId String @unique
+
+  mode       MLMode
+  confidence Float  @default(0.85)
+
   // Mode-specific parameters
-  sportsConfig    Json?
-  concertConfig   Json?
-  rallyConfig     Json?
-  genericConfig   Json?
-  
+  sportsConfig  Json?
+  concertConfig Json?
+  rallyConfig   Json?
+  genericConfig Json?
+
   // USP 6: Learning parameters
-  learningRate    Float @default(0.001)
+  learningRate      Float   @default(0.001)
   adaptiveThreshold Boolean @default(true)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([mode])
 }
 
@@ -804,23 +803,23 @@ enum MLMode {
 
 // Model Performance Tracking (USP 6: Self-learning)
 model ModelPerformance {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  mode            MLMode
+  id      String @id @default(uuid())
+  eventId String
+
+  mode               MLMode
   predictionAccuracy Float
-  falsePositiveRate Float
-  falseNegativeRate Float
-  
-  alertResponseTime Float  // Average time to respond to alerts
-  crowdFlowAccuracy Float  // How accurate were the crowd flow predictions
-  
+  falsePositiveRate  Float
+  falseNegativeRate  Float
+
+  alertResponseTime Float // Average time to respond to alerts
+  crowdFlowAccuracy Float // How accurate were the crowd flow predictions
+
   // Lessons learned for next event
-  insights        Json
-  improvements    String[]
-  
-  createdAt       DateTime @default(now())
-  
+  insights     Json
+  improvements String[]
+
+  createdAt DateTime @default(now())
+
   @@index([eventId])
   @@index([mode])
   @@index([predictionAccuracy])
@@ -832,56 +831,56 @@ model ModelPerformance {
 
 // Tickets System
 model Ticket {
-  id              String   @id @default(uuid())
-  eventId         String
-  eventName       String
-  eventDate       String
-  eventTime       String
-  venue           String
-  
-  userId          String   // Purchaser
-  userName        String
-  userEmail       String
-  userPhone       String?
-  
-  quantity        Int
-  ticketType      String   // 'General', 'VIP', 'Student', etc.
-  totalPaid       Float
-  currency        String   @default("INR")
-  
-  purchaseDate    DateTime @default(now())
-  
+  id        String @id @default(uuid())
+  eventId   String
+  eventName String
+  eventDate String
+  eventTime String
+  venue     String
+
+  userId    String // Purchaser
+  userName  String
+  userEmail String
+  userPhone String?
+
+  quantity   Int
+  ticketType String // 'General', 'VIP', 'Student', etc.
+  totalPaid  Float
+  currency   String @default("INR")
+
+  purchaseDate DateTime @default(now())
+
   // Entry details
-  entryGate       String?
-  qrCode          String   @unique
-  status          TicketStatus @default(ACTIVE)
-  
+  entryGate String?
+  qrCode    String       @unique
+  status    TicketStatus @default(ACTIVE)
+
   // Seat information (if applicable)
-  seatSection     String?
-  seatNumbers     String[]
-  
+  seatSection String?
+  seatNumbers String[]
+
   // Attendee information
-  attendeeNames   String[]
+  attendeeNames       String[]
   specialRequirements String[]
-  
+
   // Usage tracking
-  usedAt          DateTime?
-  validatedBy     String?
-  
+  usedAt      DateTime?
+  validatedBy String?
+
   // Cancellation/Refund
-  cancelledAt     DateTime?
+  cancelledAt        DateTime?
   cancellationReason String?
-  refundAmount    Float?
-  refundStatus    RefundStatus?
-  refundedAt      DateTime?
-  
+  refundAmount       Float?
+  refundStatus       RefundStatus?
+  refundedAt         DateTime?
+
   // Transfer
-  transferredTo   String?
-  transferredAt   DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  transferredTo String?
+  transferredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([userId])
   @@index([eventId, status])
   @@index([qrCode])
@@ -907,24 +906,24 @@ enum RefundStatus {
 
 // Payment Transactions
 model PaymentTransaction {
-  id              String   @id @default(uuid())
-  ticketId        String?
-  userId          String
-  
-  amount          Float
-  currency        String   @default("INR")
-  
-  paymentMethod   String   // 'card', 'upi', 'netbanking', 'wallet'
-  paymentGateway  String   // 'stripe', 'razorpay', 'paytm'
-  
-  transactionId   String   @unique
-  status          PaymentStatus
-  
-  metadata        Json?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  id       String  @id @default(uuid())
+  ticketId String?
+  userId   String
+
+  amount   Float
+  currency String @default("INR")
+
+  paymentMethod  String // 'card', 'upi', 'netbanking', 'wallet'
+  paymentGateway String // 'stripe', 'razorpay', 'paytm'
+
+  transactionId String        @unique
+  status        PaymentStatus
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([userId])
   @@index([ticketId])
   @@index([status])
@@ -940,51 +939,51 @@ enum PaymentStatus {
 
 // Volunteers Management
 model Volunteer {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  name            String
-  email           String
-  phone           String
-  
-  role            String   // 'medical', 'security', 'guide', 'logistics', etc.
-  zone            String
-  
-  status          VolunteerStatus @default(ACTIVE)
-  
+  id      String @id @default(uuid())
+  eventId String
+
+  name  String
+  email String
+  phone String
+
+  role String // 'medical', 'security', 'guide', 'logistics', etc.
+  zone String
+
+  status VolunteerStatus @default(ACTIVE)
+
   // Task tracking
-  assignedTasks   Int      @default(0)
-  completedTasks  Int      @default(0)
-  currentTask     String?
-  
+  assignedTasks  Int     @default(0)
+  completedTasks Int     @default(0)
+  currentTask    String?
+
   // Location tracking
-  lastLocation    String?
-  locationCoords  Json?
+  lastLocation       String?
+  locationCoords     Json?
   lastLocationUpdate DateTime?
-  
+
   // Contact
-  contactNumber   String?
+  contactNumber    String?
   emergencyContact String?
-  
+
   // Skills and ratings
-  skills          String[]
-  rating          Float?
-  totalRatings    Int      @default(0)
-  
+  skills       String[]
+  rating       Float?
+  totalRatings Int      @default(0)
+
   // Availability
-  shiftStart      DateTime?
-  shiftEnd        DateTime?
-  isAvailable     Boolean  @default(true)
-  
+  shiftStart  DateTime?
+  shiftEnd    DateTime?
+  isAvailable Boolean   @default(true)
+
   // Check-in/out
-  checkInTime     DateTime?
-  checkOutTime    DateTime?
-  totalHours      Float    @default(0)
-  
-  joinedAt        DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  totalHours   Float     @default(0)
+
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, status])
   @@index([zone])
   @@index([email])
@@ -1000,28 +999,28 @@ enum VolunteerStatus {
 
 // Volunteer Tasks
 model VolunteerTask {
-  id              String   @id @default(uuid())
-  volunteerId     String
-  eventId         String
-  
-  title           String
-  description     String?
-  zone            String
-  
-  priority        TaskPriority @default(MEDIUM)
-  status          TaskStatus @default(ASSIGNED)
-  
-  assignedAt      DateTime @default(now())
-  dueAt           DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  
-  notes           String?
-  attachments     String[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  id          String @id @default(uuid())
+  volunteerId String
+  eventId     String
+
+  title       String
+  description String?
+  zone        String
+
+  priority TaskPriority @default(MEDIUM)
+  status   TaskStatus   @default(ASSIGNED)
+
+  assignedAt  DateTime  @default(now())
+  dueAt       DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  notes       String?
+  attachments String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([volunteerId])
   @@index([eventId, status])
 }
@@ -1042,42 +1041,42 @@ enum TaskStatus {
 
 // Notifications System
 model Notification {
-  id              String   @id @default(uuid())
-  
-  userId          String?  // Null for broadcast notifications
-  eventId         String?
-  
-  type            NotificationType
-  priority        NotificationPriority @default(MEDIUM)
-  
-  title           String
-  message         String
-  
+  id String @id @default(uuid())
+
+  userId  String? // Null for broadcast notifications
+  eventId String?
+
+  type     NotificationType
+  priority NotificationPriority @default(MEDIUM)
+
+  title   String
+  message String
+
   // Channels
-  channels        String[] // ['push', 'email', 'sms']
-  
+  channels String[] // ['push', 'email', 'sms']
+
   // Status
-  isRead          Boolean  @default(false)
-  readAt          DateTime?
-  
-  isSent          Boolean  @default(false)
-  sentAt          DateTime?
-  
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  isSent Boolean   @default(false)
+  sentAt DateTime?
+
   // Actions
-  actionUrl       String?
-  actionLabel     String?
-  
+  actionUrl   String?
+  actionLabel String?
+
   // Metadata
-  data            Json?
-  
+  data Json?
+
   // Delivery tracking
-  pushDelivered   Boolean  @default(false)
-  emailDelivered  Boolean  @default(false)
-  smsDelivered    Boolean  @default(false)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  pushDelivered  Boolean @default(false)
+  emailDelivered Boolean @default(false)
+  smsDelivered   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([userId, isRead])
   @@index([eventId])
   @@index([type, priority])
@@ -1105,34 +1104,34 @@ enum NotificationPriority {
 
 // Points of Interest (POIs)
 model PointOfInterest {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  name            String
-  type            POIType
-  
-  location        Json     // { lat, lng }
-  coordinates     Json?    // { x, y } for indoor maps
-  
-  zone            String?
-  floor           Int?
-  
-  description     String?
-  amenities       String[]
-  
-  isAccessible    Boolean  @default(false)
-  isEmergencyExit Boolean  @default(false)
-  
-  capacity        Int?
+  id      String @id @default(uuid())
+  eventId String
+
+  name String
+  type POIType
+
+  location    Json // { lat, lng }
+  coordinates Json? // { x, y } for indoor maps
+
+  zone  String?
+  floor Int?
+
+  description String?
+  amenities   String[]
+
+  isAccessible    Boolean @default(false)
+  isEmergencyExit Boolean @default(false)
+
+  capacity         Int?
   currentOccupancy Int?
-  
-  operatingHours  Json?
-  
-  isActive        Boolean  @default(true)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+
+  operatingHours Json?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, type])
   @@index([isEmergencyExit])
 }
@@ -1157,37 +1156,37 @@ enum POIType {
 
 // Navigation Routes
 model NavigationRoute {
-  id              String   @id @default(uuid())
-  eventId         String
-  userId          String?
-  
-  startLocation   Json
-  endLocation     Json
-  
-  routeType       RouteType
-  
+  id      String  @id @default(uuid())
+  eventId String
+  userId  String?
+
+  startLocation Json
+  endLocation   Json
+
+  routeType RouteType
+
   // Route details
-  distance        Float    // in meters
-  estimatedTime   Int      // in seconds
-  
-  waypoints       Json[]
-  instructions    String[]
-  
+  distance      Float // in meters
+  estimatedTime Int // in seconds
+
+  waypoints    Json[]
+  instructions String[]
+
   // Preferences
-  isAccessible    Boolean  @default(false)
-  avoidCrowds     Boolean  @default(false)
-  
+  isAccessible Boolean @default(false)
+  avoidCrowds  Boolean @default(false)
+
   // Crowd-aware routing
   crowdLevel      String?
   alternateRoutes Json[]
-  
+
   // Usage
-  isActive        Boolean  @default(true)
-  completedAt     DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  isActive    Boolean   @default(true)
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, userId])
   @@index([routeType])
 }
@@ -1203,46 +1202,46 @@ enum RouteType {
 
 // Help Requests (Find Person, Medical Assistance)
 model HelpRequest {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  requesterId     String
-  requesterName   String
-  requesterPhone  String?
+  id      String @id @default(uuid())
+  eventId String
+
+  requesterId       String
+  requesterName     String
+  requesterPhone    String?
   requesterLocation Json?
-  
-  type            HelpRequestType
-  priority        HelpPriority @default(MEDIUM)
-  status          HelpRequestStatus @default(PENDING)
-  
-  description     String
-  
+
+  type     HelpRequestType
+  priority HelpPriority      @default(MEDIUM)
+  status   HelpRequestStatus @default(PENDING)
+
+  description String
+
   // For Find Person
-  missingPersonName String?
+  missingPersonName        String?
   missingPersonDescription String?
-  missingPersonPhoto String?
-  lastSeenLocation String?
-  lastSeenTime    DateTime?
-  
+  missingPersonPhoto       String?
+  lastSeenLocation         String?
+  lastSeenTime             DateTime?
+
   // For Medical
-  medicalIssue    String?
-  severity        String?
-  
+  medicalIssue String?
+  severity     String?
+
   // Assignment
-  assignedTo      String?
+  assignedTo        String?
   assignedVolunteer String?
-  assignedAt      DateTime?
-  
+  assignedAt        DateTime?
+
   // Resolution
   resolvedAt      DateTime?
   resolutionNotes String?
-  
+
   // Communication
-  updates         Json[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  updates Json[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, status])
   @@index([type, priority])
   @@index([requesterId])
@@ -1274,98 +1273,98 @@ enum HelpRequestStatus {
 
 // Incident Updates (Thread-based updates for incidents)
 model IncidentUpdate {
-  id              String   @id @default(uuid())
-  incidentId      String
-  
-  message         String
-  updatedBy       String
-  updatedByName   String?
-  
-  attachments     String[]
-  
-  timestamp       DateTime @default(now())
-  
+  id         String @id @default(uuid())
+  incidentId String
+
+  message       String
+  updatedBy     String
+  updatedByName String?
+
+  attachments String[]
+
+  timestamp DateTime @default(now())
+
   @@index([incidentId, timestamp])
 }
 
 // Live Metrics (Time-series for dashboard)
 model LiveMetric {
-  id              String   @id @default(uuid())
-  eventId         String
-  
+  id      String @id @default(uuid())
+  eventId String
+
   currentAttendees Int
-  checkIns        Int
+  checkIns         Int
   activeVolunteers Int
-  incidentReports Int
-  crowdDensity    Float
-  
-  timestamp       DateTime @default(now())
-  
+  incidentReports  Int
+  crowdDensity     Float
+
+  timestamp DateTime @default(now())
+
   @@index([eventId, timestamp])
   @@index([timestamp])
 }
 
 // Crowd Heatmap Zones (Real-time density data)
 model CrowdHeatmapZone {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  zoneId          String
-  zoneName        String
-  
-  density         Float    // 0-100
-  waitTime        Int      // in minutes
-  
-  coordinates     Json     // { x, y }
-  
-  timestamp       DateTime @default(now())
-  
+  id      String @id @default(uuid())
+  eventId String
+
+  zoneId   String
+  zoneName String
+
+  density  Float // 0-100
+  waitTime Int // in minutes
+
+  coordinates Json // { x, y }
+
+  timestamp DateTime @default(now())
+
   @@index([eventId, zoneId, timestamp])
   @@index([timestamp])
 }
 
 // AI Insights (For AI Platform)
 model AIInsight {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  modelName       String
-  modelType       String   // 'crowd_density', 'safety_risk', 'queue_time', 'anomaly'
-  
-  insight         String
-  confidence      Float
-  
-  data            Json?
-  
+  id      String @id @default(uuid())
+  eventId String
+
+  modelName String
+  modelType String // 'crowd_density', 'safety_risk', 'queue_time', 'anomaly'
+
+  insight    String
+  confidence Float
+
+  data Json?
+
   recommendedActions String[]
-  
-  isActioned      Boolean  @default(false)
-  actionedAt      DateTime?
-  
-  createdAt       DateTime @default(now())
-  
+
+  isActioned Boolean   @default(false)
+  actionedAt DateTime?
+
+  createdAt DateTime @default(now())
+
   @@index([eventId, modelType])
   @@index([createdAt])
 }
 
 // Activity Feed (Operations log)
 model ActivityLog {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  action          String
-  description     String
-  
-  userId          String?
-  userName        String?
-  
-  entityType      String?  // 'incident', 'volunteer', 'ticket', etc.
-  entityId        String?
-  
-  metadata        Json?
-  
-  timestamp       DateTime @default(now())
-  
+  id      String @id @default(uuid())
+  eventId String
+
+  action      String
+  description String
+
+  userId   String?
+  userName String?
+
+  entityType String? // 'incident', 'volunteer', 'ticket', etc.
+  entityId   String?
+
+  metadata Json?
+
+  timestamp DateTime @default(now())
+
   @@index([eventId, timestamp])
   @@index([entityType, entityId])
 }
@@ -1376,32 +1375,32 @@ model ActivityLog {
 
 // Automation Policies
 model AutomationPolicy {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  name            String
-  description     String?
-  
-  triggerType     AutomationTriggerType
-  triggerConditions Json  // Conditions that trigger this policy
-  
-  actions         Json[]  // Actions to execute
-  
-  priority        AutomationPriority @default(MEDIUM)
-  isActive        Boolean  @default(true)
-  
+  id      String @id @default(uuid())
+  eventId String
+
+  name        String
+  description String?
+
+  triggerType       AutomationTriggerType
+  triggerConditions Json // Conditions that trigger this policy
+
+  actions Json[] // Actions to execute
+
+  priority AutomationPriority @default(MEDIUM)
+  isActive Boolean            @default(true)
+
   // Execution tracking
-  executionCount  Int      @default(0)
-  successCount    Int      @default(0)
-  failureCount    Int      @default(0)
-  lastExecutedAt  DateTime?
-  
+  executionCount Int       @default(0)
+  successCount   Int       @default(0)
+  failureCount   Int       @default(0)
+  lastExecutedAt DateTime?
+
   // Relations
-  executions      AutomationExecution[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  executions AutomationExecution[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, isActive])
   @@index([triggerType])
 }
@@ -1425,22 +1424,22 @@ enum AutomationPriority {
 
 // Automation Execution History
 model AutomationExecution {
-  id              String   @id @default(uuid())
-  policyId        String
-  policy          AutomationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  
-  executedAt      DateTime
-  completedAt     DateTime?
-  
-  triggerSource   String  // What triggered this execution
-  context         Json?   // Execution context/data
-  
-  status          ExecutionStatus
-  result          Json?   // Execution result
-  error           String?
-  
-  actionsExecuted Int      @default(0)
-  
+  id       String           @id @default(uuid())
+  policyId String
+  policy   AutomationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  executedAt  DateTime
+  completedAt DateTime?
+
+  triggerSource String // What triggered this execution
+  context       Json? // Execution context/data
+
+  status ExecutionStatus
+  result Json? // Execution result
+  error  String?
+
+  actionsExecuted Int @default(0)
+
   @@index([policyId, executedAt])
   @@index([status])
 }
@@ -1455,33 +1454,33 @@ enum ExecutionStatus {
 
 // Gate Control
 model GateControl {
-  id              String   @id @default(uuid())
-  eventId         String
-  
-  name            String
-  type            GateType
-  location        Json     // { lat, lng }
-  zone            String?
-  
-  capacity        Int      @default(0)
-  status          GateStatus @default(OPEN)
-  
+  id      String @id @default(uuid())
+  eventId String
+
+  name     String
+  type     GateType
+  location Json // { lat, lng }
+  zone     String?
+
+  capacity Int        @default(0)
+  status   GateStatus @default(OPEN)
+
   // Access control
-  accessLevel     AccessLevel @default(PUBLIC)
+  accessLevel        AccessLevel @default(PUBLIC)
   allowedTicketTypes String[]
-  
+
   // Statistics
-  currentOccupancy Int     @default(0)
-  totalEntries    Int      @default(0)
-  totalExits      Int      @default(0)
-  averageWaitTime Float    @default(0) // in seconds
-  
+  currentOccupancy Int   @default(0)
+  totalEntries     Int   @default(0)
+  totalExits       Int   @default(0)
+  averageWaitTime  Float @default(0) // in seconds
+
   // Relations
-  entries         GateEntry[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  entries GateEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([eventId, status])
   @@index([type])
 }
@@ -1511,19 +1510,19 @@ enum AccessLevel {
 
 // Gate Entry Logs
 model GateEntry {
-  id              String   @id @default(uuid())
-  gateId          String
-  gate            GateControl @relation(fields: [gateId], references: [id], onDelete: Cascade)
-  eventId         String
-  
-  userId          String?
-  ticketId        String?
-  
-  entryType       EntryType
-  entryTime       DateTime
-  
-  metadata        Json?    // Additional data
-  
+  id      String      @id @default(uuid())
+  gateId  String
+  gate    GateControl @relation(fields: [gateId], references: [id], onDelete: Cascade)
+  eventId String
+
+  userId   String?
+  ticketId String?
+
+  entryType EntryType
+  entryTime DateTime
+
+  metadata Json? // Additional data
+
   @@index([gateId, entryTime])
   @@index([eventId, entryTime])
   @@index([userId])
@@ -1535,3 +1534,311 @@ enum EntryType {
   RE_ENTRY
 }
 
+// =============================================================================
+// CROWD FORECASTING MODEL - ZONE TIME-SERIES DATA
+// =============================================================================
+
+// Zone Metadata (Static configuration for each zone)
+model ZoneMetadata {
+  id      String @id @default(uuid())
+  eventId String
+  venueId String
+  zoneId  String // Unique identifier for the zone
+
+  // Zone classification
+  zoneName         String
+  areaCategory     Int // Encoded: Entry=1, Stand=2, Food=3, Washroom=4, Corridor=5, etc.
+  areaCategoryName String // Human-readable: "Entry Gate", "Stand A", "Food Court", etc.
+
+  // Capacity constraints
+  maxCapacity  Int // Maximum safe capacity
+  areaSqMeters Float? // Physical area in square meters
+
+  // Zone characteristics
+  fixedSeating    Boolean @default(false) // True for stands or fixed seating
+  bottleneckProne Boolean @default(false) // True for gates, corridors, stairs, ramps
+  queueProne      Boolean @default(false) // True for food courts, washrooms, gates
+
+  // Priority and routing
+  zonePriority   Int // 1-5: Safety importance (5 = critical)
+  connectedZones String[] // IDs of adjacent zones
+
+  // Geographic data
+  coordinates Json // GeoJSON polygon or centroid
+  floor       Int  @default(1)
+
+  // Metadata
+  metadata Json? // Additional zone properties
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  zoneStates ZoneState[]
+
+  @@unique([eventId, zoneId])
+  @@index([eventId, venueId])
+  @@index([areaCategory])
+  @@index([zonePriority])
+}
+
+// Zone State (Time-series snapshots every 5 minutes)
+model ZoneState {
+  id      String       @id @default(uuid())
+  eventId String
+  venueId String
+  zoneId  String
+  zone    ZoneMetadata @relation(fields: [eventId, zoneId], references: [eventId, zoneId], onDelete: Cascade)
+
+  // Temporal indexing
+  timestamp     DateTime // Fixed 5-minute bucket (e.g., 14:00, 14:05, 14:10)
+  timestepIndex Int // Sequential index from event start (0, 1, 2, ...)
+
+  // Crowd metrics
+  crowdCount   Int // Estimated number of people in zone
+  crowdDensity Float // People per sq meter
+  densityLevel DensityLevel // LOW, MEDIUM, HIGH, CRITICAL
+
+  // Flow dynamics
+  inflowRate  Float // People entering per minute
+  outflowRate Float // People exiting per minute
+  netFlowRate Float // inflow - outflow
+
+  // Movement characteristics
+  avgSpeed         Float // Average movement speed (m/s)
+  directionEntropy Float // Direction disorder score (0-1)
+  avgDwellTime     Float? // Average time spent in zone (minutes)
+
+  // Queue metrics (for queue-prone zones)
+  queueLength Int? // Estimated queue length
+  avgWaitTime Float? // Average wait time (minutes)
+
+  // Schedule context
+  schedulePhase SchedulePhase // Current event phase
+  isPeakWindow  Boolean       @default(false) // High-traffic prediction
+
+  // Environmental factors
+  temperature   Float? // Temperature (Celsius)
+  humidity      Float? // Humidity percentage
+  weatherImpact Float? // Weather impact score (0-1)
+
+  // Risk indicators
+  riskLevel       RiskLevel // LOW, MEDIUM, HIGH, CRITICAL
+  congestionScore Float // 0-1: How congested relative to capacity
+  bottleneckScore Float? // 0-1: Bottleneck severity (if applicable)
+
+  // Data source metadata
+  dataSource String // "camera", "sensor", "wifi", "simulation", "ml_estimate"
+  confidence Float  @default(1.0) // Data confidence (0-1)
+
+  // ML metadata
+  isPredicted       Boolean @default(false) // True if forecasted
+  predictionHorizon Int? // Minutes ahead (10, 30, etc.)
+
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, zoneId, timestamp])
+  @@index([eventId, timestamp])
+  @@index([zoneId, timestamp])
+  @@index([timestepIndex])
+  @@index([schedulePhase, isPeakWindow])
+  @@index([densityLevel, riskLevel])
+}
+
+// Schedule Phase Context (Event timeline)
+model EventSchedule {
+  id      String @id @default(uuid())
+  eventId String @unique
+
+  // Pre-event
+  gatesOpenTime   DateTime
+  earlyEntryStart DateTime?
+
+  // Main event phases
+  eventStartTime DateTime
+  eventEndTime   DateTime
+
+  // Break periods
+  halftimeStart DateTime?
+  halftimeEnd   DateTime?
+
+  // Post-event
+  exitStartTime  DateTime
+  venueCloseTime DateTime
+
+  // Peak windows (high traffic predictions)
+  peakWindows Json[] // [{ start, end, phase, reason }]
+
+  // Mini-events within main event
+  miniEvents Json[] // [{ name, start, end, zones_affected }]
+
+  // Current state
+  currentPhase SchedulePhase
+  lastUpdated  DateTime      @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+}
+
+// Enum for event phases
+enum SchedulePhase {
+  PRE_EVENT // Before gates open
+  EARLY_ENTRY // VIP / early access
+  MAIN_ENTRY // Primary entry phase
+  PRE_SHOW // After entry, before event start
+  MAIN_EVENT // Event in progress
+  HALFTIME // Break period
+  POST_HALFTIME // After break
+  EVENT_ENDING // Final moments
+  EXIT_PHASE // Controlled exit
+  POST_EVENT // After event, cleanup
+}
+
+// Crowd Forecasting Predictions (Model outputs)
+model CrowdForecast {
+  id      String @id @default(uuid())
+  eventId String
+  zoneId  String
+
+  // Prediction metadata
+  forecastTime   DateTime // When prediction was made
+  targetTime     DateTime // When prediction is for
+  horizonMinutes Int // 10, 30, 60, etc.
+
+  // Predicted metrics
+  predictedCount        Int
+  predictedDensity      Float
+  predictedDensityLevel DensityLevel
+  predictedRiskLevel    RiskLevel
+
+  // Predicted flows
+  predictedInflow  Float
+  predictedOutflow Float
+
+  // Confidence metrics
+  confidence   Float
+  modelVersion String
+  modelType    String @default("LSTM")
+
+  // Input features summary
+  inputFeatures Json // Snapshot of input features used
+
+  // Recommendations
+  alerts          Json[] // Auto-generated alerts
+  recommendations String[] // Suggested actions
+
+  createdAt DateTime @default(now())
+
+  @@index([eventId, targetTime])
+  @@index([zoneId, targetTime])
+  @@index([forecastTime])
+  @@index([predictedDensityLevel, predictedRiskLevel])
+}
+
+// =============================================================================
+// ORGANIZER CONFIGURATION SYSTEM
+// =============================================================================
+
+// Organizer Profile (Main organization entity)
+model OrganizerProfile {
+  id               String @id @default(uuid())
+  organizerId      String @unique
+  organizationName String
+  organizationType String // SPORTS, CONCERT, FESTIVAL, etc.
+  contactEmail     String
+  contactPhone     String
+  preferences      Json // Notification preferences, language, etc.
+
+  venueConfigs VenueConfig[]
+  eventConfigs OrganizerEventConfig[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizerId])
+}
+
+// Venue Configuration (Reusable venue setups)
+model VenueConfig {
+  id          String           @id @default(uuid())
+  organizerId String
+  organizer   OrganizerProfile @relation(fields: [organizerId], references: [organizerId], onDelete: Cascade)
+
+  venueId   String @unique
+  venueName String
+  venueType String // STADIUM, ARENA, CONCERT_HALL, etc.
+
+  totalCapacity Int
+  totalArea     Float // square meters
+  floors        Int   @default(1)
+  location      Json // {lat, lon, address, city, country}
+
+  // Zone configurations
+  zones           Json[] // Array of ZoneConfiguration
+  gates           Json[] // Array of GateConfiguration
+  emergencyExits  Json[]
+  medicalStations Json[]
+
+  // Venue-level thresholds
+  thresholds Json // VenueThresholds
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizerId])
+  @@index([venueType])
+}
+
+// Event-Specific Configuration (Event overrides)
+model OrganizerEventConfig {
+  id          String           @id @default(uuid())
+  eventId     String           @unique
+  organizerId String
+  organizer   OrganizerProfile @relation(fields: [organizerId], references: [organizerId], onDelete: Cascade)
+  venueId     String
+
+  // Event schedule
+  schedule Json // EventScheduleConfiguration
+
+  // Crowd behavior expectations
+  crowdBehavior Json // CrowdBehaviorConfiguration
+
+  // Alert configuration
+  alertConfig Json // AlertConfiguration
+
+  // Staff allocation
+  staffAllocation Json[]
+
+  // Overrides
+  zoneOverrides      Json[] // Zone-specific overrides for this event
+  thresholdOverrides Json? // Threshold overrides for this event
+  venueOverrides     Json? // Venue setting overrides
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizerId])
+  @@index([eventId])
+  @@index([venueId])
+}
+
+// Configuration Templates (Starter templates for organizers)
+model ConfigurationTemplate {
+  id            String   @id @default(uuid())
+  templateName  String
+  templateType  String // VENUE or EVENT
+  applicableFor String[] // venue types or event types
+  templateData  Json // Template configuration
+  isPublic      Boolean  @default(true)
+  createdBy     String? // organizerId of creator
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([templateType])
+  @@index([applicableFor])
+}
