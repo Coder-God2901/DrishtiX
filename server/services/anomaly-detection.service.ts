@@ -14,7 +14,7 @@
  * License: See LICENSE file in the project root
  */
 import { anomalyConfig } from '../config/anomaly.config'
-import { pubSubService } from './pubsub.service'
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
 import { io } from '../index'
 import { localMLService } from './local-ml.service'
 import { isolationForestInferenceService } from './isolation-forest-inference.service'

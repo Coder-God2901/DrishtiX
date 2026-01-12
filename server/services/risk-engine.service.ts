@@ -15,7 +15,7 @@
  */
 import { prisma } from '../index';
 import { io } from '../index';
-import { pubSubService } from './pubsub.service';
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
 import { recommendationEngineService, RiskContext } from './recommendation-engine.service';
 
 export interface RiskEngineEvent {

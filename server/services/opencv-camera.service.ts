@@ -38,7 +38,7 @@ import cv from '@u4/opencv4nodejs';
 import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import { videoAnalyticsService } from './video-analytics.service';
-import { pubSubService } from './pubsub.service';
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
 
 interface CameraConfig {
   cameraId: string;

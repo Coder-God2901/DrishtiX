@@ -48,6 +48,8 @@ interface QueueAnalysisRequest {
   videoFrameUrl?: string;
   videoStreamUrl?: string;
   analysisMode: 'snapshot' | 'continuous';
+  startTime?: Date;
+  endTime?: Date;
 }
 
 interface QueueMetrics {
@@ -337,14 +339,80 @@ class AzureCognitiveQueueService {
       },
     };
 
-    // TODO: Deploy spatial analysis configuration to Azure
-    console.log(`[Azure Queue] Spatial analysis configured for zone: ${zone.id}`);
+    try {
+      // Deploy spatial analysis configuration to Azure Video Analyzer
+      const endpoint = process.env.AZURE_VIDEO_ANALYZER_ENDPOINT;
+      const apiKey = process.env.AZURE_VIDEO_ANALYZER_API_KEY;
+
+      if (!endpoint || !apiKey) {
+        console.warn('[Azure Queue] Video Analyzer not configured, using local processing');
+        return;
+      }
+
+      const response = await fetch(`${endpoint}/spatialanalysis/zones/${zone.id}`, {
+        method: 'PUT',
+        headers: {
+          'Ocp-Apim-Subscription-Key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          zoneName: zone.name,
+          polygon: zone.location.polygon,
+          operations: [operation],
+        }),
+      });
+
+      if (response.ok) {
+        console.log(`[Azure Queue] Spatial analysis configured for zone: ${zone.id}`);
+      } else {
+        console.warn(`[Azure Queue] Failed to configure spatial analysis: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.warn('[Azure Queue] Spatial analysis deployment error:', error);
+    }
   }
 
   private async getSpatialAnalysisData(request: QueueAnalysisRequest): Promise<any> {
-    // TODO: Query Azure Video Analyzer for spatial analysis data
-    // Returns person detections, trajectories, and zone occupancy
+    try {
+      // Query Azure Video Analyzer for spatial analysis data
+      const endpoint = process.env.AZURE_VIDEO_ANALYZER_ENDPOINT;
+      const apiKey = process.env.AZURE_VIDEO_ANALYZER_API_KEY;
 
+      if (!endpoint || !apiKey) {
+        // Return default data if Video Analyzer not configured
+        return {
+          personCount: 0,
+          detections: [],
+          dwellTimes: [],
+          crossingEvents: [],
+        };
+      }
+
+      const response = await fetch(
+        `${endpoint}/spatialanalysis/zones/${request.zoneId}/data?startTime=${(request.startTime || new Date(Date.now() - 60000)).toISOString()}&endTime=${(request.endTime || new Date()).toISOString()}`,
+        {
+          headers: {
+            'Ocp-Apim-Subscription-Key': apiKey,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          personCount: data.aggregatedMetrics?.personCount || 0,
+          detections: data.detections || [],
+          dwellTimes: data.dwellTimes || [],
+          crossingEvents: data.crossingEvents || [],
+        };
+      } else {
+        console.warn(`[Azure Queue] Failed to fetch spatial data: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.warn('[Azure Queue] Spatial data retrieval error:', error);
+    }
+
+    // Fallback to default data
     return {
       personCount: 0,
       detections: [],

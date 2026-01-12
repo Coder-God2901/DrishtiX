@@ -20,7 +20,7 @@
 
 import Redis from 'ioredis'
 import { auditLoggerService } from './audit-logger.service'
-import { pubSubService } from './pubsub.service'
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
 
 interface FailedLoginAttempt {
   count: number

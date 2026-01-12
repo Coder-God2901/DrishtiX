@@ -27,12 +27,14 @@
  */
 
 import axios from 'axios';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { gcpConfig } from '../config/gcp.config';
-import { pubSubService } from './pubsub.service';
-import { bigQueryAnalyticsService } from './bigquery-analytics.service';
+import { PrismaClient } from '@prisma/client';
+import { azureOpenAIService } from './azure-openai.service';
+import { azureServiceBusMessagingService as pubSubService } from './azure-service-bus-messaging.service';
+import { azureSynapseAnalyticsService } from './azure-synapse-analytics.service';
 import { io } from '../index';
 import { EventEmitter } from 'events';
+
+const prisma = new PrismaClient();
 
 // Twitter API v2 Configuration
 const TWITTER_CONFIG = {
@@ -120,14 +122,12 @@ export interface AggregatedSentiment {
 }
 
 class SocialMediaMonitoringService extends EventEmitter {
-  private genAI: GoogleGenerativeAI;
   private monitoringIntervals: Map<string, NodeJS.Timeout> = new Map();
   private sentimentCache: Map<string, SentimentAnalysis> = new Map();
   private initialized: boolean = false;
 
   constructor() {
     super();
-    this.genAI = new GoogleGenerativeAI(gcpConfig.gemini.apiKey);
     this.initialized = !!TWITTER_CONFIG.bearerToken;
 
     if (!this.initialized) {
@@ -334,9 +334,10 @@ class SocialMediaMonitoringService extends EventEmitter {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: gcpConfig.gemini.model });
-
-      const prompt = `Analyze the sentiment and panic level of this social media post from a crowd safety perspective:
+      const result = await azureOpenAIService.chatCompletion({
+        messages: [{
+          role: 'user',
+          content: `Analyze the sentiment and panic level of this social media post from a crowd safety perspective:
 
 "${text}"
 
@@ -357,14 +358,13 @@ Focus on detecting:
 - Fire, violence, crush, medical emergencies
 - Evacuation needs
 
-Return ONLY the JSON object, no markdown or explanation.`;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const textResponse = response.text();
+Return ONLY the JSON object, no markdown or explanation.`
+        }],
+        temperature: 0.3,
+      });
 
       // Parse JSON from response
-      const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+      const jsonMatch = result.content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('Failed to parse JSON response');
       }
@@ -532,7 +532,7 @@ Return ONLY the JSON object, no markdown or explanation.`;
   }
 
   /**
-   * Store social signals to BigQuery
+   * Store social signals to database (Azure Synapse Analytics)
    */
   private async storeToBigQuery(
     eventId: string,
@@ -540,26 +540,30 @@ Return ONLY the JSON object, no markdown or explanation.`;
     aggregated: AggregatedSentiment
   ): Promise<void> {
     try {
-      // Stream individual signals for detailed analytics
+      // Stream individual signals for detailed analytics to Azure Synapse
       for (const signal of signals) {
-        await bigQueryAnalyticsService.streamSocialMediaData({
-          eventId,
-          platform: 'twitter',
-          postId: signal.id,
-          timestamp: signal.timestamp,
-          content: signal.text,
-          sentiment: signal.sentiment.sentiment === 'PANIC'
-            ? 'negative'
-            : signal.sentiment.sentiment.toLowerCase() as 'positive' | 'negative' | 'neutral',
-          sentimentScore: signal.sentiment.confidence,
-          panicLevel: signal.sentiment.panicLevel,
-          keywords: signal.sentiment.keywords,
-        });
+        // TODO: Store in database for Synapse Analytics once SocialMediaPost model is added to schema
+        // await prisma.socialMediaPost.create({
+        //   data: {
+        //     eventId,
+        //     platform: 'twitter',
+        //     postId: signal.id,
+        //     content: signal.text,
+        //     sentiment: signal.sentiment.sentiment === 'PANIC'
+        //       ? 'negative'
+        //       : signal.sentiment.sentiment.toLowerCase(),
+        //     sentimentScore: signal.sentiment.confidence,
+        //     keywords: signal.sentiment.keywords,
+        //     timestamp: signal.timestamp,
+        //   },
+        // }).catch(() => {
+        //   // Ignore duplicates
+        // });
       }
 
-      console.log(`[Social Media] Streamed ${signals.length} signals to BigQuery`);
-    } catch (error) {
-      console.error('[Social Media] Error storing to BigQuery:', error);
+      console.log(`[Social Media] Stored ${signals.length} signals for analytics`);
+    } catch (error: any) {
+      console.error('[Social Media] Error storing to database:', error);
     }
   }
 

@@ -19,8 +19,8 @@
  */
 
 import { Router } from 'express';
-import { googleEarthEngineService } from '../services/earth-engine.service';
-import { googleMapsService } from '../services/google-maps.service';
+import { azurePlanetaryComputerService } from '../services/azure-planetary-computer.service';
+import { azureMapsService } from '../services/azure-maps.service';
 
 const router = Router();
 
