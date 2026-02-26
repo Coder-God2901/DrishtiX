@@ -51,7 +51,7 @@ Both features are now in the sidebar under **"Advanced Features"**:
 - Video Surveillance Dashboard UI
 - ML Training Dashboard UI
 - Object Detection (OpenCV-based)
-- BigQuery Analytics
+- Amazon Athena Analytics
 - Camera grid layout
 - Feature toggles
 - Real-time status indicators

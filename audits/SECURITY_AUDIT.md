@@ -33,7 +33,7 @@ This security audit evaluates the security posture of the DrishtiX platform acro
 
 #### ✅ Multi-Provider Authentication
 
-- **Firebase Authentication**: Primary identity provider
+- **Amazon Cognitoentication**: Primary identity provider
   - Email/password authentication
   - Google OAuth 2.0
   - Facebook OAuth 2.0
@@ -41,7 +41,7 @@ This security audit evaluates the security posture of the DrishtiX platform acro
   - Anonymous authentication
   - Custom token generation
 
-- **Azure AD (MSAL)**: Enterprise SSO
+- **AWS AD (MSAL)**: Enterprise SSO
   - Single sign-on for organizations
   - Multi-factor authentication (MFA)
   - Conditional access policies
@@ -50,7 +50,7 @@ This security audit evaluates the security posture of the DrishtiX platform acro
 **Implementation**:
 
 ```typescript
-// server/services/firebase-admin.service.ts
+// server/services/Amazon Cognito+S3-admin.service.ts
 ✅ JWT token verification
 ✅ Custom claims for roles
 ✅ Token refresh mechanism
@@ -157,19 +157,19 @@ This security audit evaluates the security posture of the DrishtiX platform acro
 
 #### ✅ Database Encryption
 
-- **Azure Cosmos DB**: AES-256 encryption
+- **Amazon DynamoDB**: AES-256 encryption
 - **PostgreSQL**: Transparent Data Encryption (TDE)
-- **Firebase Firestore**: Automatic encryption
-- **BigQuery**: Google-managed encryption keys
+- **Amazon DynamoDB**: Automatic encryption
+- **Amazon Athena**: Google-managed encryption keys
 
 **Security Rating**: 98/100 ✅
 
 #### ✅ File Storage Encryption
 
-- **Azure Blob Storage**: Server-side encryption (SSE)
+- **Amazon S3**: Server-side encryption (SSE)
   - Microsoft-managed keys
   - Customer-managed keys (optional)
-- **Google Cloud Storage**: Default encryption
+- **Google Amazon S3**: Default encryption
 
 **Security Rating**: 95/100 ✅
 
@@ -218,7 +218,7 @@ This security audit evaluates the security posture of the DrishtiX platform acro
 
 ```typescript
 // server/services/cloud-dlp.service.ts
-✅ Google Cloud DLP API integration
+✅ Google Amazon Macie API integration
 ✅ PII detection and masking
 ✅ Data tokenization
 ✅ Pseudonymization
@@ -353,7 +353,7 @@ This security audit evaluates the security posture of the DrishtiX platform acro
 
 #### ✅ Container Registry
 
-- **Azure Container Registry (ACR)**
+- **Amazon ECR (ACR)**
   - Image vulnerability scanning
   - Content trust (Notary)
   - Access control (RBAC)
@@ -366,31 +366,31 @@ This security audit evaluates the security posture of the DrishtiX platform acro
 #### ✅ Firewall Rules
 
 ```typescript
-// Azure Network Security Groups
+// AWS Network Security Groups
 ✅ Ingress rules: HTTPS (443), WSS (443)
 ✅ Egress rules: Restricted to required services
 ✅ Default deny policy
-✅ DDoS protection (Azure DDoS Protection)
+✅ DDoS protection (AWS DDoS Protection)
 ```
 
 **Security Rating**: 89/100 ✅
 
 #### ✅ Virtual Private Network (VPN)
 
-- Azure VNet for internal services
+- AWS VNet for internal services
 - Private endpoints for databases
-- Service endpoints for Azure services
+- Service endpoints for AWS services
 - Network isolation for ML workloads
 
 **Security Rating**: 90/100 ✅
 
 ### 4.3 Secrets Management
 
-#### ✅ Azure Key Vault Integration
+#### ✅ AWS Secrets Manager Integration
 
 ```typescript
-// server/config/azure.config.ts
-✅ Secrets stored in Azure Key Vault
+// server/config/AWS.config.ts
+✅ Secrets stored in AWS Secrets Manager
 ✅ Automatic secret rotation
 ✅ Managed identities for access
 ✅ Audit logging for secret access
@@ -399,7 +399,7 @@ This security audit evaluates the security posture of the DrishtiX platform acro
 **Managed Secrets**:
 
 - Database connection strings
-- API keys (Azure, Firebase, Google)
+- API keys (AWS, Amazon Cognito+S3, Google)
 - Encryption keys
 - OAuth client secrets
 - JWT signing keys
@@ -433,8 +433,8 @@ This security audit evaluates the security posture of the DrishtiX platform acro
 
 #### ✅ Monitoring & Alerting
 
-- **Azure Monitor**: Metrics, alerts
-- **Cloud Logging**: Centralized logs
+- **Amazon CloudWatch**: Metrics, alerts
+- **Amazon CloudWatch Logs**: Centralized logs
 - **Snyk**: Vulnerability monitoring
 - **Sentry**: Error tracking
 
@@ -562,9 +562,9 @@ Content-Security-Policy:
 
 ## ☁️ 6. Cloud Security (94/100)
 
-### 6.1 Azure Security
+### 6.1 AWS Security
 
-#### ✅ Azure Active Directory
+#### ✅ AWS Active Directory
 
 - Single sign-on (SSO)
 - Multi-factor authentication (MFA)
@@ -573,7 +573,7 @@ Content-Security-Policy:
 
 **Security Rating**: 96/100 ✅
 
-#### ✅ Azure Resource RBAC
+#### ✅ AWS Resource RBAC
 
 - Least privilege principle
 - Resource group isolation
@@ -582,7 +582,7 @@ Content-Security-Policy:
 
 **Security Rating**: 94/100 ✅
 
-#### ✅ Azure Security Center
+#### ✅ AWS Security Center
 
 - Continuous security assessment
 - Threat detection
@@ -611,12 +611,12 @@ Content-Security-Policy:
 
 **Security Rating**: 91/100 ✅
 
-### 6.3 Firebase Security
+### 6.3 Amazon Cognito+S3 Security
 
-#### ✅ Firestore Security Rules
+#### ✅ Amazon DynamoDB Security Rules
 
 ```javascript
-// firestore.rules
+// Amazon DynamoDB.rules
 ✅ User-based access control
 ✅ Resource-based permissions
 ✅ Data validation rules
@@ -733,7 +733,7 @@ Content-Security-Policy:
 #### ✅ Backup Strategy
 
 - **Database**: Daily backups, 30-day retention
-- **Files**: Continuous backup to Azure Blob Storage
+- **Files**: Continuous backup to Amazon S3
 - **Configuration**: Version-controlled (Git)
 
 **Recovery Time Objective (RTO)**: 4 hours
@@ -815,7 +815,7 @@ Content-Security-Policy:
 - **Risk Level**: High
 - **Impact**: Credential exposure
 - **Probability**: Medium
-- **Mitigation**: Migrate all secrets to Azure Key Vault
+- **Mitigation**: Migrate all secrets to AWS Secrets Manager
 - **Deadline**: 2 weeks
 
 #### 2. **Incomplete Data Anonymization**
@@ -893,7 +893,7 @@ Content-Security-Policy:
 
 ### Immediate Actions (Next 2 Weeks)
 
-1. **Migrate Secrets to Azure Key Vault**: Priority P0
+1. **Migrate Secrets to AWS Secrets Manager**: Priority P0
 2. **Add SRI Hashes**: Priority P1
 3. **Update Security Documentation**: Priority P2
 
@@ -947,7 +947,7 @@ Content-Security-Policy:
 - **Bandit**: Python security linting
 - **OWASP ZAP**: Dynamic application scanning
 - **Burp Suite**: Penetration testing
-- **Azure Security Center**: Cloud security posture
+- **AWS Security Center**: Cloud security posture
 
 ---
 
@@ -965,7 +965,7 @@ DrishtiX demonstrates a **strong security posture** with an overall score of **9
 
 ### Areas for Improvement
 
-- Complete migration to Azure Key Vault
+- Complete migration to AWS Secrets Manager
 - Implement full data anonymization
 - Execute vendor DPAs
 - Complete SOC 2 Type II audit

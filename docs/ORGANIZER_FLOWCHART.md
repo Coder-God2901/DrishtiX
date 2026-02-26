@@ -397,7 +397,7 @@ Generic:
 
 - **Payment Gateways**: For ticketing
 - **Email/SMS**: For notifications
-- **Google Maps**: For venue mapping
+- **Amazon Location Service**: For venue mapping
 - **Weather APIs**: For condition monitoring
 - **Social Media**: For sentiment analysis
 

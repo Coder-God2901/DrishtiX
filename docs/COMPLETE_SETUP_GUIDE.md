@@ -12,8 +12,8 @@ This guide walks you through setting up the **entire DrishtiX platform** without
 
 - [x] **Node.js** 18+ and npm/pnpm
 - [x] **PostgreSQL** 14+ with PostGIS extension
-- [x] **Google Cloud Platform** account with billing enabled
-- [x] **Google Cloud SDK** (`gcloud` CLI)
+- [x] **Amazon Web Services (AWS)** account with billing enabled
+- [x] **AWS CLI** (`aws` CLI)
 - [x] **Git**
 
 ### Optional (for ML training later)
@@ -76,92 +76,92 @@ cd ..
 
 ---
 
-### **Step 3: Setup Google Cloud Platform**
+### **Step 3: Setup Amazon Web Services (AWS)**
 
-#### 3.1 Create GCP Project
+#### 3.1 Create AWS Project
 
 ```bash
-# Login to GCP
-gcloud auth login
+# Login to AWS
+aws configure --profile drishtix
 
 # Create project (replace with your project ID)
-gcloud projects create drishtix-platform --name="DrishtiX Platform"
+# AWS account is pre-provisioned � no project creation needed
 
 # Set project
-gcloud config set project drishtix-platform
+aws configure set region ap-south-1
 
 # Enable billing (required for all services)
-# Go to: https://console.cloud.google.com/billing
+# Go to: https://console.aws.amazon.com/billing
 ```
 
 #### 3.2 Enable Required APIs
 
 ```bash
 # Enable all required Google Cloud APIs
-gcloud services enable \
-  pubsub.googleapis.com \
-  bigquery.googleapis.com \
-  storage-api.googleapis.com \
-  storage-component.googleapis.com \
-  firestore.googleapis.com \
-  firebase.googleapis.com \
-  aiplatform.googleapis.com \
-  generativelanguage.googleapis.com \
-  maps-backend.googleapis.com \
-  routes.googleapis.com \
-  places-backend.googleapis.com \
-  earthengine.googleapis.com \
-  logging.googleapis.com \
-  monitoring.googleapis.com \
-  cloudresourcemanager.googleapis.com
+# Enable AWS services via IAM policies
+  pubsub.amazonaws.com \
+  Amazon Athena.amazonaws.com \
+  storage-api.amazonaws.com \
+  storage-component.amazonaws.com \
+  Amazon DynamoDB.amazonaws.com \
+  Amazon Cognito+S3.amazonaws.com \
+  aiplatform.amazonaws.com \
+  generativelanguage.amazonaws.com \
+  maps-backend.amazonaws.com \
+  routes.amazonaws.com \
+  places-backend.amazonaws.com \
+  earthengine.amazonaws.com \
+  logging.amazonaws.com \
+  monitoring.amazonaws.com \
+  cloudresourcemanager.amazonaws.com
 ```
 
 #### 3.3 Create Service Account
 
 ```bash
 # Create service account
-gcloud iam service-accounts create drishtix-sa \
+aws iam create-role --role-name drishtix-service-role \
   --display-name="DrishtiX Service Account"
 
 # Grant required roles
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
   --role="roles/pubsub.publisher"
 
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
   --role="roles/pubsub.subscriber"
 
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
-  --role="roles/bigquery.dataEditor"
+  --role="roles/Amazon Athena.dataEditor"
 
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
-  --role="roles/bigquery.jobUser"
+  --role="roles/Amazon Athena.jobUser"
 
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
   --role="roles/storage.objectAdmin"
 
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
-  --role="roles/firebase.admin"
+  --role="roles/Amazon Cognito+S3.admin"
 
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
   --role="roles/aiplatform.user"
 
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
   --role="roles/logging.logWriter"
 
-gcloud projects add-iam-policy-binding drishtix-platform \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:drishtix-sa@drishtix-platform.iam.gserviceaccount.com" \
   --role="roles/monitoring.metricWriter"
 
 # Download service account key
-gcloud iam service-accounts keys create config/gcp-service-account-key.json \
+aws iam create-access-key --user-name drishtix-deploy-user
   --iam-account=drishtix-sa@drishtix-platform.iam.gserviceaccount.com
 ```
 
@@ -185,21 +185,21 @@ FRONTEND_URL=http://localhost:5173
 DATABASE_URL="postgresql://postgres:password@localhost:5432/drishtix_db"
 
 # ================================
-# GOOGLE CLOUD PLATFORM
+# Amazon Web Services (AWS)
 # ================================
 VITE_GOOGLE_CLOUD_PROJECT_ID=drishtix-platform
-GCP_PROJECT_ID=drishtix-platform
-GOOGLE_APPLICATION_CREDENTIALS=./config/gcp-service-account-key.json
-GCP_REGION=us-central1
-BIGQUERY_LOCATION=US
+AWS_ACCOUNT_ID=drishtix-platform
+AWS_SECRET_ACCESS_KEY=./config/AWS-service-account-key.json
+AWS_REGION=us-central1
+Amazon Athena_LOCATION=US
 
 # ================================
-# GOOGLE MAPS
+# Amazon Location Service
 # ================================
 GOOGLE_MAPS_API_KEY=your-maps-api-key
 VITE_GOOGLE_MAPS_API_KEY=your-maps-api-key
 
-# Get your API key: https://console.cloud.google.com/google/maps-apis/credentials
+# Get your API key: https://console.aws.amazon.com/google/maps-apis/credentials
 
 # ================================
 # GEMINI AI
@@ -214,13 +214,13 @@ OPENWEATHER_API_KEY=your-openweather-key
 # Get free key: https://openweathermap.org/api
 
 # ================================
-# VERTEX AI (Optional - for production)
+# Amazon SageMaker (Optional - for production)
 # ================================
 VERTEX_AI_MODEL_ENDPOINT=
 VERTEX_AI_AGENT_ID=
 
 # ================================
-# PUB/SUB TOPICS
+# Amazon SQS + SNS TOPICS
 # ================================
 PUBSUB_TOPIC_CROWD_DATA=crowd-density-updates
 PUBSUB_TOPIC_PREDICTIONS=prediction-results
@@ -230,12 +230,12 @@ PUBSUB_TOPIC_DISPATCH=responder-dispatch
 PUBSUB_TOPIC_RISK_ENGINE=risk-engine
 
 # ================================
-# BIGQUERY
+# Amazon Athena
 # ================================
-BIGQUERY_DATASET=drishtix_analytics
+Amazon Athena_DATASET=drishtix_analytics
 
 # ================================
-# CLOUD STORAGE
+# Amazon S3
 # ================================
 GCS_BUCKET_MODELS=drishtix-platform-drishtix-models
 GCS_BUCKET_VIDEOS=drishtix-platform-drishtix-videos
@@ -259,24 +259,24 @@ DLP_ENABLED=false
 
 ---
 
-### **Step 5: Initialize GCP Services**
+### **Step 5: Initialize AWS Services**
 
 Run our automated initialization script:
 
 ```bash
-# This creates all Pub/Sub topics, BigQuery datasets/tables, Cloud Storage buckets, and Firestore collections
-npx tsx scripts/initialize-gcp-services.ts
+# This creates all Amazon SQS + SNS topics, Amazon Athena datasets/tables, Amazon S3 buckets, and Amazon DynamoDB collections
+npx tsx scripts/initialize-AWS-services.ts
 ```
 
 **Expected Output:**
 
 ```
-✓ 9 Pub/Sub topics created
-✓ 9 Pub/Sub subscriptions created
-✓ BigQuery dataset: drishtix_analytics
-✓ 6 BigQuery tables created
-✓ 4 Cloud Storage buckets created
-✓ Firestore collections initialized
+✓ 9 Amazon SQS + SNS topics created
+✓ 9 Amazon SQS + SNS subscriptions created
+✓ Amazon Athena dataset: drishtix_analytics
+✓ 6 Amazon Athena tables created
+✓ 4 Amazon S3 buckets created
+✓ Amazon DynamoDB collections initialized
 ```
 
 ---
@@ -294,10 +294,10 @@ npx tsx scripts/health-check.ts
 - ✅ Environment Variables: PASS
 - ✅ PostgreSQL: PASS
 - ✅ PostGIS: PASS
-- ✅ Pub/Sub: PASS (9 topics)
-- ✅ BigQuery: PASS (6 tables)
-- ✅ Cloud Storage: PASS (4 buckets)
-- ✅ Firebase: PASS
+- ✅ Amazon SQS + SNS: PASS (9 topics)
+- ✅ Amazon Athena: PASS (6 tables)
+- ✅ Amazon S3: PASS (4 buckets)
+- ✅ Amazon Cognito+S3: PASS
 - ⚠️ Trained Models: WARN (expected - not yet trained)
 
 **Overall Health Score: ≥ 80%** = Ready to start!
@@ -322,8 +322,8 @@ npm run dev
 ║  Server:            http://localhost:3000                        ║
 ║  WebSocket:         Active                                     ║
 ║  Database:          Connected                                  ║
-║  Pub/Sub:           Active                                     ║
-║  GCP Services:      ✓ Connected                               ║
+║  Amazon SQS + SNS:           Active                                     ║
+║  AWS Services:      ✓ Connected                               ║
 ╚════════════════════════════════════════════════════════════════╝
 ```
 
@@ -348,12 +348,12 @@ pnpm run dev
 
 ### 2. **Google Cloud Services (95%)**
 
-- ✅ Pub/Sub real-time event streaming
-- ✅ BigQuery analytics queries
-- ✅ Cloud Storage bucket operations
-- ✅ Firebase Admin SDK (Auth, FCM, Firestore)
-- ✅ Google Maps integration (routing, geocoding)
-- ✅ Cloud Logging & Monitoring
+- ✅ Amazon SQS + SNS real-time event streaming
+- ✅ Amazon Athena analytics queries
+- ✅ Amazon S3 bucket operations
+- ✅ Amazon Cognito+S3 Admin SDK (Auth, Amazon SNS Push, Amazon DynamoDB)
+- ✅ Amazon Location Service integration (routing, geocoding)
+- ✅ Amazon CloudWatch Logs & Monitoring
 
 ### 3. **Frontend Dashboard (90%)**
 
@@ -453,15 +453,15 @@ brew services list  # macOS
 psql -U postgres -d drishtix_db
 ```
 
-### GCP Permission Errors
+### AWS Permission Errors
 
 ```bash
 # Re-authenticate
-gcloud auth login
-gcloud auth application-default login
+aws configure --profile drishtix
+aws sts get-session-token --region ap-south-1
 
 # Verify service account
-gcloud iam service-accounts describe drishtix-sa@drishtix-platform.iam.gserviceaccount.com
+aws iam get-role --role-name drishtix-sahtix-platform.iam.gserviceaccount.com
 ```
 
 ### Port Already in Use
@@ -484,11 +484,11 @@ lsof -ti:3000 | xargs kill -9
 | **PostgreSQL Database**    | ✅ 100% | All tables with PostGIS           |
 | **API Routes**             | ✅ 95%  | All endpoints working             |
 | **Socket.IO Real-time**    | ✅ 100% | Live updates functional           |
-| **Pub/Sub Messaging**      | ✅ 100% | 9 topics configured               |
-| **BigQuery Analytics**     | ✅ 95%  | 6 tables, queries ready           |
-| **Cloud Storage**          | ✅ 100% | 4 buckets configured              |
-| **Firebase Admin**         | ✅ 100% | Auth, FCM, Firestore ready        |
-| **Google Maps**            | ✅ 90%  | Routing, geocoding working        |
+| **Amazon SQS + SNS Messaging**      | ✅ 100% | 9 topics configured               |
+| **Amazon Athena Analytics**     | ✅ 95%  | 6 tables, queries ready           |
+| **Amazon S3**          | ✅ 100% | 4 buckets configured              |
+| **Amazon Cognito+S3 Admin**         | ✅ 100% | Auth, Amazon SNS Push, Amazon DynamoDB ready        |
+| **Amazon Location Service**            | ✅ 90%  | Routing, geocoding working        |
 | **Weather Service**        | ✅ 85%  | API integration complete          |
 | **ConvLSTM Forecasting**   | ⚠️ 40%  | Service ready, models not trained |
 | **Anomaly Detection L1**   | ✅ 100% | Threshold-based working           |
@@ -516,16 +516,16 @@ lsof -ti:3000 | xargs kill -9
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
 │                INGESTION LAYER                              │
-│  • Pub/Sub Topics (100% - 9 topics created)                │
+│  • Amazon SQS + SNS Topics (100% - 9 topics created)                │
 │  • Dataflow Pipeline (50% - code ready, not deployed)      │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
 │                 STORAGE LAYER                               │
 │  • PostgreSQL + PostGIS (100%)                             │
-│  • Firestore (100%)                                        │
-│  • BigQuery (95% - 6 tables)                               │
-│  • Cloud Storage (100% - 4 buckets)                        │
+│  • Amazon DynamoDB (100%)                                        │
+│  • Amazon Athena (95% - 6 tables)                               │
+│  • Amazon S3 (100% - 4 buckets)                        │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
@@ -534,7 +534,7 @@ lsof -ti:3000 | xargs kill -9
 │  • Isolation Forest (70% - ready, not trained)             │
 │  • Autoencoder (70% - ready, not trained)                  │
 │  • Gemini Vision (85% - API working)                       │
-│  • Vertex AI (30% - infra ready)                           │
+│  • Amazon SageMaker (30% - infra ready)                           │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
@@ -548,7 +548,7 @@ lsof -ti:3000 | xargs kill -9
 │               DELIVERY LAYER                                │
 │  • REST API (95%)                                          │
 │  • WebSocket/Socket.IO (100%)                              │
-│  • Firebase FCM (100%)                                     │
+│  • Amazon Cognito+S3 Amazon SNS Push (100%)                                     │
 │  • React Dashboard (90%)                                   │
 │  • Flutter App (0% - not started)                          │
 └─────────────────────────────────────────────────────────────┘
@@ -565,7 +565,7 @@ You're ready to use the platform when:
 - ✅ Frontend loads and connects to backend
 - ✅ Can create events and view them in dashboard
 - ✅ Real-time Socket.IO updates working
-- ✅ Pub/Sub messages being published/received
+- ✅ Amazon SQS + SNS messages being published/received
 
 ---
 
@@ -576,7 +576,7 @@ For issues or questions:
 1. Check `scripts/health-check.ts` output
 2. Review logs in `server/` console
 3. Verify `.env` configuration
-4. Ensure all GCP APIs are enabled
+4. Ensure all AWS APIs are enabled
 
 ---
 

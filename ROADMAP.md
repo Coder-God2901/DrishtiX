@@ -17,7 +17,7 @@ Transform DrishtiX into the world's leading AI-powered crowd safety platform, pr
 
 ### ✅ Completed Features
 
-- ✅ Azure AI services integration (12 services)
+- ✅ AWS AI services integration (12 services)
 - ✅ ML model deployment (5 production models)
 - ✅ Real-time crowd monitoring with heatmaps
 - ✅ Predictive safety alerts
@@ -50,7 +50,7 @@ Transform DrishtiX into the world's leading AI-powered crowd safety platform, pr
 
 - **Priority**: P0 (Critical)
 - **Effort**: 4 weeks
-- **Description**: Integrate Azure Face API for banned attendee detection
+- **Description**: Integrate AWS Face API for banned attendee detection
 - **Compliance**: GDPR-compliant with explicit consent
 - **Status**: 📋 Planning
 
@@ -90,14 +90,14 @@ Transform DrishtiX into the world's leading AI-powered crowd safety platform, pr
 - **Priority**: P1 (High)
 - **Effort**: 8 weeks
 - **Languages**: English, Spanish, French, German, Hindi, Mandarin, Arabic, Japanese, Portuguese, Russian
-- **Implementation**: Azure Translator API + i18next
+- **Implementation**: AWS Translator API + i18next
 - **Status**: 📋 Planning
 
 **2. AR Safety Navigation**
 
 - **Priority**: P1 (High)
 - **Effort**: 6 weeks
-- **Description**: Augmented reality safety guidance using Azure Spatial Anchors
+- **Description**: Augmented reality safety guidance using AWS Spatial Anchors
 - **Features**: Exit routes, assembly points, hazard warnings
 - **Platforms**: iOS (ARKit), Android (ARCore)
 - **Status**: 📋 Planning
@@ -115,7 +115,7 @@ Transform DrishtiX into the world's leading AI-powered crowd safety platform, pr
 
 - **Priority**: P2 (Medium)
 - **Effort**: 4 weeks
-- **Description**: Hands-free emergency reporting via Azure Speech Services
+- **Description**: Hands-free emergency reporting via AWS Speech Services
 - **Languages**: 10+ languages
 - **Use Case**: Reporting while assisting victims
 - **Status**: 📋 Planning
@@ -149,7 +149,7 @@ Transform DrishtiX into the world's leading AI-powered crowd safety platform, pr
 - **Effort**: 8 weeks
 - **Description**: Power BI integration with custom dashboards
 - **Features**: Incident trends, crowd flow analysis, ROI metrics
-- **Integration**: Azure Synapse Analytics
+- **Integration**: Amazon Athena Analytics
 - **Status**: 📋 Planning
 
 **3. Compliance Certifications**
@@ -184,7 +184,7 @@ Transform DrishtiX into the world's leading AI-powered crowd safety platform, pr
 
 #### 🎯 Features
 
-**1. Azure OpenAI Integration**
+**1. Amazon Bedrock Integration**
 
 - **Priority**: P0 (Critical)
 - **Effort**: 10 weeks
@@ -206,16 +206,16 @@ Transform DrishtiX into the world's leading AI-powered crowd safety platform, pr
 
 - **Priority**: P1 (High)
 - **Effort**: 12 weeks
-- **Description**: On-device ML inference using Azure IoT Edge
+- **Description**: On-device ML inference using AWS IoT Edge
 - **Benefits**: 80% cost reduction, 90% latency reduction
-- **Devices**: NVIDIA Jetson, Azure Stack Edge
+- **Devices**: NVIDIA Jetson, AWS Stack Edge
 - **Status**: 📋 Planning
 
 **4. Blockchain for Incident Audit Trail**
 
 - **Priority**: P2 (Medium)
 - **Effort**: 8 weeks
-- **Description**: Immutable incident records on Azure Blockchain
+- **Description**: Immutable incident records on AWS Blockchain
 - **Use Cases**: Legal evidence, compliance, insurance claims
 - **Status**: 📋 Planning
 

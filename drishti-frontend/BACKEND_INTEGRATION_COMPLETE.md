@@ -71,9 +71,9 @@ Create `.env.local` file:
 VITE_API_BASE_URL=http://localhost:3000/api
 VITE_WS_URL=ws://localhost:3000
 
-# Optional Firebase Config (if using auth)
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_PROJECT_ID=your-project-id
+# Amazon Cognito Config (auth)
+VITE_COGNITO_USER_POOL_ID=ap-south-1_XXXXXXXXX
+VITE_COGNITO_CLIENT_ID=your-app-client-id
 ```
 
 ### Step 3: Start Backend Server

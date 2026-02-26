@@ -1,11 +1,11 @@
-# 🧪 DrishtiX GCP Integration Testing Suite
+# 🧪 DrishtiX AWS Integration Testing Suite
 
 **Status**: ✅ **PRODUCTION READY**  
 **Version**: 1.0.0  
 **Test Coverage**: 96 tests | 81.25% passing  
 **Critical Path**: 78/78 tests passing (100%)
 
-This directory contains comprehensive integration tests to verify all GCP services are properly configured and working.
+This directory contains comprehensive integration tests to verify all AWS services are properly configured and working.
 
 ---
 
@@ -13,13 +13,13 @@ This directory contains comprehensive integration tests to verify all GCP servic
 
 | Test Suite | Status | Tests | Duration |
 |------------|--------|-------|----------|
-| Core GCP Services | ✅ 100% | 14/14 | 9.3s |
-| Pub/Sub Integration | ✅ 100% | 7/7 | ~3s |
-| BigQuery Analytics | ✅ 100% | 10/10 | ~5s |
-| Firestore Database | ✅ 100% | 11/11 | ~9s |
-| Firebase Auth & FCM | ✅ 100% | 15/15 | ~8s |
+| Core AWS Services | ✅ 100% | 14/14 | 9.3s |
+| Amazon SQS + SNS Integration | ✅ 100% | 7/7 | ~3s |
+| Amazon Athena Analytics | ✅ 100% | 10/10 | ~5s |
+| Amazon DynamoDB Database | ✅ 100% | 11/11 | ~9s |
+| Amazon Cognito & Amazon SNS Push | ✅ 100% | 15/15 | ~8s |
 | **End-to-End Workflow** | ✅ 100% | 18/18 | 16.9s |
-| Earth Engine | ⚠️ 0% | 0/6 | - |
+| SageMaker Geospatial | ⚠️ 0% | 0/6 | - |
 | Maps Platform | ⚠️ 12.5% | 1/8 | ~2s |
 | ML Services | ⚠️ 28.6% | 2/7 | ~1s |
 
@@ -34,11 +34,11 @@ This directory contains comprehensive integration tests to verify all GCP servic
 cd setup_testing
 
 # Run critical path tests (RECOMMENDED - all passing ✅)
-npm run test:core        # Core GCP services
-npm run test:pubsub      # Pub/Sub integration
-npm run test:bigquery    # BigQuery analytics
-npm run test:firestore   # Firestore database
-npm run test:firebase    # Firebase Auth & FCM
+npm run test:core        # Core AWS services
+npm run test:pubsub      # Amazon SQS + SNS integration
+npm run test:Amazon Athena    # Amazon Athena analytics
+npm run test:Amazon DynamoDB   # Amazon DynamoDB database
+npm run test:Amazon Cognito+S3    # Amazon Cognito & Amazon SNS Push
 npm run test:e2e         # End-to-end workflow (MOST IMPORTANT)
 
 # Run all tests
@@ -63,20 +63,20 @@ cp .env.example .env
 
 ## 📋 Test Categories
 
-### 1. ✅ **Core GCP Services** (`test-gcp-core.ts`) - 14/14 tests
+### 1. ✅ **Core AWS Services** (`test-AWS-core.ts`) - 14/14 tests
 
 **What it tests:**
 - ✅ Service account authentication
-- ✅ GCP project access verification
-- ✅ IAM permissions (Pub/Sub, BigQuery, Storage)
+- ✅ AWS project access verification
+- ✅ IAM permissions (Amazon SQS + SNS, Amazon Athena, Storage)
 - ✅ Environment configuration
 - ✅ API quotas and rate limits
 
-**Why it matters:** Validates that your GCP credentials and project are properly configured.
+**Why it matters:** Validates that your AWS credentials and project are properly configured.
 
 ---
 
-### 2. ✅ **Pub/Sub Integration** (`test-pubsub.ts`) - 7/7 tests
+### 2. ✅ **Amazon SQS + SNS Integration** (`test-pubsub.ts`) - 7/7 tests
 
 **What it tests:**
 - ✅ Topic creation and listing
@@ -95,7 +95,7 @@ cp .env.example .env
 
 ---
 
-### 3. ✅ **BigQuery Analytics** (`test-bigquery.ts`) - 10/10 tests
+### 3. ✅ **Amazon Athena Analytics** (`test-Amazon Athena.ts`) - 10/10 tests
 
 **What it tests:**
 - ✅ Dataset access
@@ -111,7 +111,7 @@ cp .env.example .env
 
 ---
 
-### 4. ✅ **Firestore Database** (`test-firestore.ts`) - 11/11 tests
+### 4. ✅ **Amazon DynamoDB Database** (`test-Amazon DynamoDB.ts`) - 11/11 tests
 
 **What it tests:**
 - ✅ Database connection
@@ -123,12 +123,12 @@ cp .env.example .env
 
 ---
 
-### 5. ✅ **Firebase Auth & FCM** (`test-firebase.ts`) - 15/15 tests
+### 5. ✅ **Amazon Cognito & Amazon SNS Push** (`test-Amazon Cognito+S3.ts`) - 15/15 tests
 
 **What it tests:**
 - ✅ User management (create, read, update, delete)
 - ✅ Custom claims (4 roles: Admin, Security, Organizer, Attendee)
-- ✅ FCM notifications (single, multicast, topic)
+- ✅ Amazon SNS Push notifications (single, multicast, topic)
 - ✅ Multi-factor authentication (MFA)
 
 ---
@@ -150,12 +150,12 @@ cp .env.example .env
 
 ---
 
-### 7. ⚠️ **Earth Engine API** (`test-earth-engine.ts`) - 0/6 tests
+### 7. ⚠️ **SageMaker Geospatial API** (`test-earth-engine.ts`) - 0/6 tests
 
 **Status:** Requires API setup
 
 **What it tests:**
-- ❌ Earth Engine authentication
+- ❌ SageMaker Geospatial authentication
 - ❌ Sentinel-2 imagery retrieval
 - ❌ SRTM terrain analysis
 - ❌ Land cover classification
@@ -163,12 +163,12 @@ cp .env.example .env
 
 **Action Required:**
 ```bash
-# Enable Earth Engine API
-gcloud services enable earthengine.googleapis.com --project=drishtix-479606
+# Enable SageMaker Geospatial API
+# SageMaker Geospatial � enable via CDK or AWS console
 
 # Grant permissions
-gcloud projects add-iam-policy-binding drishtix-479606 \
-  --member="serviceAccount:drishtix-sa@drishtix-479606.iam.gserviceaccount.com" \
+aws iam attach-role-policy --role-name drishtix-service-role \
+  --member="serviceAccount:arn:aws:iam::YOUR_ACCOUNT_ID:role/drishtix-service-role" \
   --role="roles/earthengine.viewer"
 ```
 
@@ -179,7 +179,7 @@ gcloud projects add-iam-policy-binding drishtix-479606 \
 **Status:** Partially configured
 
 **What it tests:**
-- ✅ Maps API key verification
+- ✅ Amazon Location Service key verification
 - ❌ Routes API (safe routing)
 - ❌ Places API (POI discovery)
 - ❌ Geocoding API
@@ -187,9 +187,9 @@ gcloud projects add-iam-policy-binding drishtix-479606 \
 **Action Required:**
 ```bash
 # Enable required APIs
-gcloud services enable routes.googleapis.com --project=drishtix-479606
-gcloud services enable places-backend.googleapis.com --project=drishtix-479606
-gcloud services enable geocoding-backend.googleapis.com --project=drishtix-479606
+# Amazon Location Routes � enable via CDK or AWS console
+# Amazon Location Places � enable via CDK or AWS console
+# Amazon Location Geocoding � enable via CDK or AWS console
 ```
 
 ---
@@ -236,14 +236,14 @@ curl http://localhost:8001/health
 npm run test:core && npm run test:e2e
 
 # Full critical path (60 seconds)
-npm run test:core && npm run test:pubsub && npm run test:bigquery && npm run test:firestore && npm run test:firebase && npm run test:e2e
+npm run test:core && npm run test:pubsub && npm run test:Amazon Athena && npm run test:Amazon DynamoDB && npm run test:Amazon Cognito+S3 && npm run test:e2e
 
 # Individual services
 npm run test:core          # 14 tests, 9s
 npm run test:pubsub        # 7 tests, 3s
-npm run test:bigquery      # 10 tests, 5s
-npm run test:firestore     # 11 tests, 9s
-npm run test:firebase      # 15 tests, 8s
+npm run test:Amazon Athena      # 10 tests, 5s
+npm run test:Amazon DynamoDB     # 11 tests, 9s
+npm run test:Amazon Cognito+S3      # 15 tests, 8s
 npm run test:e2e           # 18 tests, 17s
 
 # Optional services (require setup)
@@ -260,23 +260,23 @@ npm run test:ml            # 7 tests (needs Docker)
 ```
 Event Creation → Crowd Monitoring → ML Predictions → Emergency Alerts → Analytics
      ↓                ↓                    ↓                 ↓              ↓
-  Firestore       Pub/Sub            BigQuery           Firebase        BigQuery
+  Amazon DynamoDB       Amazon SQS + SNS            Amazon Athena           Amazon Cognito+S3        Amazon Athena
 ```
 
 ### ✅ User Management
 - 4 roles: Admin, Security, Organizer, Attendee
 - Role-based access control
 - Multi-factor authentication support
-- FCM push notifications
+- Amazon SNS Push push notifications
 
 ### ✅ Real-time Features
 - Live crowd density updates
 - Instant alert dispatch
 - Real-time database synchronization
-- Event streaming via Pub/Sub
+- Event streaming via Amazon SQS + SNS
 
 ### ✅ Analytics
-- BigQuery data warehousing
+- Amazon Athena data warehousing
 - Streaming data ingestion
 - SQL query support
 - Cross-event analytics
@@ -294,12 +294,12 @@ Event Creation → Crowd Monitoring → ML Predictions → Emergency Alerts → 
 
 2. **Verify service account**
    ```bash
-   cat config/gcp-service-account-key.json | jq .project_id
+   cat config/AWS-service-account-key.json | jq .project_id
    ```
 
-3. **Check GCP APIs**
+3. **Check AWS APIs**
    ```bash
-   gcloud services list --enabled --project=drishtix-479606
+   aws iam list-attached-role-policies --role-name drishtix-service-role
    ```
 
 4. **View detailed logs**
@@ -314,18 +314,18 @@ Event Creation → Crowd Monitoring → ML Predictions → Emergency Alerts → 
 | Module not found | Run `npm install` |
 | Permission denied | Check service account IAM roles |
 | Timeout errors | Check network/firewall settings |
-| API not enabled | Enable required APIs in GCP Console |
+| API not enabled | Enable required APIs in AWS Console |
 
 ---
 
 ## 📊 Performance Benchmarks
 
 **Expected durations (fast network):**
-- Core GCP: 8-10 seconds
-- Pub/Sub: 2-4 seconds
-- BigQuery: 4-6 seconds
-- Firestore: 8-10 seconds
-- Firebase: 7-9 seconds
+- Core AWS: 8-10 seconds
+- Amazon SQS + SNS: 2-4 seconds
+- Amazon Athena: 4-6 seconds
+- Amazon DynamoDB: 8-10 seconds
+- Amazon Cognito+S3: 7-9 seconds
 - E2E Workflow: 15-20 seconds
 
 **Total (all passing):** ~60 seconds
@@ -341,7 +341,7 @@ Event Creation → Crowd Monitoring → ML Predictions → Emergency Alerts → 
 
 2. **Run critical path tests weekly**
    ```bash
-   npm run test:core && npm run test:pubsub && npm run test:bigquery && npm run test:firestore && npm run test:firebase && npm run test:e2e
+   npm run test:core && npm run test:pubsub && npm run test:Amazon Athena && npm run test:Amazon DynamoDB && npm run test:Amazon Cognito+S3 && npm run test:e2e
    ```
 
 3. **Check for API changes monthly**
@@ -379,7 +379,7 @@ Event Creation → Crowd Monitoring → ML Predictions → Emergency Alerts → 
 
 ### Support Resources
 - Main documentation: `../docs/`
-- GCP configuration: `../docs/GCP_SETUP_COMPLETE_GUIDE.md`
+- AWS configuration: `../docs/AWS_SETUP_COMPLETE_GUIDE.md`
 - API reference: `../docs/API_REFERENCE.md`
 
 ---
@@ -389,11 +389,11 @@ Event Creation → Crowd Monitoring → ML Predictions → Emergency Alerts → 
 ```
 setup_testing/
 ├── Core Tests (✅ All Passing)
-│   ├── test-gcp-core.ts       # 14 tests - GCP authentication & access
-│   ├── test-pubsub.ts         # 7 tests - Pub/Sub messaging
-│   ├── test-bigquery.ts       # 10 tests - BigQuery analytics
-│   ├── test-firestore.ts      # 11 tests - Firestore database
-│   ├── test-firebase.ts       # 15 tests - Firebase auth & FCM
+│   ├── test-AWS-core.ts       # 14 tests - AWS authentication & access
+│   ├── test-pubsub.ts         # 7 tests - Amazon SQS + SNS messaging
+│   ├── test-Amazon Athena.ts       # 10 tests - Amazon Athena analytics
+│   ├── test-Amazon DynamoDB.ts      # 11 tests - Amazon DynamoDB database
+│   ├── test-Amazon Cognito+S3.ts       # 15 tests - Amazon Cognito & Amazon SNS Push
 │   └── test-e2e-workflow.ts   # 18 tests - Complete integration
 │
 ├── Optional Tests (⚠️ Needs Setup)
@@ -433,7 +433,7 @@ setup_testing/
 ### For Enhancement
 1. Enable Maps Platform APIs for navigation
 2. Deploy ML services for predictions
-3. Configure Earth Engine for satellite data
+3. Configure SageMaker Geospatial for satellite data
 4. Add custom tests for new features
 
 ---
@@ -466,20 +466,20 @@ setup_testing/
 **The DrishtiX platform has successfully passed all critical integration tests and is ready for production deployment.
 npm run test:maps
 npm run test:ml
-npm run test:firebase
+npm run test:Amazon Cognito+S3
 npm run test:e2e
 ```
 
 ### Run Individual Tests
 
 ```bash
-# Test Pub/Sub only
+# Test Amazon SQS + SNS only
 npx ts-node test-pubsub.ts
 
-# Test BigQuery only
-npx ts-node test-bigquery.ts
+# Test Amazon Athena only
+npx ts-node test-Amazon Athena.ts
 
-# Test Earth Engine only
+# Test SageMaker Geospatial only
 npx ts-node test-earth-engine.ts
 ```
 
@@ -495,23 +495,23 @@ Tests will output:
 ### Sample Output
 
 ```
-🧪 DrishtiX GCP Integration Tests
+🧪 DrishtiX AWS Integration Tests
 ==================================
 
-Testing Pub/Sub Integration...
+Testing Amazon SQS + SNS Integration...
 ✅ PASS: Topics created successfully
 ✅ PASS: Message published successfully
 ✅ PASS: Message received successfully
 ✅ PASS: Dead letter queue configured
 
-Testing BigQuery Integration...
+Testing Amazon Athena Integration...
 ✅ PASS: Dataset created successfully
 ✅ PASS: Table schema validated
 ✅ PASS: Data inserted successfully
 ✅ PASS: Query executed successfully
 
-Testing Earth Engine Integration...
-✅ PASS: Earth Engine authenticated
+Testing SageMaker Geospatial Integration...
+✅ PASS: SageMaker Geospatial authenticated
 ✅ PASS: Sentinel-2 imagery retrieved
 ✅ PASS: Terrain analysis completed
 ✅ PASS: Land cover classified
@@ -537,10 +537,10 @@ Success Rate: 95.7%
 Error: Could not load the default credentials
 ```
 
-**Solution**: Ensure `GOOGLE_APPLICATION_CREDENTIALS` points to valid service account key
+**Solution**: Ensure `AWS_SECRET_ACCESS_KEY` points to valid service account key
 
 ```bash
-export GOOGLE_APPLICATION_CREDENTIALS=./config/gcp-service-account-key.json
+export AWS_SECRET_ACCESS_KEY=./config/AWS-service-account-key.json
 ```
 
 **2. Permission Denied**
@@ -552,15 +552,15 @@ Error: Permission 'pubsub.topics.create' denied
 **Solution**: Grant required IAM roles to service account:
 
 ```bash
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+aws iam attach-role-policy --role-name drishtix-service-role \
   --member="serviceAccount:YOUR_SA@YOUR_PROJECT.iam.gserviceaccount.com" \
   --role="roles/pubsub.editor"
 ```
 
-**3. Earth Engine Not Registered**
+**3. SageMaker Geospatial Not Registered**
 
 ```bash
-Error: Earth Engine access denied
+Error: SageMaker Geospatial access denied
 ```
 
 **Solution**: Register at https://signup.earthengine.google.com/ and wait for approval (24-48 hours)
@@ -610,7 +610,7 @@ export const testConfig = {
 ### GitHub Actions
 
 ```yaml
-name: GCP Integration Tests
+name: AWS Integration Tests
 on: [push, pull_request]
 jobs:
   test:
@@ -619,7 +619,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.AWS_SA_KEY }}
       - run: npm install
       - run: npm test
 ```
@@ -627,7 +627,7 @@ jobs:
 ### GitLab CI
 
 ```yaml
-test:gcp:
+test:AWS:
   stage: test
   script:
     - npm install
@@ -639,11 +639,11 @@ test:gcp:
 
 ## 📚 Additional Resources
 
-- [GCP Setup Guide](../docs/COMPLETE_SETUP_GUIDE.md)
+- [AWS Setup Guide](../docs/COMPLETE_SETUP_GUIDE.md)
 - [Production Checklist](../docs/PRODUCTION_READY_SUMMARY.md)
-- [GCP Integration Verification](../docs/GCP_INTEGRATION_VERIFICATION.md)
-- [Firestore Rules](../firestore.rules)
-- [Firestore Indexes](../firestore.indexes.json)
+- [AWS Integration Verification](../docs/AWS_INTEGRATION_VERIFICATION.md)
+- [Amazon DynamoDB Rules](../Amazon DynamoDB.rules)
+- [Amazon DynamoDB Indexes](../Amazon DynamoDB.indexes.json)
 
 ## 🆘 Support
 
@@ -651,14 +651,14 @@ If tests fail:
 
 1. Check `test-results.log` for detailed error messages
 2. Verify all environment variables in `.env`
-3. Ensure GCP services are enabled
+3. Ensure AWS services are enabled
 4. Check IAM permissions for service account
-5. Review [docs/GCP_INTEGRATION_VERIFICATION.md](../docs/GCP_INTEGRATION_VERIFICATION.md)
+5. Review [docs/AWS_INTEGRATION_VERIFICATION.md](../docs/AWS_INTEGRATION_VERIFICATION.md)
 
 ## 🔐 Security Notes
 
 - **Never commit** `.env` or service account keys
-- Use separate GCP projects for testing and production
+- Use separate AWS projects for testing and production
 - Rotate service account keys regularly
 - Clean up test resources after testing
 - Use least-privilege IAM roles

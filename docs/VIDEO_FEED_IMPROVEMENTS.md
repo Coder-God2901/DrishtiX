@@ -85,7 +85,7 @@ Integrated toast notifications for:
 
 ### 4. **Enhanced Data Flow**
 
-- Merged camera frames with GCP analytics
+- Merged camera frames with AWS analytics
 - Filter application after data merge
 - Smart fallback handling
 

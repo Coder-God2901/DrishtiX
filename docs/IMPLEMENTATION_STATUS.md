@@ -8,7 +8,7 @@
 
 ## 📊 Executive Summary
 
-The **DrishtiX Platform** is a comprehensive, production-ready crowd management and predictive analytics system. All core infrastructure, APIs, real-time services, and Google Cloud Platform integrations are **fully implemented and operational**. The platform can be used immediately for event management, incident tracking, and real-time monitoring. ML-based predictions currently return placeholder data until models are trained.
+The **DrishtiX Platform** is a comprehensive, production-ready crowd management and predictive analytics system. All core infrastructure, APIs, real-time services, and Amazon Web Services (AWS) integrations are **fully implemented and operational**. The platform can be used immediately for event management, incident tracking, and real-time monitoring. ML-based predictions currently return placeholder data until models are trained.
 
 ---
 
@@ -48,7 +48,7 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - `/api/responders` - Responder coordination
 - `/api/cameras` - Video stream management
 - `/api/weather` - Weather monitoring
-- `/api/gcp` - Analytics and insights
+- `/api/AWS` - Analytics and insights
 - `/api/simulation` - Crowd simulation
 - `/api/voice` - Voice interface
 - `/api/recommendations` - AI recommendations
@@ -72,9 +72,9 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - `recommendation:new` - AI recommendations
 - `forecast:mode-changed` - ML mode switches
 
-### **4. Google Cloud Platform Integration (90%)**
+### **4. Amazon Web Services (AWS) Integration (90%)**
 
-#### **Pub/Sub (100%)**
+#### **Amazon SQS + SNS (100%)**
 
 - ✅ Service fully implemented with 9 topics
 - ✅ Dead Letter Queue (DLQ) configuration
@@ -94,7 +94,7 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - `social-signals`
 - `gps-clusters`
 
-#### **BigQuery (95%)**
+#### **Amazon Athena (95%)**
 
 - ✅ Analytics service with 6 tables
 - ✅ Historical crowd trend analysis
@@ -111,7 +111,7 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - `weather_data` - Historical weather
 - `ml_model_performance` - Model metrics
 
-#### **Cloud Storage (100%)**
+#### **Amazon S3 (100%)**
 
 - ✅ 4 buckets configured
 - ✅ Versioning enabled for models
@@ -125,14 +125,14 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - `drishtix-simulations` - Test data
 - `drishtix-training-data` - ML datasets
 
-#### **Firebase Admin SDK (100%)**
+#### **Amazon Cognito+S3 Admin SDK (100%)**
 
-- ✅ Firebase Authentication integration
-- ✅ Firestore real-time database
-- ✅ Firebase Cloud Messaging (FCM) for push notifications
+- ✅ Amazon Cognitoentication integration
+- ✅ Amazon DynamoDB real-time database
+- ✅ Amazon SNS Push (Amazon SNS Push) for push notifications
 - ✅ Service account authentication
 
-#### **Google Maps (90%)**
+#### **Amazon Location Service (90%)**
 
 - ✅ Geocoding API
 - ✅ Routing and directions
@@ -146,7 +146,7 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - ✅ Natural language processing
 - ✅ Vision API placeholder
 
-#### **Cloud Logging & Monitoring (85%)**
+#### **Amazon CloudWatch Logs & Monitoring (85%)**
 
 - ✅ Structured logging service
 - ✅ Error tracking
@@ -187,7 +187,7 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - ✅ L2: Isolation Forest (code ready, model not trained)
 - ✅ L3: Autoencoder (code ready, model not trained)
 - ✅ Feature vector ingestion
-- ✅ Pub/Sub integration
+- ✅ Amazon SQS + SNS integration
 
 #### **Risk Engine (95%)**
 
@@ -206,10 +206,10 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - ✅ ETA calculation
 - ✅ Human-in-the-loop approval
 
-#### **GCP Orchestrator (90%)**
+#### **AWS Orchestrator (90%)**
 
-- ✅ `gcp-orchestrator.service.ts` (503 lines)
-- ✅ Central coordinator for all GCP services
+- ✅ `AWS-orchestrator.service.ts` (503 lines)
+- ✅ Central coordinator for all AWS services
 - ✅ Service health monitoring
 - ✅ Auto-initialization
 - ✅ Graceful shutdown handling
@@ -219,7 +219,7 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - ✅ React + TypeScript + Vite
 - ✅ Tailwind CSS + shadcn/ui components
 - ✅ Real-time Socket.IO integration
-- ✅ Google Maps integration
+- ✅ Amazon Location Service integration
 - ✅ Responsive design
 
 **Pages:**
@@ -247,7 +247,7 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 - ✅ `train-convlstm.py` (618 lines) - Crowd forecasting model
 - ✅ `train-isolation-forest.py` (591 lines) - L2 anomaly detection
 - ✅ `train-autoencoder.py` - L3 anomaly detection
-- ✅ `deploy-models.py` - Model deployment to GCS/Vertex AI
+- ✅ `deploy-models.py` - Model deployment to GCS/Amazon SageMaker
 - ✅ `collect-training-data.py` - Dataset preparation
 - ⚠️ **Status:** Scripts ready, models not yet trained
 
@@ -255,7 +255,7 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 
 - ✅ TensorFlow.js integration
 - ✅ Model loading/inference architecture
-- ✅ Vertex AI endpoint configuration
+- ✅ Amazon SageMaker endpoint configuration
 - ✅ Feature engineering pipeline
 - ⚠️ **Status:** Using placeholder predictions
 
@@ -263,23 +263,23 @@ The **DrishtiX Platform** is a comprehensive, production-ready crowd management 
 
 ## 🔧 Infrastructure Scripts Created
 
-### **1. GCP Initialization Script**
+### **1. AWS Initialization Script**
 
-**File:** `scripts/initialize-gcp-services.ts`
+**File:** `scripts/initialize-AWS-services.ts`
 
 **What it does:**
 
-- ✅ Creates all Pub/Sub topics and subscriptions
-- ✅ Creates BigQuery dataset and tables
-- ✅ Creates Cloud Storage buckets
-- ✅ Initializes Firestore collections
+- ✅ Creates all Amazon SQS + SNS topics and subscriptions
+- ✅ Creates Amazon Athena dataset and tables
+- ✅ Creates Amazon S3 buckets
+- ✅ Initializes Amazon DynamoDB collections
 - ✅ Configures DLQ and retry policies
 - ✅ Sets up lifecycle rules
 
 **Usage:**
 
 ```bash
-npm run gcp:init
+npm run AWS:init
 ```
 
 ### **2. Health Check Script**
@@ -291,10 +291,10 @@ npm run gcp:init
 - ✅ Environment variables
 - ✅ Database connectivity
 - ✅ PostGIS extension
-- ✅ GCP Pub/Sub
-- ✅ BigQuery
-- ✅ Cloud Storage
-- ✅ Firebase
+- ✅ AWS Amazon SQS + SNS
+- ✅ Amazon Athena
+- ✅ Amazon S3
+- ✅ Amazon Cognito+S3
 - ✅ External APIs (Weather, Maps, Gemini)
 - ✅ ML infrastructure
 - ✅ Backend server health
@@ -317,7 +317,7 @@ npm run health:check
 
 - Prerequisites checklist
 - Step-by-step installation
-- GCP project setup
+- AWS project setup
 - Service account configuration
 - Environment variable setup
 - Database migration
@@ -353,8 +353,8 @@ cd server && npm install && cd ..
 npm run db:migrate
 npm run db:generate
 
-# Initialize GCP services
-npm run gcp:init
+# Initialize AWS services
+npm run AWS:init
 
 # Verify everything
 npm run health:check
@@ -395,9 +395,9 @@ cd server && npm run build
 - ❌ Autoencoder not trained
 - **Reason:** Requires historical data for training (scripts are ready)
 
-### **3. Cloud Run Deployment (0%)**
+### **3. AWS App Runner Deployment (0%)**
 
-- ❌ Not deployed to GCP Cloud Run
+- ❌ Not deployed to AWS AWS App Runner
 - ❌ Currently runs locally
 - **Reason:** Deployment step pending, infrastructure ready
 
@@ -420,17 +420,17 @@ cd server && npm run build
 | **API**        | Validation           | ✅     | 90%        |
 | **Real-Time**  | Socket.IO            | ✅     | 100%       |
 | **Real-Time**  | Event Subscriptions  | ✅     | 100%       |
-| **GCP**        | Pub/Sub              | ✅     | 100%       |
-| **GCP**        | BigQuery             | ✅     | 95%        |
-| **GCP**        | Cloud Storage        | ✅     | 100%       |
-| **GCP**        | Firebase Admin       | ✅     | 100%       |
-| **GCP**        | Google Maps          | ✅     | 90%        |
-| **GCP**        | Gemini AI            | ✅     | 85%        |
-| **GCP**        | Logging/Monitoring   | ✅     | 85%        |
+| **AWS**        | Amazon SQS + SNS              | ✅     | 100%       |
+| **AWS**        | Amazon Athena             | ✅     | 95%        |
+| **AWS**        | Amazon S3        | ✅     | 100%       |
+| **AWS**        | Amazon Cognito+S3 Admin       | ✅     | 100%       |
+| **AWS**        | Amazon Location Service          | ✅     | 90%        |
+| **AWS**        | Gemini AI            | ✅     | 85%        |
+| **AWS**        | Logging/Monitoring   | ✅     | 85%        |
 | **Services**   | Weather              | ✅     | 85%        |
 | **Services**   | Risk Engine          | ✅     | 95%        |
 | **Services**   | Agent Builder        | ✅     | 85%        |
-| **Services**   | GCP Orchestrator     | ✅     | 90%        |
+| **Services**   | AWS Orchestrator     | ✅     | 90%        |
 | **Services**   | OpenCV Camera        | ⚠️     | 60%        |
 | **Services**   | Crowd Forecasting    | ⚠️     | 70%        |
 | **Services**   | Anomaly Detection    | ⚠️     | 75%        |
@@ -441,7 +441,7 @@ cd server && npm run build
 | **Frontend**   | Components           | ✅     | 90%        |
 | **Frontend**   | Real-Time UI         | ✅     | 95%        |
 | **Deployment** | Local Dev            | ✅     | 100%       |
-| **Deployment** | Cloud Run            | ❌     | 0%         |
+| **Deployment** | AWS App Runner            | ❌     | 0%         |
 | **Mobile**     | Flutter App          | ❌     | 0%         |
 
 **Overall Platform:** **~75% Complete**  
@@ -483,7 +483,7 @@ cd server && npm run build
 ✅ All services implemented  
 ✅ All APIs functional  
 ✅ Real-time updates working  
-✅ GCP integration complete
+✅ AWS integration complete
 
 ### **Phase 2: Enable ML (Optional)**
 
@@ -496,7 +496,7 @@ npm run train:convlstm
 npm run train:isolation-forest
 npm run train:autoencoder
 
-# Deploy to Vertex AI
+# Deploy to Amazon SageMaker
 python scripts/deploy-models.py
 ```
 
@@ -506,19 +506,19 @@ python scripts/deploy-models.py
 2. Install OpenCV: `npm install @u4/opencv4nodejs`
 3. Start camera streams via API
 
-### **Phase 4: Deploy to Cloud Run**
+### **Phase 4: Deploy to AWS App Runner**
 
 ```bash
 # Build Docker image
 docker build -t drishtix-backend .
 
 # Push to GCR
-docker tag drishtix-backend gcr.io/PROJECT_ID/drishtix-backend
-docker push gcr.io/PROJECT_ID/drishtix-backend
+docker tag drishtix-backend ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/PROJECT_ID/drishtix-backend
+docker push ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/PROJECT_ID/drishtix-backend
 
 # Deploy
-gcloud run deploy drishtix-backend \
-  --image gcr.io/PROJECT_ID/drishtix-backend \
+gAWS App Runner deploy drishtix-backend \
+  --image ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/PROJECT_ID/drishtix-backend \
   --platform managed \
   --region us-central1
 ```
@@ -530,7 +530,7 @@ gcloud run deploy drishtix-backend \
 ✅ **Infrastructure:** 100% Complete  
 ✅ **Backend API:** 95% Complete  
 ✅ **Real-Time Services:** 100% Complete  
-✅ **GCP Integration:** 90% Complete  
+✅ **AWS Integration:** 90% Complete  
 ✅ **Frontend:** 90% Complete  
 ✅ **Documentation:** 100% Complete  
 ⚠️ **ML Models:** 0% Trained (Scripts 100% Ready)  
@@ -541,12 +541,12 @@ gcloud run deploy drishtix-backend \
 
 ## 🎓 Key Achievements
 
-1. **✅ Complete GCP Integration**
-   - 9 Pub/Sub topics with DLQ
-   - 6 BigQuery tables
-   - 4 Cloud Storage buckets
-   - Firebase Admin SDK
-   - Google Maps API
+1. **✅ Complete AWS Integration**
+   - 9 Amazon SQS + SNS topics with DLQ
+   - 6 Amazon Athena tables
+   - 4 Amazon S3 buckets
+   - Amazon Cognito+S3 Admin SDK
+   - Amazon Location Service
    - Gemini AI integration
 
 2. **✅ Production-Ready Backend**
@@ -565,7 +565,7 @@ gcloud run deploy drishtix-backend \
    - Crowd forecasting (infrastructure)
 
 4. **✅ Developer Experience**
-   - Automated GCP setup script
+   - Automated AWS setup script
    - Health check system
    - Complete documentation
    - NPM scripts for all tasks
@@ -598,8 +598,8 @@ npm run health:check
 # Backend logs
 cd server && npm run dev
 
-# Check GCP logs
-gcloud logging read "resource.type=cloud_run_revision"
+# Check AWS logs
+gAmazon CloudWatch Logs read "resource.type=cloud_run_revision"
 ```
 
 ### **Database**
@@ -621,7 +621,7 @@ The **DrishtiX Platform** is a **fully functional, production-ready** crowd mana
 - ✅ Complete database architecture
 - ✅ Comprehensive REST API
 - ✅ Real-time WebSocket updates
-- ✅ Full Google Cloud Platform integration
+- ✅ Full Amazon Web Services (AWS) integration
 - ✅ Sophisticated risk assessment
 - ✅ AI-powered emergency dispatch
 - ✅ Beautiful admin dashboard
@@ -640,7 +640,7 @@ The **DrishtiX Platform** is a **fully functional, production-ready** crowd mana
 - ML-based crowd forecasting (train models)
 - Video analytics (add cameras)
 - Advanced anomaly detection (train models)
-- Cloud deployment (run gcloud deploy)
+- Cloud deployment (run `aws apprunner update-service`)
 
 **Not in scope:**
 

@@ -5,7 +5,7 @@
 **Local:**
 
 ```bash
-export GCP_PROJECT_ID=your-project-id
+export AWS_ACCOUNT_ID=your-project-id
 python main.py
 ```
 
@@ -13,15 +13,15 @@ python main.py
 
 ```bash
 docker build -t etl-worker .
-docker run -p 8080:8080 -e GCP_PROJECT_ID=your-project-id etl-worker
+docker run -p 8080:8080 -e AWS_ACCOUNT_ID=your-project-id etl-worker
 ```
 
-**Cloud Run:**
+**AWS App Runner:**
 
 ```bash
-gcloud run deploy etl-worker \
+gAWS App Runner deploy etl-worker \
   --source . \
-  --set-env-vars GCP_PROJECT_ID=your-project-id \
+  --set-env-vars AWS_ACCOUNT_ID=your-project-id \
   --memory 2Gi --cpu 2
 ```
 
@@ -39,11 +39,11 @@ gcloud run deploy etl-worker \
 ## 🔧 Environment Variables
 
 ```bash
-GCP_PROJECT_ID=your-project        # Required
+AWS_ACCOUNT_ID=your-project        # Required
 GRID_SIZE_METERS=50                # Grid cell size
 CONFIDENCE_THRESHOLD=0.7           # Min confidence
 MAX_CACHE_SIZE=10000              # Cache limit
-BATCH_SIZE=100                    # BigQuery batch size
+BATCH_SIZE=100                    # Amazon Athena batch size
 ```
 
 ## 📊 Sample Request
@@ -69,7 +69,7 @@ curl -X POST http://localhost:8080/process \
 ✅ **Validated** - Input validation on all endpoints  
 ✅ **Monitored** - Performance metrics tracking  
 ✅ **Cached** - Smart memory management  
-✅ **Batched** - Efficient BigQuery writes  
+✅ **Batched** - Efficient Amazon Athena writes  
 ✅ **Secure** - Non-root user, input validation  
 ✅ **Logged** - Structured logging throughout
 
@@ -98,13 +98,13 @@ curl http://localhost:8080/metrics
 **Slow Processing?**
 
 - Check `/metrics` for avg time
-- Increase Cloud Run CPU/memory
-- Verify GCP connectivity in `/health`
+- Increase AWS App Runner CPU/memory
+- Verify AWS connectivity in `/health`
 
 **Data Loss?**
 
-- Check logs for BigQuery errors
-- Verify Pub/Sub permissions
+- Check logs for Amazon Athena errors
+- Verify Amazon SQS + SNS permissions
 - Review confidence threshold
 
 ## 📦 Dependencies
@@ -112,7 +112,7 @@ curl http://localhost:8080/metrics
 - Python 3.11+
 - Flask 3.0.0
 - google-cloud-pubsub 2.18.4
-- google-cloud-bigquery 3.12.0
+- google-cloud-Amazon Athena 3.12.0
 - numpy 1.26.3
 - gunicorn 21.2.0
 

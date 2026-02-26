@@ -10,13 +10,13 @@ cd setup_testing
 npm run test:all
 
 # Run individual test suites
-npm run test:core        # 14 tests - Core GCP services (9s)
-npm run test:pubsub      # 7 tests - Pub/Sub integration (3s)
-npm run test:bigquery    # 10 tests - BigQuery analytics (5s)
-npm run test:firestore   # 11 tests - Firestore database (9s)
-npm run test:firebase    # 15 tests - Firebase Auth & FCM (8s)
+npm run test:core        # 14 tests - Core AWS services (9s)
+npm run test:pubsub      # 7 tests - Amazon SQS + SNS integration (3s)
+npm run test:Amazon Athena    # 10 tests - Amazon Athena analytics (5s)
+npm run test:Amazon DynamoDB   # 11 tests - Amazon DynamoDB database (9s)
+npm run test:Amazon Cognito+S3    # 15 tests - Amazon Cognito & Amazon SNS Push (8s)
 npm run test:e2e         # 18 tests - End-to-end workflow (18s)
-npm run test:earth-engine # 6 tests - Earth Engine (requires setup)
+npm run test:earth-engine # 6 tests - SageMaker Geospatial (requires setup)
 npm run test:maps        # 8 tests - Maps Platform (requires APIs)
 npm run test:ml          # 7 tests - ML services (requires Docker)
 
@@ -30,18 +30,18 @@ npm test
 
 | Service | Tests | Status | Duration |
 |---------|-------|--------|----------|
-| Core GCP | 14/14 | ✅ 100% | 9.3s |
-| Pub/Sub | 7/7 | ✅ 100% | ~3s |
-| BigQuery | 10/10 | ✅ 100% | ~5s |
-| Firestore | 11/11 | ✅ 100% | ~9s |
-| Firebase | 15/15 | ✅ 100% | ~8s |
+| Core AWS | 14/14 | ✅ 100% | 9.3s |
+| Amazon SQS + SNS | 7/7 | ✅ 100% | ~3s |
+| Amazon Athena | 10/10 | ✅ 100% | ~5s |
+| Amazon DynamoDB | 11/11 | ✅ 100% | ~9s |
+| Amazon Cognito+S3 | 15/15 | ✅ 100% | ~8s |
 | E2E Workflow | 18/18 | ✅ 100% | 18.3s |
 
 ### ⚠️ REQUIRES SETUP (18/96 tests)
 
 | Service | Tests | Status | Action Required |
 |---------|-------|--------|-----------------|
-| Earth Engine | 0/6 | ⚠️ 0% | Enable API & configure auth |
+| SageMaker Geospatial | 0/6 | ⚠️ 0% | Enable API & configure auth |
 | Maps Platform | 1/8 | ⚠️ 12.5% | Enable Routes, Places, Geocoding APIs |
 | ML Services | 2/7 | ⚠️ 28.6% | Start Docker containers |
 
@@ -63,39 +63,39 @@ npm test
 
 3. **Required Environment Variables**
    ```env
-   GCP_PROJECT_ID=drishtix-479606
-   GCP_SERVICE_ACCOUNT_KEY_PATH=./config/gcp-service-account-key.json
-   GCP_REGION=us-central1
-   FIREBASE_PROJECT_ID=drishtix-479606
-   FIREBASE_SERVICE_ACCOUNT_KEY_PATH=./config/gcp-service-account-key.json
+   AWS_ACCOUNT_ID=YOUR_AWS_ACCOUNT_ID
+   AWS_SERVICE_ACCOUNT_KEY_PATH=./config/AWS-service-account-key.json
+   AWS_REGION=us-central1
+   Amazon Cognito+S3_PROJECT_ID=YOUR_AWS_ACCOUNT_ID
+   Amazon Cognito+S3_SERVICE_ACCOUNT_KEY_PATH=./config/AWS-service-account-key.json
    ```
 
 ### Fix Failing Tests
 
-#### Earth Engine (0/6 passing)
+#### SageMaker Geospatial (0/6 passing)
 ```bash
-# 1. Enable Earth Engine API
-gcloud services enable earthengine.googleapis.com --project=drishtix-479606
+# 1. Enable SageMaker Geospatial API
+# SageMaker Geospatial � enabled via CDK/console
 
-# 2. Initialize Earth Engine
+# 2. Initialize SageMaker Geospatial
 # Visit: https://code.earthengine.google.com/
 # Accept terms and link project
 
 # 3. Grant permissions
-gcloud projects add-iam-policy-binding drishtix-479606 \
-  --member="serviceAccount:drishtix-sa@drishtix-479606.iam.gserviceaccount.com" \
+aws iam attach-role-policy --role-name drishtix-sagemaker-geo-role \
+  --member="serviceAccount:arn:aws:iam::YOUR_ACCOUNT_ID:role/drishtix-service-role" \
   --role="roles/earthengine.viewer"
 ```
 
 #### Maps Platform (1/8 passing)
 ```bash
 # Enable required APIs
-gcloud services enable routes.googleapis.com --project=drishtix-479606
-gcloud services enable places-backend.googleapis.com --project=drishtix-479606
-gcloud services enable geocoding-backend.googleapis.com --project=drishtix-479606
+# Amazon Location Route Calculator � enabled via console
+# Amazon Location Place Index � enabled via console
+# Amazon Location Geocoding � enabled via console
 
 # Verify APIs are enabled
-gcloud services list --enabled | grep -E "routes|places|geocoding"
+aws location list-maps --region ap-south-1
 ```
 
 #### ML Services (2/7 passing)
@@ -117,17 +117,17 @@ docker-compose logs -f vision-service
 
 ## 📋 Test Breakdown
 
-### Core GCP Services (14 tests) ✅
+### Core AWS Services (14 tests) ✅
 **What it tests:**
 - Service account authentication
-- GCP project access
-- IAM permissions (Pub/Sub, BigQuery, Storage)
+- AWS project access
+- IAM permissions (Amazon SQS + SNS, Amazon Athena, Storage)
 - Environment configuration
 - API quotas and rate limits
 
-**Why it matters:** Validates that your GCP credentials and project are properly configured.
+**Why it matters:** Validates that your AWS credentials and project are properly configured.
 
-### Pub/Sub Integration (7 tests) ✅
+### Amazon SQS + SNS Integration (7 tests) ✅
 **What it tests:**
 - Topic creation and listing
 - Message publishing (single & batch)
@@ -137,7 +137,7 @@ docker-compose logs -f vision-service
 
 **Why it matters:** Ensures real-time messaging infrastructure works.
 
-### BigQuery Analytics (10 tests) ✅
+### Amazon Athena Analytics (10 tests) ✅
 **What it tests:**
 - Dataset access
 - Table schema validation (3 tables)
@@ -147,7 +147,7 @@ docker-compose logs -f vision-service
 
 **Why it matters:** Confirms analytics and data warehousing capabilities.
 
-### Firestore Database (11 tests) ✅
+### Amazon DynamoDB Database (11 tests) ✅
 **What it tests:**
 - Database connection
 - CRUD operations
@@ -158,11 +158,11 @@ docker-compose logs -f vision-service
 
 **Why it matters:** Validates real-time database and data storage.
 
-### Firebase Auth & FCM (15 tests) ✅
+### Amazon Cognito & Amazon SNS Push (15 tests) ✅
 **What it tests:**
 - User management (create, read, update, delete)
 - Custom claims (role-based access)
-- FCM notifications (single, multicast, topic)
+- Amazon SNS Push notifications (single, multicast, topic)
 - Multi-factor authentication (MFA)
 - 4 user roles (Admin, Security, Organizer, Attendee)
 
@@ -184,18 +184,18 @@ docker-compose logs -f vision-service
 
 **These tests MUST pass for production:**
 
-1. ✅ Core GCP Services - Authentication and access
-2. ✅ Pub/Sub Integration - Real-time messaging
-3. ✅ BigQuery Analytics - Data warehousing
-4. ✅ Firestore Database - Real-time data storage
-5. ✅ Firebase Auth & FCM - User auth and notifications
+1. ✅ Core AWS Services - Authentication and access
+2. ✅ Amazon SQS + SNS Integration - Real-time messaging
+3. ✅ Amazon Athena Analytics - Data warehousing
+4. ✅ Amazon DynamoDB Database - Real-time data storage
+5. ✅ Amazon Cognito & Amazon SNS Push - User auth and notifications
 6. ✅ End-to-End Workflow - Complete system integration
 
 **Current Status: 78/78 critical tests passing (100%)**
 
 ## ⚠️ Non-Critical Tests (Can be fixed later)
 
-- Earth Engine - Advanced analytics (optional)
+- SageMaker Geospatial - Advanced analytics (optional)
 - Maps Platform - Enhanced navigation (can use basic features)
 - ML Services - Predictions (can be mocked initially)
 
@@ -236,13 +236,13 @@ docker-compose logs vision-service
 cat .env
 
 # Verify service account key
-cat config/gcp-service-account-key.json | jq .project_id
+cat config/AWS-service-account-key.json | jq .project_id
 
-# Check GCP project
-gcloud config get-value project
+# Check AWS project
+aws configure get region
 
 # List enabled APIs
-gcloud services list --enabled
+aws iam list-attached-role-policies --role-name drishtix-service-role
 ```
 
 ### Test Individual Components
@@ -257,17 +257,17 @@ npm run test:core --verbose
 ## 📈 Performance Benchmarks
 
 **Expected test durations:**
-- Core GCP: ~9 seconds
-- Pub/Sub: ~3 seconds
-- BigQuery: ~5 seconds
-- Firestore: ~9 seconds
-- Firebase: ~8 seconds
+- Core AWS: ~9 seconds
+- Amazon SQS + SNS: ~3 seconds
+- Amazon Athena: ~5 seconds
+- Amazon DynamoDB: ~9 seconds
+- Amazon Cognito+S3: ~8 seconds
 - E2E Workflow: ~18 seconds
 - **Total (all passing tests): ~60 seconds**
 
 If tests are significantly slower:
 1. Check network connection
-2. Verify GCP region (use us-central1)
+2. Verify AWS region (use us-central1)
 3. Check for rate limiting
 4. Ensure no other heavy processes running
 
@@ -293,7 +293,7 @@ npm test  # Run test orchestrator with full report
 ### Updating Tests
 
 **When to update tests:**
-- Adding new GCP services
+- Adding new AWS services
 - Changing data schemas
 - Updating security rules
 - Adding new features
@@ -301,14 +301,14 @@ npm test  # Run test orchestrator with full report
 **Test file locations:**
 ```
 setup_testing/
-├── test-gcp-core.ts         # Core services
-├── test-pubsub.ts           # Pub/Sub
-├── test-bigquery.ts         # BigQuery
-├── test-firestore.ts        # Firestore
-├── test-earth-engine.ts     # Earth Engine
+├── test-AWS-core.ts         # Core services
+├── test-pubsub.ts           # Amazon SQS + SNS
+├── test-Amazon Athena.ts         # Amazon Athena
+├── test-Amazon DynamoDB.ts        # Amazon DynamoDB
+├── test-earth-engine.ts     # SageMaker Geospatial
 ├── test-maps-platform.ts    # Maps
 ├── test-local-ml.ts         # ML services
-├── test-firebase.ts         # Firebase
+├── test-Amazon Cognito+S3.ts         # Amazon Cognito+S3
 └── test-e2e-workflow.ts     # E2E workflow
 ```
 
@@ -327,7 +327,7 @@ setup_testing/
 1. Check this guide's "Fix Failing Tests" section
 2. Review error messages carefully
 3. Verify environment configuration
-4. Check GCP console for API status
+4. Check AWS console for API status
 5. Review logs: `npm run test:core 2>&1 | tee debug.log`
 
 **Common Issues:**

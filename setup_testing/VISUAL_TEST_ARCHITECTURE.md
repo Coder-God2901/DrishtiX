@@ -12,7 +12,7 @@
 └─────────────────────────────────────────────────────────────────────┘
 
     ┌──────────────────────────────────────────────────────────────┐
-    │  1. Core GCP Services                    ✅ 14/14 (9.3s)    │
+    │  1. Core AWS Services                    ✅ 14/14 (9.3s)    │
     ├──────────────────────────────────────────────────────────────┤
     │  • Service Account Authentication                             │
     │  • Project Access Verification                                │
@@ -22,7 +22,7 @@
     └──────────────────────────────────────────────────────────────┘
                             ↓
     ┌──────────────────────────────────────────────────────────────┐
-    │  2. Pub/Sub Integration                   ✅ 7/7 (~3s)      │
+    │  2. Amazon SQS + SNS Integration                   ✅ 7/7 (~3s)      │
     ├──────────────────────────────────────────────────────────────┤
     │  • Topic Creation & Listing                                   │
     │  • Message Publishing (Single & Batch)                        │
@@ -32,7 +32,7 @@
     └──────────────────────────────────────────────────────────────┘
                             ↓
     ┌──────────────────────────────────────────────────────────────┐
-    │  3. BigQuery Analytics                   ✅ 10/10 (~5s)     │
+    │  3. Amazon Athena Analytics                   ✅ 10/10 (~5s)     │
     ├──────────────────────────────────────────────────────────────┤
     │  • Dataset Access                                             │
     │  • Table Schema Validation (3 tables)                         │
@@ -42,7 +42,7 @@
     └──────────────────────────────────────────────────────────────┘
                             ↓
     ┌──────────────────────────────────────────────────────────────┐
-    │  4. Firestore Database                   ✅ 11/11 (~9s)     │
+    │  4. Amazon DynamoDB Database                   ✅ 11/11 (~9s)     │
     ├──────────────────────────────────────────────────────────────┤
     │  • Database Connection                                        │
     │  • CRUD Operations                                            │
@@ -53,11 +53,11 @@
     └──────────────────────────────────────────────────────────────┘
                             ↓
     ┌──────────────────────────────────────────────────────────────┐
-    │  5. Firebase Auth & FCM                  ✅ 15/15 (~8s)     │
+    │  5. Amazon Cognito & Amazon SNS Push                  ✅ 15/15 (~8s)     │
     ├──────────────────────────────────────────────────────────────┤
     │  • User Management (CRUD)                                     │
     │  • Custom Claims (4 Roles)                                    │
-    │  • FCM Notifications                                          │
+    │  • Amazon SNS Push Notifications                                          │
     │  • Multi-Factor Authentication                                │
     └──────────────────────────────────────────────────────────────┘
                             ↓
@@ -78,7 +78,7 @@
 └─────────────────────────────────────────────────────────────────────┘
 
     ┌──────────────────────────────────────────────────────────────┐
-    │  7. Earth Engine API                      ⚠️ 0/6 (0%)       │
+    │  7. SageMaker Geospatial API                      ⚠️ 0/6 (0%)       │
     ├──────────────────────────────────────────────────────────────┤
     │  ❌ Service Status Check                                      │
     │  ❌ Satellite Imagery (Sentinel-2)                            │
@@ -86,13 +86,13 @@
     │  ❌ Land Cover Classification                                 │
     │  ❌ Synthetic Crowd Data                                      │
     │                                                               │
-    │  📋 Action: Enable Earth Engine API                          │
+    │  📋 Action: Enable SageMaker Geospatial API                          │
     └──────────────────────────────────────────────────────────────┘
 
     ┌──────────────────────────────────────────────────────────────┐
     │  8. Maps Platform                       ⚠️ 1/8 (12.5%)      │
     ├──────────────────────────────────────────────────────────────┤
-    │  ✅ Maps API Key Verification                                 │
+    │  ✅ Amazon Location Service Key Verification                                 │
     │  ❌ Routes API (Safe Routing)                                 │
     │  ❌ Places API (POI Discovery)                                │
     │  ❌ Geocoding API                                             │
@@ -129,7 +129,7 @@
     └──────────┘               │
          │                     ↓
          │              ┌─────────────┐
-         │              │  Firestore  │ ✅ Event Data Stored
+         │              │  Amazon DynamoDB  │ ✅ Event Data Stored
          │              └─────────────┘
          │                     │
          ↓                     │
@@ -139,7 +139,7 @@
     └──────────┘               │
          │                     ↓
          │              ┌─────────────┐
-         │              │   Pub/Sub   │ ✅ Real-time Messaging
+         │              │   Amazon SQS + SNS   │ ✅ Real-time Messaging
          │              └─────────────┘
          │                     │
          ↓                     │
@@ -150,7 +150,7 @@
          │                     │
          │                     ↓
          │              ┌─────────────┐
-         │              │  BigQuery   │ ✅ Analytics Storage
+         │              │  Amazon Athena   │ ✅ Analytics Storage
          │              └─────────────┘
          │                     │
          ↓                     │
@@ -160,8 +160,8 @@
     └──────────┘               │
          │                     ↓
          │              ┌─────────────┐
-         │              │ Firebase    │ ✅ Notifications Sent
-         │              │     FCM     │
+         │              │ Amazon Cognito+S3    │ ✅ Notifications Sent
+         │              │     Amazon SNS Push     │
          │              └─────────────┘
          │
          ↓
@@ -179,14 +179,14 @@
 ┌──────────────────┬─────────┬─────────┬──────────┬──────────────┐
 │    Service       │  Tests  │ Passing │  Status  │   Priority   │
 ├──────────────────┼─────────┼─────────┼──────────┼──────────────┤
-│ Core GCP         │   14    │   14    │    ✅    │   CRITICAL   │
-│ Pub/Sub          │    7    │    7    │    ✅    │   CRITICAL   │
-│ BigQuery         │   10    │   10    │    ✅    │   CRITICAL   │
-│ Firestore        │   11    │   11    │    ✅    │   CRITICAL   │
-│ Firebase         │   15    │   15    │    ✅    │   CRITICAL   │
+│ Core AWS         │   14    │   14    │    ✅    │   CRITICAL   │
+│ Amazon SQS + SNS          │    7    │    7    │    ✅    │   CRITICAL   │
+│ Amazon Athena         │   10    │   10    │    ✅    │   CRITICAL   │
+│ Amazon DynamoDB        │   11    │   11    │    ✅    │   CRITICAL   │
+│ Amazon Cognito+S3         │   15    │   15    │    ✅    │   CRITICAL   │
 │ E2E Workflow     │   18    │   18    │    ✅    │   CRITICAL   │
 ├──────────────────┼─────────┼─────────┼──────────┼──────────────┤
-│ Earth Engine     │    6    │    0    │    ⚠️    │   OPTIONAL   │
+│ SageMaker Geospatial     │    6    │    0    │    ⚠️    │   OPTIONAL   │
 │ Maps Platform    │    8    │    1    │    ⚠️    │  ENHANCED    │
 │ ML Services      │    7    │    2    │    ⚠️    │  ENHANCED    │
 ├──────────────────┼─────────┼─────────┼──────────┼──────────────┤
@@ -201,7 +201,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                   ROLE-BASED ACCESS CONTROL                          │
-│                      (Firebase Tested ✅)                            │
+│                      (Amazon Cognito+S3 Tested ✅)                            │
 └─────────────────────────────────────────────────────────────────────┘
 
     ┌─────────────────────────────────────────────────────────────┐
@@ -252,11 +252,11 @@
 
 ---
 
-## 📦 BigQuery Schema
+## 📦 Amazon Athena Schema
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    BIGQUERY ANALYTICS SCHEMA                         │
+│                    Amazon Athena ANALYTICS SCHEMA                         │
 │                         (3 Tables ✅)                                │
 └─────────────────────────────────────────────────────────────────────┘
 
@@ -307,7 +307,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    FCM NOTIFICATION TYPES                            │
+│                    Amazon SNS Push NOTIFICATION TYPES                            │
 │                        (5 Types ✅)                                  │
 └─────────────────────────────────────────────────────────────────────┘
 
@@ -328,29 +328,29 @@
 └─────────────────────────────────────────────────────────────────────┘
 
 0s ───────► PHASE 1: Event Creation (3.4s)
-            │ • Create event in Firestore (2.1s)
+            │ • Create event in Amazon DynamoDB (2.1s)
             │ • Create 3 monitoring zones (1.2s)
             ↓
 3.4s ──────► PHASE 2: Data Streaming (0.6s)
-            │ • Publish crowd updates to Pub/Sub (292ms)
+            │ • Publish crowd updates to Amazon SQS + SNS (292ms)
             │ • Update zone densities (305ms)
             ↓
 4.0s ──────► PHASE 3: ML Predictions (4.2s)
             │ • Generate predictions (1.2s)
             │ • Publish results (102ms)
-            │ • Store in BigQuery (2.9s)
+            │ • Store in Amazon Athena (2.9s)
             ↓
 8.2s ──────► PHASE 4: Emergency Alerts (2.6s)
             │ • Create alert (303ms)
-            │ • Publish to Pub/Sub (92ms)
-            │ • Send FCM notification (926ms)
+            │ • Publish to Amazon SQS + SNS (92ms)
+            │ • Send Amazon SNS Push notification (926ms)
             │ • Log incident (1.3s)
             ↓
 10.8s ─────► PHASE 5: Verification (3.9s)
-            │ • Verify Firestore data (295ms)
+            │ • Verify Amazon DynamoDB data (295ms)
             │ • Verify predictions (1.2s)
             │ • Verify alerts (312ms)
-            │ • Query BigQuery (786ms)
+            │ • Query Amazon Athena (786ms)
             │ • Check pipeline (1.4s)
             ↓
 14.7s ─────► PHASE 6: Cleanup (2.1s)
@@ -370,14 +370,14 @@ setup_testing/
 ├── npm test                  # Full test runner with reports
 │
 ├── npm run test:all          # Sequential execution
-│   ├── test:core            # Core GCP (prerequisite)
-│   ├── test:pubsub          # Pub/Sub integration
-│   ├── test:bigquery        # BigQuery analytics
-│   ├── test:firestore       # Firestore database
-│   ├── test:earth-engine    # Earth Engine (optional)
+│   ├── test:core            # Core AWS (prerequisite)
+│   ├── test:pubsub          # Amazon SQS + SNS integration
+│   ├── test:Amazon Athena        # Amazon Athena analytics
+│   ├── test:Amazon DynamoDB       # Amazon DynamoDB database
+│   ├── test:earth-engine    # SageMaker Geospatial (optional)
 │   ├── test:maps            # Maps Platform (optional)
 │   ├── test:ml              # ML services (optional)
-│   ├── test:firebase        # Firebase Auth & FCM
+│   ├── test:Amazon Cognito+S3        # Amazon Cognito & Amazon SNS Push
 │   └── test:e2e             # End-to-end workflow
 │
 └── Individual Tests (parallel execution supported)
@@ -395,19 +395,19 @@ setup_testing/
 ├── .env.example                      # Environment template
 │
 ├── config/
-│   └── gcp-service-account-key.json # GCP credentials
+│   └── AWS-service-account-key.json # AWS credentials
 │
 ├── test-config.ts                    # Shared test configuration
 ├── test-runner.ts                    # Test orchestrator
 │
-├── test-gcp-core.ts           ✅    # Core GCP services (14 tests)
-├── test-pubsub.ts             ✅    # Pub/Sub (7 tests)
-├── test-bigquery.ts           ✅    # BigQuery (10 tests)
-├── test-firestore.ts          ✅    # Firestore (11 tests)
-├── test-firebase.ts           ✅    # Firebase (15 tests)
+├── test-AWS-core.ts           ✅    # Core AWS services (14 tests)
+├── test-pubsub.ts             ✅    # Amazon SQS + SNS (7 tests)
+├── test-Amazon Athena.ts           ✅    # Amazon Athena (10 tests)
+├── test-Amazon DynamoDB.ts          ✅    # Amazon DynamoDB (11 tests)
+├── test-Amazon Cognito+S3.ts           ✅    # Amazon Cognito+S3 (15 tests)
 ├── test-e2e-workflow.ts       ✅    # E2E workflow (18 tests)
 │
-├── test-earth-engine.ts       ⚠️    # Earth Engine (0/6)
+├── test-earth-engine.ts       ⚠️    # SageMaker Geospatial (0/6)
 ├── test-maps-platform.ts      ⚠️    # Maps (1/8)
 ├── test-local-ml.ts           ⚠️    # ML services (2/7)
 │

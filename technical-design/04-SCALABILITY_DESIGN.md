@@ -125,12 +125,12 @@ Batch Operations:
    ┌▼┐ ┌▼┐ ┌▼┐         ┌▼┐ ┌▼┐ ┌▼┐        ┌▼┐ ┌▼┐ ┌▼┐
    │1│ │2│ │3│         │1│ │2│ │3│        │1│ │2│ │3│
    └─┘ └─┘ └─┘         └─┘ └─┘ └─┘        └─┘ └─┘ └─┘
-  Cloud Run          Cloud Run          Cloud Run
+  AWS App Runner          AWS App Runner          AWS App Runner
   Instances          Instances          Instances
   (0-100)            (0-100)            (0-100)
 ```
 
-### Cloud Run Auto-Scaling Configuration
+### AWS App Runner Auto-Scaling Configuration
 
 ```yaml
 # cloud-run-service.yaml
@@ -148,12 +148,12 @@ spec:
         autoscaling.knative.dev/target: '80'
 
         # CPU Allocation
-        run.googleapis.com/cpu-throttling: 'false'
-        run.googleapis.com/startup-cpu-boost: 'true'
+        run.amazonaws.com/cpu-throttling: 'false'
+        run.amazonaws.com/startup-cpu-boost: 'true'
 
         # Instance Limits
-        run.googleapis.com/max-instances: '100'
-        run.googleapis.com/min-instances: '2'
+        run.amazonaws.com/max-instances: '100'
+        run.amazonaws.com/min-instances: '2'
     spec:
       containers:
         - image: gcr.io/drishtix/api:latest
@@ -303,9 +303,9 @@ const scalingProfiles = {
 // Code-level optimizations for vertical scaling
 
 // 1. Connection Pooling
-import { Pool } from '@google-cloud/firestore';
+import { Pool } from '@google-cloud/Amazon DynamoDB';
 
-const firestorePool = new Pool({
+const Amazon DynamoDBPool = new Pool({
   min: 10, // Minimum connections
   max: 100, // Maximum connections
   idleTimeoutMillis: 30000, // Close idle after 30s
@@ -316,13 +316,13 @@ const firestorePool = new Pool({
 class OptimizedQueries {
   // Bad: Fetches all documents, filters in memory
   async getBadIncidents() {
-    const docs = await firestore.collection('incidents').get();
+    const docs = await Amazon DynamoDB.collection('incidents').get();
     return docs.docs.filter((d) => d.data().severity === 'critical');
   }
 
-  // Good: Firestore index + server-side filtering
+  // Good: Amazon DynamoDB index + server-side filtering
   async getGoodIncidents() {
-    return await firestore
+    return await Amazon DynamoDB
       .collection('incidents')
       .where('severity', '==', 'critical')
       .where('status', '==', 'active')
@@ -335,10 +335,10 @@ class OptimizedQueries {
 // 3. Batch Operations
 class BatchProcessor {
   async processBatch(items: any[]) {
-    const batch = firestore.batch();
+    const batch = Amazon DynamoDB.batch();
 
     items.forEach((item) => {
-      const ref = firestore.collection('incidents').doc(item.id);
+      const ref = Amazon DynamoDB.collection('incidents').doc(item.id);
       batch.set(ref, item);
     });
 
@@ -379,11 +379,11 @@ class LazyLoader {
 
 ## Database Scaling
 
-### Firestore Scaling Strategy
+### Amazon DynamoDB Scaling Strategy
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                FIRESTORE SCALING ARCHITECTURE               │
+│                Amazon DynamoDB SCALING ARCHITECTURE               │
 └─────────────────────────────────────────────────────────────┘
 
                     Application Layer
@@ -397,7 +397,7 @@ class LazyLoader {
                 │          │          │
          ┌──────┴──────────┴──────────┴──────┐
          │                                   │
-         │  Firestore (Multi-Region)         │
+         │  Amazon DynamoDB (Multi-Region)         │
          │  ─────────────────────────────    │
          │  • Auto-scaling                   │
          │  • Automatic sharding             │
@@ -460,7 +460,7 @@ async function createIncident(eventId: string, incident: Incident) {
   const shard = sharding.getEventShard(eventId);
   const collection = `incidents_${shard}`;
 
-  await firestore
+  await Amazon DynamoDB
     .collection(collection)
     .add(incident);
 }
@@ -470,14 +470,14 @@ async function queryAllShards(eventId: string) {
   const shard = sharding.getEventShard(eventId);
   const collection = `incidents_${shard}`;
 
-  return await firestore
+  return await Amazon DynamoDB
     .collection(collection)
     .where('eventId', '==', eventId)
     .get();
 }
 ```
 
-### Read Replicas (BigQuery)
+### Read Replicas (Amazon Athena + AWS Glue)
 
 ```sql
 -- Materialized view for analytics (refreshed every 5 minutes)
@@ -509,16 +509,16 @@ WHERE event_id = 'evt_123'
 ### Database Connection Pooling
 
 ```typescript
-// Firestore connection pool
-class FirestorePool {
-  private pools: Map<string, Firestore[]> = new Map();
+// Amazon DynamoDB connection pool
+class Amazon DynamoDBPool {
+  private pools: Map<string, Amazon DynamoDB[]> = new Map();
   private config = {
     minConnections: 5,
     maxConnections: 50,
     idleTimeout: 60000, // 60 seconds
   };
 
-  async getConnection(region: string): Promise<Firestore> {
+  async getConnection(region: string): Promise<Amazon DynamoDB> {
     let pool = this.pools.get(region);
 
     if (!pool) {
@@ -538,8 +538,8 @@ class FirestorePool {
     return await this.waitForConnection(pool);
   }
 
-  private createConnection(region: string): Firestore {
-    return new Firestore({
+  private createConnection(region: string): Amazon DynamoDB {
+    return new Amazon DynamoDB({
       projectId: 'drishtix',
       preferRest: false, // Use gRPC for better performance
       maxIdleChannels: 10,
@@ -547,14 +547,14 @@ class FirestorePool {
     });
   }
 
-  releaseConnection(region: string, connection: Firestore) {
+  releaseConnection(region: string, connection: Amazon DynamoDB) {
     const pool = this.pools.get(region);
     if (pool && pool.length < this.config.maxConnections) {
       pool.push(connection);
     }
   }
 
-  private async waitForConnection(pool: Firestore[]): Promise<Firestore> {
+  private async waitForConnection(pool: Amazon DynamoDB[]): Promise<Amazon DynamoDB> {
     return new Promise((resolve) => {
       const interval = setInterval(() => {
         const conn = pool.pop();
@@ -613,8 +613,8 @@ Client Request
       ▼
 ┌─────────────┐
 │  Database   │
-│ (Firestore/ │
-│  BigQuery)  │
+│ (Amazon DynamoDB/ │
+│  Amazon Athena + AWS Glue)  │
 └─────────────┘
       │
       ▼
@@ -762,7 +762,7 @@ class CacheInvalidation {
   // Pattern 3: Write-through cache
   async updateEntity(entity: any) {
     // Update database
-    await firestore.collection(entity.type).doc(entity.id).set(entity);
+    await Amazon DynamoDB.collection(entity.type).doc(entity.id).set(entity);
 
     // Invalidate cache
     await this.invalidateOnUpdate(entity.type, entity.id);
@@ -829,7 +829,7 @@ class CacheInvalidation {
      ┌▼┐ ┌▼┐ ┌▼┐ ┌▼┐   ┌▼┐┌▼┐┌▼┐┌▼┐   ┌▼┐ ┌▼┐┌▼┐┌▼┐
      │1│ │2│ │3│ │4│   │1││2││3││4│   │1│ │2││3││4│
      └─┘ └─┘ └─┘ └─┘   └─┘└─┘└─┘└─┘   └─┘ └─┘└─┘└─┘
-   Cloud Run Instances  Cloud Run      Cloud Run
+   AWS App Runner Instances  AWS App Runner      AWS App Runner
 ```
 
 ### Load Balancing Algorithms
@@ -1003,7 +1003,7 @@ class CircuitBreaker {
 
 ## Auto-Scaling Policies
 
-### Cloud Run Auto-Scaling
+### AWS App Runner Auto-Scaling
 
 ```yaml
 # Auto-scaling configuration

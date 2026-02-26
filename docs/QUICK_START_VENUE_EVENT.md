@@ -3,7 +3,7 @@
 ## Prerequisites
 
 1. ✅ PostgreSQL running with PostGIS extension
-2. ✅ Google Maps API key configured in `.env`
+2. ✅ Amazon Location Service key configured in `.env`
 3. ✅ Backend dependencies installed
 4. ✅ Database migrations applied
 
@@ -14,7 +14,7 @@
 Create/update `.env` file in project root:
 
 ```env
-# Google Maps
+# Amazon Location Service
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
 # WebSocket
@@ -30,7 +30,7 @@ Create/update `server/.env`:
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/eventsphere
 
-# Google Maps
+# Amazon Location Service
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
 # Server
@@ -220,7 +220,7 @@ Get-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess | Stop-Proc
 **Solutions:**
 
 1. Check API key in `.env`: `VITE_GOOGLE_MAPS_API_KEY`
-2. Verify Google Maps JavaScript API enabled in console
+2. Verify Amazon Location Service JavaScript API enabled in console
 3. Check browser console for errors
 4. Clear browser cache
 

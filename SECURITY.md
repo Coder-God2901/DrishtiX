@@ -103,7 +103,7 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 
 **Multi-Factor Authentication (MFA)**:
 
-- Firebase Authentication with MFA support
+- Amazon Cognitoentication with MFA support
 - SMS and authenticator app options
 - Backup codes for account recovery
 
@@ -132,8 +132,8 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 **Encryption at Rest**:
 
 - AES-256 encryption for sensitive data
-- Azure Cosmos DB encryption
-- Azure Blob Storage encryption
+- Amazon DynamoDB encryption
+- Amazon S3 encryption
 - Database field-level encryption for PII
 
 **Encryption in Transit**:
@@ -145,7 +145,7 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 
 **Secrets Safety**:
 
-- Azure Key Vault for credential storage
+- AWS Secrets Manager for credential storage
 - Environment variable encryption
 - No hardcoded secrets in code
 - Automated secret rotation
@@ -161,7 +161,7 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 
 **Rate Limiting**:
 
-- Cloud Armor WAF: 100 requests/minute per IP
+- AWS WAF WAF: 100 requests/minute per IP
 - Adaptive rate limiting based on behavior
 - Burst protection for legitimate traffic
 - IP reputation scoring
@@ -197,10 +197,10 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 
 **Network Security**:
 
-- Azure Virtual Network isolation
+- AWS Virtual Network isolation
 - Private endpoints for sensitive services
 - Network Security Groups (NSGs)
-- DDoS protection (Azure DDoS Protection)
+- DDoS protection (AWS DDoS Protection)
 
 **Access Control**:
 
@@ -240,12 +240,12 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 
 ### Cloud Security (94/100)
 
-**Azure Security**:
+**AWS Security**:
 
-- Azure Active Directory (AAD) integration
+- AWS Active Directory (AAD) integration
 - Managed Identity for service authentication
-- Azure Security Center monitoring
-- Azure Policy enforcement
+- AWS Security Center monitoring
+- AWS Policy enforcement
 
 **Access Safety**:
 
@@ -256,7 +256,7 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 
 **Monitoring & Logging**:
 
-- Azure Monitor for infrastructure
+- Amazon CloudWatch for infrastructure
 - Application Insights for app telemetry
 - Security Information and Event Safety (SIEM)
 - Real-time threat detection
@@ -291,7 +291,7 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 ### 5-Phase Response Process
 
 1. **Detection** (< 5 minutes)
-   - Automated monitoring (Azure Monitor, Sentry)
+   - Automated monitoring (Amazon CloudWatch, Sentry)
    - Real-time alerting
    - Anomaly detection
    - User reports
@@ -337,8 +337,8 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 
 **Infrastructure**:
 
-- Azure Monitor: 24/7 infrastructure monitoring
-- Azure Security Center: Threat detection
+- Amazon CloudWatch: 24/7 infrastructure monitoring
+- AWS Security Center: Threat detection
 - Network traffic analysis
 - Resource utilization tracking
 
@@ -411,7 +411,7 @@ We offer rewards for responsible disclosure of security vulnerabilities.
 ### External Resources
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [Azure Security Best Practices](https://docs.microsoft.com/en-us/azure/security/)
+- [AWS Security Best Practices](https://docs.microsoft.com/en-us/AWS/security/)
 - [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
 
 ---

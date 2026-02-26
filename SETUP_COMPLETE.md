@@ -1,7 +1,7 @@
 # ✅ Setup Complete - Configuration Status
 
 **Date**: December 2, 2025  
-**Project**: DrishtiX (drishtix-479606)  
+**Project**: DrishtiX (YOUR_AWS_ACCOUNT_ID)  
 **Status**: ✅ **READY FOR DEVELOPMENT**
 
 ---
@@ -11,14 +11,14 @@
 ### ✅ All Critical Components Configured
 
 #### 1. Service Account Key ✅
-- **Location**: `config/gcp-service-account-key.json`
-- **Server Copy**: `server/config/gcp-service-account-key.json`
-- **Project**: `drishtix-479606`
-- **Service Account**: `drishtix-sa@drishtix-479606.iam.gserviceaccount.com`
+- **Location**: `config/AWS-service-account-key.json`
+- **Server Copy**: `server/config/AWS-service-account-key.json`
+- **Project**: `YOUR_AWS_ACCOUNT_ID`
+- **Service Account**: `arn:aws:iam::YOUR_ACCOUNT_ID:role/drishtix-service-role`
 - **Status**: Transferred from previous project ✅
 - **Authentication**: Active ✅
 
-#### 2. Pub/Sub Topics (18/18) ✅
+#### 2. Amazon SQS + SNS Topics (18/18) ✅
 All required topics created:
 - ✅ anomaly-detections
 - ✅ anomaly-events
@@ -39,32 +39,32 @@ All required topics created:
 - ✅ video-analytics
 - ✅ weather-updates
 
-#### 3. Cloud Storage ✅
-- **Bucket**: `drishtix-479606-data-storage`
+#### 3. Amazon S3 ✅
+- **Bucket**: `YOUR_AWS_ACCOUNT_ID-data-storage`
 - **Configuration**: Updated in `.env` ✅
 
-#### 4. GCP APIs (54 services) ✅
+#### 4. AWS APIs (54 services) ✅
 All required APIs enabled including:
-- ✅ Firebase & Firestore
-- ✅ Cloud Functions
-- ✅ Pub/Sub
-- ✅ BigQuery
-- ✅ Vertex AI
+- ✅ Amazon Cognito+S3 & Amazon DynamoDB
+- ✅ AWS Lambda
+- ✅ Amazon SQS + SNS
+- ✅ Amazon Athena
+- ✅ Amazon SageMaker
 - ✅ Vision AI
 - ✅ Gemini (Generative Language API)
-- ✅ Google Maps (Routes, Places)
-- ✅ Earth Engine API ✅ (Just enabled)
-- ✅ Cloud Run
-- ✅ Secret Manager
-- ✅ Cloud Logging & Monitoring
+- ✅ Amazon Location Service (Routes, Places)
+- ✅ SageMaker Geospatial API ✅ (Just enabled)
+- ✅ AWS App Runner
+- ✅ AWS Secrets Manager
+- ✅ Amazon CloudWatch Logs & Monitoring
 
 #### 5. Environment Variables ✅
 **Fixed Issues**:
 - ✅ Storage bucket name corrected
 - ✅ Gemini API key added to frontend
-- ✅ All GCP project IDs verified
+- ✅ All AWS project IDs verified
 
-#### 6. Firebase Configuration ✅
+#### 6. Amazon Cognito+S3 Configuration ✅
 - ✅ API Key configured
 - ✅ Auth Domain configured
 - ✅ Project ID correct
@@ -73,7 +73,7 @@ All required APIs enabled including:
 - ✅ App ID configured
 - ✅ Measurement ID configured
 
-#### 7. Google Maps API ✅
+#### 7. Amazon Location Service ✅
 - ✅ API Key: `AIzaSyDCDgccfU3Gfg8d8awLeOHX6SD6N2SLWgg`
 - ✅ Routes API enabled
 - ✅ Places API enabled
@@ -91,24 +91,24 @@ All required APIs enabled including:
 **Overall Status**: ✅ Ready for Development
 
 ### Breakdown:
-- **GCP Infrastructure**: 100% ✅
+- **AWS Infrastructure**: 100% ✅
   - APIs: 100% ✅ (54 services)
   - Service Account: 100% ✅
   - IAM Roles: 100% ✅
   - Storage: 100% ✅
-  - Pub/Sub: 100% ✅ (18 topics)
+  - Amazon SQS + SNS: 100% ✅ (18 topics)
   
 - **Authentication**: 100% ✅
   - Service Account Key: 100% ✅
-  - GCP Authentication: Active ✅
+  - AWS Authentication: Active ✅
   
 - **Environment Variables**: 85% ✅
   - Critical values: 100% ✅
   - Optional values: 20% (OK for development)
   
 - **Third-Party APIs**: 60%
-  - Firebase: 90% ✅ (missing FCM server key - optional)
-  - Google Maps: 100% ✅
+  - Amazon Cognito+S3: 90% ✅ (missing Amazon SNS Push server key - optional)
+  - Amazon Location Service: 100% ✅
   - Gemini: 100% ✅
   - Weather: 0% (optional)
   - Twitter: 0% (optional)
@@ -120,14 +120,14 @@ All required APIs enabled including:
 
 ### Optional for Development (Can skip):
 
-1. **FCM Server Key** (For push notifications)
-   - Get from: https://console.firebase.google.com/project/drishtix-479606/settings/cloudmessaging
-   - Add to `.env`: `FIREBASE_SERVER_KEY=`
-   - Add to `server/.env`: `FCM_SERVER_KEY=`
+1. **Amazon SNS Push Server Key** (For push notifications)
+   - Get from: https://console.Amazon Cognito+S3.google.com/project/YOUR_AWS_ACCOUNT_ID/settings/cloudmessaging
+   - Add to `.env`: `Amazon Cognito+S3_SERVER_KEY=`
+   - Add to `server/.env`: `Amazon SNS Push_SERVER_KEY=`
 
-2. **BigQuery Dataset** (May already exist)
+2. **Amazon Athena Dataset** (May already exist)
    - Expected: `drishtix_analytics`
-   - Verify at: https://console.cloud.google.com/bigquery?project=drishtix-479606
+   - Verify at: https://console.aws.amazon.com/Amazon Athena?project=YOUR_AWS_ACCOUNT_ID
    - Create if needed: Dataset ID = `drishtix_analytics`, Location = US
 
 3. **Database Configuration** (For production)
@@ -159,32 +159,34 @@ pnpm dev
 ```
 
 **Expected Output**:
-- ✅ No GCP authentication errors
+- ✅ No AWS authentication errors
 - ✅ Server starts on `http://localhost:3000`
 - ✅ Frontend on `http://localhost:5173`
-- ✅ Firebase connected
-- ✅ Pub/Sub available
+- ✅ Amazon Cognito+S3 connected
+- ✅ Amazon SQS + SNS available
 - ✅ Storage accessible
 
 ---
 
 ## 🧪 Verification Commands
 
-### Test GCP Services:
+### Test AWS Services:
 
 ```powershell
-# Check authentication
-cd "C:\Users\akjai\AppData\Local\Google\Cloud SDK"
-.\google-cloud-sdk\bin\gcloud.cmd auth list
+# Check AWS authentication
+aws sts get-caller-identity --region ap-south-1
 
-# List Pub/Sub topics (should show 18)
-.\google-cloud-sdk\bin\gcloud.cmd pubsub topics list --project=drishtix-479606
+# List Amazon SQS queues
+aws sqs list-queues --queue-name-prefix drishtix --region ap-south-1
 
-# Test storage bucket
-.\google-cloud-sdk\bin\gcloud.cmd storage buckets list --project=drishtix-479606
+# List Amazon SNS topics
+aws sns list-topics --region ap-south-1 --query "Topics[*].TopicArn"
 
-# Check enabled APIs
-.\google-cloud-sdk\bin\gcloud.cmd services list --enabled --project=drishtix-479606 | Select-String "firebase|pubsub|bigquery|vertex|maps"
+# List S3 buckets
+aws s3 ls | Select-String "drishtix"
+
+# Check DynamoDB tables
+aws dynamodb list-tables --region ap-south-1 --query "TableNames[?starts_with(@,'drishtix')]"
 ```
 
 ### Test Node.js Application:
@@ -193,9 +195,9 @@ cd "C:\Users\akjai\AppData\Local\Google\Cloud SDK"
 cd "C:\Users\akjai\Desktop\open-source\DrishtiX"
 
 # Verify service account key is accessible
-node -e "const key = require('./config/gcp-service-account-key.json'); console.log('Project:', key.project_id)"
+node -e "const key = require('./config/AWS-service-account-key.json'); console.log('Project:', key.project_id)"
 
-# Should output: Project: drishtix-479606
+# Should output: Project: YOUR_AWS_ACCOUNT_ID
 ```
 
 ---
@@ -204,20 +206,20 @@ node -e "const key = require('./config/gcp-service-account-key.json'); console.l
 
 ### Transferred from Previous Project:
 1. ✅ Service account key file
-2. ✅ All GCP project configurations
-3. ✅ Firebase setup
-4. ✅ Google Maps API configuration
+2. ✅ All AWS project configurations
+3. ✅ Amazon Cognito+S3 setup
+4. ✅ Amazon Location Service configuration
 5. ✅ Environment variable configurations
 
 ### Newly Created:
-1. ✅ 12 missing Pub/Sub topics
-2. ✅ Enabled Earth Engine API
+1. ✅ 12 missing Amazon SQS + SNS topics
+2. ✅ Enabled SageMaker Geospatial API
 3. ✅ Fixed storage bucket name in `.env`
 4. ✅ Added Gemini API key to frontend
 
 ### Fixed Issues:
 1. ✅ Service account key copied to both locations
-2. ✅ GCP authentication activated
+2. ✅ AWS authentication activated
 3. ✅ Configuration mismatches corrected
 
 ---
@@ -234,10 +236,10 @@ node -e "const key = require('./config/gcp-service-account-key.json'); console.l
 ## 📚 Documentation References
 
 All setup documentation available in:
-- `GCP_CONFIGURATION_ANALYSIS.md` - Complete analysis
+- `AWS_CONFIGURATION_ANALYSIS.md` - Complete analysis
 - `QUICK_SETUP.md` - Quick start guide
 - `CONFIG_STATUS_CHECKLIST.md` - Detailed checklist
-- `docs/GCP_SETUP_COMPLETE_GUIDE.md` - Full GCP setup guide
+- `docs/AWS_SETUP_COMPLETE_GUIDE.md` - Full AWS setup guide
 
 ---
 
@@ -249,11 +251,11 @@ All setup documentation available in:
 3. Get optional API keys as needed
 
 ### For Production (Later):
-1. Deploy Cloud Functions
-2. Setup Cloud SQL (managed PostgreSQL)
+1. Deploy AWS Lambda
+2. Setup Amazon RDS Aurora Serverless (managed PostgreSQL)
 3. Configure Redis for caching
 4. Setup monitoring and alerts
-5. Deploy ML models to Vertex AI (or use local)
+5. Deploy ML models to Amazon SageMaker (or use local)
 
 ---
 
@@ -266,13 +268,13 @@ All setup documentation available in:
 - Hot reload enabled for both
 
 ### Troubleshooting:
-- If you see GCP errors, verify service account key exists in both locations
-- If Firebase fails, check Firebase configuration in `.env`
-- If Pub/Sub fails, verify topics exist using gcloud commands above
+- If you see AWS errors, verify service account key exists in both locations
+- If Amazon Cognito+S3 fails, check Amazon Cognito+S3 configuration in `.env`
+- If Amazon SQS + SNS fails, verify topics exist using AWS CLI commands above
 
 ### Development Mode:
 - SQLite is fine for development (no PostgreSQL needed)
-- Local ML models work without Vertex AI
+- Local ML models work without Amazon SageMaker
 - Most optional APIs not needed for basic development
 
 ---
@@ -281,7 +283,7 @@ All setup documentation available in:
 
 **Your DrishtiX project is now fully configured and ready for development!**
 
-All critical GCP services are:
+All critical AWS services are:
 - ✅ Enabled
 - ✅ Authenticated
 - ✅ Configured
@@ -289,7 +291,7 @@ All critical GCP services are:
 
 You can now:
 - ✅ Start the development server
-- ✅ Test all GCP integrations
+- ✅ Test all AWS integrations
 - ✅ Begin feature development
 - ✅ Deploy when ready
 

@@ -1,4 +1,4 @@
-// Guidance for using Google Earth Engine in Node.js/TypeScript
+// Guidance for using Amazon SageMaker Geospatial in Node.js/TypeScript
 // 1. There is no official @types/google\_\_earthengine package on npm.
 // 2. Use the official client: https://developers.google.com/earth-engine/guides/node_setup
 // npm install @google/earthengine

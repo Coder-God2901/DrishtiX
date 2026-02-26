@@ -47,7 +47,7 @@
 
 ✅ **Technical**: All core technologies proven and production-ready  
 ✅ **Economic**: Positive ROI (65% cost savings, 4.3-month payback)  
-✅ **Operational**: Manageable with 2-person team + GCP automation  
+✅ **Operational**: Manageable with 2-person team + AWS automation  
 ⚠️ **Schedule**: Aggressive but achievable with phased approach  
 ✅ **Compliance**: GDPR, HIPAA, SOC 2 requirements met
 
@@ -73,19 +73,19 @@
 │ React Query          5.6      Stable    ✅          LOW       │
 │ React Router         7.1      Stable    ✅          LOW       │
 │ ──────────────────────────────────────────────────────────── │
-│ Cloud Run            GA       Stable    ✅          LOW       │
-│ Cloud Functions      GA       Stable    ✅          LOW       │
-│ Firestore            GA       Stable    ✅          LOW       │
-│ Firebase Storage     GA       Stable    ✅          LOW       │
-│ BigQuery             GA       Stable    ✅          LOW       │
+│ AWS App Runner            GA       Stable    ✅          LOW       │
+│ AWS Lambda      GA       Stable    ✅          LOW       │
+│ Amazon DynamoDB            GA       Stable    ✅          LOW       │
+│ cognito Storage     GA       Stable    ✅          LOW       │
+│ Amazon Athena + AWS Glue             GA       Stable    ✅          LOW       │
 │ Cloud Vision API     GA       Stable    ✅          LOW       │
-│ Vertex AI            GA       Stable    ✅          LOW       │
+│ Amazon SageMaker            GA       Stable    ✅          LOW       │
 │ Gemini API           GA       Stable    ✅          LOW       │
-│ Firebase Auth        GA       Stable    ✅          LOW       │
-│ FCM                  GA       Stable    ✅          LOW       │
+│ Amazon Cognito        GA       Stable    ✅          LOW       │
+│ Amazon SNS Push                  GA       Stable    ✅          LOW       │
 │ ──────────────────────────────────────────────────────────── │
 │ Twilio WhatsApp      GA       Stable    ✅          LOW       │
-│ Google Maps API      GA       Stable    ✅          LOW       │
+│ Amazon Location Service API      GA       Stable    ✅          LOW       │
 │ TensorFlow.js        4.23     Stable    ✅          LOW       │
 │ Three.js             0.171    Stable    ✅          MEDIUM    │
 │ Leaflet              1.9      Stable    ✅          LOW       │
@@ -131,18 +131,18 @@ Dashboard Load Time    <3s       2.1s       ✅
 Security Assessment (Penetration Testing):
 ──────────────────────────────────────────
 OWASP Top 10:
-  ✅ SQL Injection:           Not vulnerable (Firestore NoSQL)
+  ✅ SQL Injection:           Not vulnerable (Amazon DynamoDB NoSQL)
   ✅ XSS:                     Prevented (React auto-escaping)
   ✅ CSRF:                    Protected (SameSite cookies)
-  ✅ Broken Auth:             Secure (Firebase Auth + MFA)
+  ✅ Broken Auth:             Secure (Amazon Cognito + MFA)
   ✅ Sensitive Data Exposure: Encrypted (TLS 1.3 + KMS)
   ✅ XXE:                     N/A (no XML processing)
-  ✅ Broken Access Control:   RBAC enforced (Firebase rules)
-  ✅ Security Misconfiguration: Hardened (Cloud Armor)
+  ✅ Broken Access Control:   RBAC enforced (cognito rules)
+  ✅ Security Misconfiguration: Hardened (AWS WAF)
   ✅ Insecure Deserialization: Validated (JSON schema)
   ✅ Vulnerable Components:   Up-to-date (Dependabot)
 
-Cloud Armor Rules: 10 active
+AWS WAF Rules: 10 active
   - Rate limiting: 100 req/min per IP
   - SQL injection prevention
   - XSS attack blocking
@@ -153,7 +153,7 @@ Compliance:
   ✅ SOC 2 Type II (infrastructure)
   ✅ GDPR (right to erasure, data portability)
   ✅ HIPAA (medical data encryption)
-  ✅ ISO 27001 (GCP certification)
+  ✅ ISO 27001 (AWS certification)
 ```
 
 ### Integration Feasibility
@@ -165,14 +165,14 @@ Compliance:
 │                                                                 │
 │ Integration          Status    Complexity   Risk    Notes      │
 │ ──────────────────────────────────────────────────────────── │
-│ Firebase Auth        ✅ Done    LOW         LOW     Native    │
-│ Firestore            ✅ Done    LOW         LOW     Native    │
+│ Amazon Cognito        ✅ Done    LOW         LOW     Native    │
+│ Amazon DynamoDB            ✅ Done    LOW         LOW     Native    │
 │ Cloud Vision API     ✅ Done    MEDIUM      LOW     REST API  │
 │ Twilio WhatsApp      ✅ Done    MEDIUM      LOW     Webhooks  │
-│ Google Maps API      ✅ Done    LOW         LOW     JavaScript│
-│ Vertex AI            ✅ Done    HIGH        MEDIUM  Python    │
-│ BigQuery             ✅ Done    MEDIUM      LOW     SQL       │
-│ FCM                  ✅ Done    LOW         LOW     Native    │
+│ Amazon Location Service API      ✅ Done    LOW         LOW     JavaScript│
+│ Amazon SageMaker            ✅ Done    HIGH        MEDIUM  Python    │
+│ Amazon Athena + AWS Glue             ✅ Done    MEDIUM      LOW     SQL       │
+│ Amazon SNS Push                  ✅ Done    LOW         LOW     Native    │
 │ TensorFlow.js        ✅ Done    HIGH        MEDIUM  Browser   │
 │ Three.js (AR)        ✅ Done    HIGH        HIGH    WebGL     │
 │ ──────────────────────────────────────────────────────────── │
@@ -221,13 +221,13 @@ Verdict: ✅ Production-ready code quality
 Current Team:
 ─────────────
 Frontend Developer (1):     ✅ Sufficient for maintenance
-Backend Developer (1):      ✅ Sufficient with GCP automation
-DevOps (0.5 FTE):          ✅ Mostly automated (Cloud Run, Cloud Build)
+Backend Developer (1):      ✅ Sufficient with AWS automation
+DevOps (0.5 FTE):          ✅ Mostly automated (AWS App Runner, Cloud Build)
 Product Manager (0.5 FTE):  ✅ Part-time sufficient
 
 Required Skills Present:
 ✅ React/TypeScript
-✅ Cloud architecture (GCP)
+✅ Cloud architecture (AWS)
 ✅ AI/ML integration
 ✅ API design
 ✅ Database design (NoSQL)
@@ -244,17 +244,17 @@ Missing Skills (Can be hired as needed):
 Operational Complexity: LOW ✅
 
 Managed Services (Zero Ops):
-  - Cloud Run (auto-scaling, zero downtime deploys)
-  - Cloud Functions (serverless, auto-scaling)
-  - Firestore (managed database, auto-scaling)
-  - Firebase Storage (managed object storage)
-  - BigQuery (serverless analytics)
-  - Cloud Armor (managed WAF)
-  - Cloud Monitoring (managed observability)
+  - AWS App Runner (auto-scaling, zero downtime deploys)
+  - AWS Lambda (serverless, auto-scaling)
+  - Amazon DynamoDB (managed database, auto-scaling)
+  - cognito Storage (managed object storage)
+  - Amazon Athena + AWS Glue (serverless analytics)
+  - AWS WAF (managed WAF)
+  - Amazon CloudWatch (managed observability)
 
 Manual Operations Required:
   - Code deployments (automated via CI/CD)
-  - Firestore index management (rare, < 1 hour/month)
+  - Amazon DynamoDB index management (rare, < 1 hour/month)
   - Cost monitoring (weekly review, 15 min)
   - Security updates (automated with Dependabot)
   - ML model retraining (weekly, automated)
@@ -286,7 +286,7 @@ Expected Support Volume:
 Support Tools:
   ✅ Intercom (chat support)
   ✅ Zendesk (ticketing)
-  ✅ Cloud Monitoring (alerting)
+  ✅ Amazon CloudWatch (alerting)
   ✅ Error Reporting (crash logs)
   ✅ Analytics (usage tracking)
 
@@ -488,11 +488,11 @@ Mitigation:
 │                                                                         │
 │ Risk ID  Description           Probability  Impact  Mitigation         │
 │ ─────────────────────────────────────────────────────────────────── │
-│ TECH-01  GCP outage            LOW         HIGH    Multi-region       │
+│ TECH-01  AWS outage            LOW         HIGH    Multi-region       │
 │ TECH-02  API rate limits       MEDIUM      MEDIUM  Caching + quotas   │
 │ TECH-03  ML model accuracy     LOW         MEDIUM  Human review       │
 │ TECH-04  Database scaling      LOW         HIGH    Auto-scaling       │
-│ TECH-05  Security breach       LOW         CRITICAL Cloud Armor+KMS   │
+│ TECH-05  Security breach       LOW         CRITICAL AWS WAF+KMS   │
 │ ─────────────────────────────────────────────────────────────────── │
 │ OPS-01   Team turnover         MEDIUM      MEDIUM  Documentation      │
 │ OPS-02   Customer support      MEDIUM      LOW     Chatbot + KB       │
@@ -515,14 +515,14 @@ Mitigation:
 
 ### Risk Mitigation Strategies
 
-#### TECH-01: GCP Outage (LOW probability, HIGH impact)
+#### TECH-01: AWS Outage (LOW probability, HIGH impact)
 
 ```yaml
 Mitigation:
   - Multi-region deployment (us-central1, us-east1, europe-west1)
   - Automatic failover (Cloud Load Balancer)
-  - Database replication (Firestore multi-region)
-  - Monitoring and alerts (Cloud Monitoring)
+  - Database replication (Amazon DynamoDB multi-region)
+  - Monitoring and alerts (Amazon CloudWatch)
   - Disaster recovery plan (RTO: 1 hour, RPO: 5 minutes)
 
 Contingency:
@@ -532,7 +532,7 @@ Contingency:
   - Customer communication (email + in-app banner)
 
 Historical Data:
-  - GCP uptime: 99.95% (2024)
+  - AWS uptime: 99.95% (2024)
   - Last major outage: 0 days (in our region)
 
 Risk After Mitigation: VERY LOW

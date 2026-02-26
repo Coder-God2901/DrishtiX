@@ -1,13 +1,13 @@
-# Cloud Run ETL Worker Integration Guide
+# AWS App Runner ETL Worker Integration Guide
 
 ## 🎯 Overview
 
-This guide explains how the **Cloud Run ETL Worker** integrates with the DrishtiX platform to replace Google Cloud Dataflow with a cost-effective Python-based solution.
+This guide explains how the **AWS App Runner ETL Worker** integrates with the DrishtiX platform to replace Google Cloud Dataflow with a cost-effective Python-based solution.
 
 ### Cost Comparison
 
 - **Dataflow**: ~$2,500/month for 10M requests
-- **Cloud Run ETL**: ~$50/month for 10M requests
+- **AWS App Runner ETL**: ~$50/month for 10M requests
 - **Savings**: 50x reduction (98% cost savings)
 
 ---
@@ -32,7 +32,7 @@ This guide explains how the **Cloud Run ETL Worker** integrates with the Drishti
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│               Cloud Run ETL Worker (Python)                     │
+│               AWS App Runner ETL Worker (Python)                     │
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │ GridConverter│  │  DataMerger  │  │FeatureEngineer│        │
@@ -55,7 +55,7 @@ This guide explains how the **Cloud Run ETL Worker** integrates with the Drishti
               ┌────────────┴────────────┐
               ▼                         ▼
     ┌─────────────────┐      ┌─────────────────┐
-    │   Pub/Sub       │      │   BigQuery      │
+    │   Amazon SQS + SNS       │      │   Amazon Athena      │
     │ ML predictions  │      │   Analytics     │
     └────────┬────────┘      └─────────────────┘
              │
@@ -173,10 +173,10 @@ const stats = cloudRunETLService.getBatchStats();
 # https://cloud.google.com/sdk/docs/install
 
 # Authenticate
-gcloud auth login
+aws configure --profile drishtix
 
 # Set project
-gcloud config set project YOUR_PROJECT_ID
+aws configure set region ap-south-1
 ```
 
 ### Deploy ETL Worker
@@ -185,7 +185,7 @@ gcloud config set project YOUR_PROJECT_ID
 
 ```powershell
 cd Events
-.\scripts\deploy-etl-worker.ps1 -ProjectId "your-gcp-project"
+.\scripts\deploy-etl-worker.ps1 -ProjectId "your-AWS-project"
 ```
 
 **Linux/macOS:**
@@ -201,14 +201,14 @@ chmod +x scripts/deploy-etl-worker.sh
 ```bash
 # 1. Build Docker image
 cd workers/etl-worker
-docker build -t gcr.io/YOUR_PROJECT/etl-worker:latest .
+docker build -t ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/YOUR_PROJECT/etl-worker:latest .
 
 # 2. Push to GCR
-docker push gcr.io/YOUR_PROJECT/etl-worker:latest
+docker push ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/YOUR_PROJECT/etl-worker:latest
 
-# 3. Deploy to Cloud Run
-gcloud run deploy etl-worker \
-  --image gcr.io/YOUR_PROJECT/etl-worker:latest \
+# 3. Deploy to AWS App Runner
+gAWS App Runner deploy etl-worker \
+  --image ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/YOUR_PROJECT/etl-worker:latest \
   --platform managed \
   --region us-central1 \
   --memory 2Gi \
@@ -218,22 +218,22 @@ gcloud run deploy etl-worker \
   --concurrency 80 \
   --timeout 300 \
   --allow-unauthenticated \
-  --set-env-vars "GCP_PROJECT_ID=YOUR_PROJECT,BIGQUERY_DATASET=drishtix_analytics"
+  --set-env-vars "AWS_ACCOUNT_ID=YOUR_PROJECT,Amazon Athena_DATASET=drishtix_analytics"
 
 # 4. Get service URL
-gcloud run services describe etl-worker --region us-central1 --format "value(status.url)"
+gAWS App Runner services describe etl-worker --region us-central1 --format "value(status.url)"
 ```
 
-### Configure Pub/Sub Push Subscription
+### Configure Amazon SQS + SNS Push Subscription
 
 ```bash
 # Create topic
-gcloud pubsub topics create raw-data-stream
+aws sns create-topic --name drishtix-raw-data-stream --region ap-south-1
 
 # Create push subscription
-SERVICE_URL=$(gcloud run services describe etl-worker --region us-central1 --format "value(status.url)")
+SERVICE_URL=$(gAWS App Runner services describe etl-worker --region us-central1 --format "value(status.url)")
 
-gcloud pubsub subscriptions create etl-worker-sub \
+aws sqs create-queue --queue-name drishtix-etl-worker-sub --region ap-south-1 \
   --topic raw-data-stream \
   --push-endpoint "${SERVICE_URL}/process" \
   --ack-deadline 60 \
@@ -247,22 +247,22 @@ gcloud pubsub subscriptions create etl-worker-sub \
 ### Backend `.env`
 
 ```bash
-# Cloud Run ETL Worker
+# AWS App Runner ETL Worker
 ETL_WORKER_URL=https://etl-worker-xxxxx-uc.a.run.app
 
-# GCP Configuration
-GCP_PROJECT_ID=your-project-id
-BIGQUERY_DATASET=drishtix_analytics
+# AWS Configuration
+AWS_ACCOUNT_ID=your-project-id
+Amazon Athena_DATASET=drishtix_analytics
 ```
 
-### Cloud Run Environment Variables
+### AWS App Runner Environment Variables
 
 Set during deployment or update later:
 
 ```bash
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --region us-central1 \
-  --set-env-vars "GCP_PROJECT_ID=your-project,BIGQUERY_DATASET=drishtix_analytics"
+  --set-env-vars "AWS_ACCOUNT_ID=your-project,Amazon Athena_DATASET=drishtix_analytics"
 ```
 
 ---
@@ -418,46 +418,46 @@ features = feature_engineer.add_schedule_context(features, schedule_data)
 ### 4. Output Publishing
 
 ```python
-# Publish to Pub/Sub (ML predictions)
+# Publish to Amazon SQS + SNS (ML predictions)
 output_publisher.publish_to_pubsub(features, "processed-features")
 
-# Save to BigQuery (Analytics)
-output_publisher.save_to_bigquery(features, "crowd_analytics")
+# Save to Amazon Athena (Analytics)
+output_publisher.save_to_Amazon Athena(features, "crowd_analytics")
 ```
 
 ---
 
 ## 🔍 Monitoring
 
-### Cloud Run Logs
+### AWS App Runner Logs
 
 ```bash
 # Tail logs
-gcloud run logs tail etl-worker --region us-central1
+gAWS App Runner logs tail etl-worker --region us-central1
 
 # Last 50 logs
-gcloud run logs read etl-worker --region us-central1 --limit 50
+gAWS App Runner logs read etl-worker --region us-central1 --limit 50
 
 # Filter by severity
-gcloud run logs read etl-worker --region us-central1 --log-filter="severity>=ERROR"
+gAWS App Runner logs read etl-worker --region us-central1 --log-filter="severity>=ERROR"
 ```
 
 ### Metrics
 
 ```bash
 # CPU utilization
-gcloud monitoring time-series list \
-  --filter='metric.type="run.googleapis.com/container/cpu/utilizations"' \
+gAmazon CloudWatch time-series list \
+  --filter='metric.type="run.amazonaws.com/container/cpu/utilizations"' \
   --filter='resource.labels.service_name="etl-worker"'
 
 # Request count
-gcloud monitoring time-series list \
-  --filter='metric.type="run.googleapis.com/request_count"' \
+gAmazon CloudWatch time-series list \
+  --filter='metric.type="run.amazonaws.com/request_count"' \
   --filter='resource.labels.service_name="etl-worker"'
 
 # Request latency
-gcloud monitoring time-series list \
-  --filter='metric.type="run.googleapis.com/request_latencies"' \
+gAmazon CloudWatch time-series list \
+  --filter='metric.type="run.amazonaws.com/request_latencies"' \
   --filter='resource.labels.service_name="etl-worker"'
 ```
 
@@ -507,7 +507,7 @@ curl -X POST https://etl-worker-xxxxx-uc.a.run.app/process \
 // server/test/etl-integration.test.ts
 import { cloudRunETLService } from '../services/cloudrun-etl.service';
 
-describe('Cloud Run ETL Integration', () => {
+describe('AWS App Runner ETL Integration', () => {
   it('should send CCTV data successfully', async () => {
     await cloudRunETLService.sendCCTVData('test-event', {
       cameraId: 'cam-001',
@@ -536,8 +536,8 @@ describe('Cloud Run ETL Integration', () => {
 #### 1. ETL Worker not receiving data
 
 ```bash
-# Check Pub/Sub subscription
-gcloud pubsub subscriptions describe etl-worker-sub
+# Check Amazon SQS + SNS subscription
+aws sqs get-queue-attributes --queue-url $(aws sqs get-queue-url --queue-name drishtix-etl-worker-sub --query QueueUrl --output text --region ap-south-1) --attribute-names All
 
 # Check push endpoint
 # Should match: https://etl-worker-xxxxx-uc.a.run.app/process
@@ -547,13 +547,13 @@ gcloud pubsub subscriptions describe etl-worker-sub
 
 ```bash
 # Increase instances
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --region us-central1 \
   --min-instances 5 \
   --max-instances 200
 
 # Increase CPU/memory
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --region us-central1 \
   --cpu 4 \
   --memory 4Gi
@@ -563,12 +563,12 @@ gcloud run services update etl-worker \
 
 ```bash
 # Check memory usage
-gcloud monitoring time-series list \
-  --filter='metric.type="run.googleapis.com/container/memory/utilizations"' \
+gAmazon CloudWatch time-series list \
+  --filter='metric.type="run.amazonaws.com/container/memory/utilizations"' \
   --filter='resource.labels.service_name="etl-worker"'
 
 # Increase memory limit
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --region us-central1 \
   --memory 4Gi
 ```
@@ -577,7 +577,7 @@ gcloud run services update etl-worker \
 
 ```bash
 # Increase timeout
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --region us-central1 \
   --timeout 600  # 10 minutes
 ```
@@ -588,7 +588,7 @@ gcloud run services update etl-worker \
 
 ### Pricing Breakdown
 
-**Cloud Run ETL Worker** (10M requests/month):
+**AWS App Runner ETL Worker** (10M requests/month):
 
 - Request charges: $0.40
 - CPU time: ~$15
@@ -617,23 +617,23 @@ gcloud run services update etl-worker \
 
 ## 📚 Additional Resources
 
-- [Cloud Run Documentation](https://cloud.google.com/run/docs)
-- [Pub/Sub Push Subscriptions](https://cloud.google.com/pubsub/docs/push)
-- [BigQuery Streaming](https://cloud.google.com/bigquery/docs/streaming-data-into-bigquery)
+- [AWS App Runner Documentation](https://cloud.google.com/run/docs)
+- [Amazon SQS + SNS Push Subscriptions](https://cloud.google.com/pubsub/docs/push)
+- [Amazon Athena Streaming](https://cloud.google.com/Amazon Athena/docs/streaming-data-into-Amazon Athena)
 - [ETL Worker Source Code](../workers/etl-worker/)
 
 ---
 
 ## ✅ Verification Checklist
 
-- [ ] ETL worker deployed to Cloud Run
+- [ ] ETL worker deployed to AWS App Runner
 - [ ] Service URL added to backend `.env`
-- [ ] Pub/Sub push subscription created
+- [ ] Amazon SQS + SNS push subscription created
 - [ ] Health check passing
 - [ ] Backend services updated to use `cloudRunETLService`
 - [ ] Test data flowing through ETL pipeline
-- [ ] BigQuery tables receiving data
-- [ ] Frontend receiving processed features via Pub/Sub
+- [ ] Amazon Athena tables receiving data
+- [ ] Frontend receiving processed features via Amazon SQS + SNS
 - [ ] Monitoring dashboards configured
 - [ ] Cost alerts set up
 

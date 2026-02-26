@@ -28,7 +28,7 @@ This folder contains comprehensive technical design documentation for the Drisht
 
 ### 4. Infrastructure & DevOps
 
-- **[10-INFRASTRUCTURE_DESIGN.md](./10-INFRASTRUCTURE_DESIGN.md)** - GCP infrastructure, networking, and resource topology
+- **[10-INFRASTRUCTURE_DESIGN.md](./10-INFRASTRUCTURE_DESIGN.md)** - AWS infrastructure, networking, and resource topology
 - **[11-DEPLOYMENT_ARCHITECTURE.md](./11-DEPLOYMENT_ARCHITECTURE.md)** - CI/CD pipelines, deployment strategies, and environments
 - **[12-DISASTER_RECOVERY.md](./12-DISASTER_RECOVERY.md)** - Backup strategies, failover, and business continuity
 
@@ -48,7 +48,7 @@ This folder contains comprehensive technical design documentation for the Drisht
 
 - **[19-COST_ANALYSIS.md](./19-COST_ANALYSIS.md)** - Detailed cost breakdown, TCO, and ROI analysis
 - **[20-FEASIBILITY_STUDY.md](./20-FEASIBILITY_STUDY.md)** - Technical feasibility, risks, and mitigation plans
-- **[21-VENDOR_COMPARISON.md](./21-VENDOR_COMPARISON.md)** - GCP vs AWS vs Azure vs Open-Source analysis
+- **[21-VENDOR_COMPARISON.md](./21-VENDOR_COMPARISON.md)** - AWS vs AWS vs AWS vs Open-Source analysis
 
 ### 8. Monitoring & Operations
 
@@ -195,21 +195,21 @@ Version history and updates
 
 ### Official Documentation
 
-- [Google Cloud Architecture Center](https://cloud.google.com/architecture)
-- [Firebase Documentation](https://firebase.google.com/docs)
+- [AWS Architecture Center](https://cloud.google.com/architecture)
+- [cognito Documentation](https://cognito.google.com/docs)
 - [React Architecture Guide](https://react.dev/learn/thinking-in-react)
 - [TypeScript Best Practices](https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html)
 
 ### Industry Standards
 
 - [The Twelve-Factor App](https://12factor.net/)
-- [Microsoft Azure Architecture Center](https://learn.microsoft.com/azure/architecture/)
+- [Microsoft AWS Architecture Center](https://learn.microsoft.com/AWS/architecture/)
 - [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
 - [OWASP Security Guidelines](https://owasp.org/)
 
 ### Tools & Frameworks
 
-- [Terraform GCP Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
 - [Cloud Architecture Diagramming](https://www.cloudcraft.co/)
 - [PlantUML for Diagrams](https://plantuml.com/)
 - [Mermaid Diagrams](https://mermaid.js.org/)

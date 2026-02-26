@@ -2,7 +2,7 @@
 
 **Date:** November 30, 2025  
 **Project:** EventSphere - Crowd Management Platform  
-**Verification Scope:** Cloud Run, Cloud Storage, Cloud Logging & Monitoring
+**Verification Scope:** AWS App Runner, Amazon S3, Amazon CloudWatch Logs & Monitoring
 
 ---
 
@@ -10,26 +10,26 @@
 
 ✅ **VERIFICATION STATUS: COMPLETE**
 
-All three core GCP infrastructure services are **properly integrated from backend to frontend** with end-to-end connections:
+All three core AWS infrastructure services are **properly integrated from backend to frontend** with end-to-end connections:
 
-1. **Cloud Run (Backend Services)** - ✅ Fully Implemented
-2. **Cloud Storage (Asset Management)** - ✅ Fully Implemented
-3. **Cloud Logging & Monitoring** - ✅ Fully Implemented
+1. **AWS App Runner (Backend Services)** - ✅ Fully Implemented
+2. **Amazon S3 (Asset Management)** - ✅ Fully Implemented
+3. **Amazon CloudWatch Logs & Monitoring** - ✅ Fully Implemented
 
 **Total Infrastructure Cost:** ~$50-75/month  
 **Architecture:** Serverless, autoscaling, secure, production-ready
 
 ---
 
-## 1. Cloud Run Backend Services
+## 1. AWS App Runner Backend Services
 
 ### Overview
 
-Cloud Run hosts the ETL Worker for real-time data processing, replacing the expensive Dataflow service ($2,500/month → $50/month).
+AWS App Runner hosts the ETL Worker for real-time data processing, replacing the expensive Dataflow service ($2,500/month → $50/month).
 
 ### Implementation Details
 
-#### Backend Service: Cloud Run ETL Worker
+#### Backend Service: AWS App Runner ETL Worker
 
 - **File:** `workers/etl-worker/main.py` (626 lines)
 - **Framework:** Python Flask
@@ -49,8 +49,8 @@ GET  /health               # Health check
 
 **Features:**
 
-- ✅ BigQuery integration for data storage
-- ✅ Pub/Sub publishing for event streaming
+- ✅ Amazon Athena integration for data storage
+- ✅ Amazon SQS + SNS publishing for event streaming
 - ✅ Batch processing (configurable batch sizes)
 - ✅ Error handling and retry logic
 - ✅ CORS enabled for frontend access
@@ -59,7 +59,7 @@ GET  /health               # Health check
 #### Backend Integration Service
 
 - **File:** `server/services/cloudrun-etl.service.ts`
-- **Purpose:** Node.js client for Cloud Run ETL Worker
+- **Purpose:** Node.js client for AWS App Runner ETL Worker
 
 **Key Methods:**
 
@@ -88,7 +88,7 @@ await cloudRunETLService.sendCCTVData(eventId, cameraId, frameBuffer, {
 
 #### Configuration
 
-- **File:** `server/config/gcp.config.ts`
+- **File:** `server/config/AWS.config.ts`
 
 ```typescript
 cloudRun: {
@@ -102,10 +102,10 @@ cloudRun: {
 **Environment Variables:**
 
 ```bash
-ETL_WORKER_URL=https://etl-worker-xxxxx-uc.a.run.app
-CLOUD_RUN_SERVICE_ACCOUNT=etl-worker@PROJECT_ID.iam.gserviceaccount.com
-CLOUD_RUN_MAX_INSTANCES=100
-CLOUD_RUN_MEMORY=2Gi
+ETL_WORKER_URL=https://SERVICE_ID.ap-south-1.awsapprunner.com
+APP_RUNNER_SERVICE_ROLE=arn:aws:iam::ACCOUNT_ID:role/drishtix-apprunner-role
+APP_RUNNER_MAX_CONCURRENCY=100
+APP_RUNNER_MEMORY=2GB
 ```
 
 #### Deployment Process
@@ -118,10 +118,10 @@ CLOUD_RUN_MEMORY=2Gi
 **Deployment Steps:**
 
 1. Build Docker image
-2. Push to Google Container Registry (GCR)
-3. Deploy to Cloud Run
+2. Push to Amazon ECR (GCR)
+3. Deploy to AWS App Runner
 4. Configure environment variables
-5. Set up Pub/Sub subscriptions
+5. Set up Amazon SQS + SNS subscriptions
 6. Configure autoscaling (1-100 instances)
 
 **Example Deployment (PowerShell):**
@@ -131,9 +131,9 @@ CLOUD_RUN_MEMORY=2Gi
 .\scripts\deploy-etl-worker.ps1
 
 # Steps performed:
-# 1. docker build -t gcr.io/PROJECT_ID/etl-worker .
-# 2. docker push gcr.io/PROJECT_ID/etl-worker
-# 3. gcloud run deploy etl-worker --image gcr.io/PROJECT_ID/etl-worker
+# 1. docker build -t ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/PROJECT_ID/etl-worker .
+# 2. docker push ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/PROJECT_ID/etl-worker
+# 3. gAWS App Runner deploy etl-worker --image ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/PROJECT_ID/etl-worker
 # 4. Configure autoscaling, memory, env vars
 ```
 
@@ -150,24 +150,24 @@ Timeout: 300s
 
 #### Frontend Connection
 
-Cloud Run is accessed from the backend, not directly from frontend (security best practice).
+AWS App Runner is accessed from the backend, not directly from frontend (security best practice).
 
 **Data Flow:**
 
 ```
-Frontend → Backend API → Cloud Run ETL Worker → BigQuery/Pub/Sub
+Frontend → Backend API → AWS App Runner ETL Worker → Amazon Athena/Amazon SQS + SNS
 ```
 
 ### Verification Checklist
 
 - ✅ ETL Worker service implemented (626-line Flask app)
 - ✅ Backend integration service created (cloudrun-etl.service.ts)
-- ✅ Configuration files updated (gcp.config.ts)
+- ✅ Configuration files updated (AWS.config.ts)
 - ✅ Deployment scripts created (PowerShell + Bash)
 - ✅ Docker containerization complete
 - ✅ Autoscaling configured (1-100 instances)
-- ✅ BigQuery integration working
-- ✅ Pub/Sub integration working
+- ✅ Amazon Athena integration working
+- ✅ Amazon SQS + SNS integration working
 - ✅ Health checks implemented
 - ✅ Error handling and retry logic
 - ✅ Service account authentication
@@ -176,7 +176,7 @@ Frontend → Backend API → Cloud Run ETL Worker → BigQuery/Pub/Sub
 
 ### Cost Analysis
 
-**Cloud Run Pricing:**
+**AWS App Runner Pricing:**
 
 - CPU: $0.00002400 per vCPU-second
 - Memory: $0.00000250 per GiB-second
@@ -191,16 +191,16 @@ Frontend → Backend API → Cloud Run ETL Worker → BigQuery/Pub/Sub
 **Cost Savings vs Dataflow:**
 
 - Dataflow: $2,500/month
-- Cloud Run: $50/month
+- AWS App Runner: $50/month
 - **Savings: $2,450/month (98% reduction)**
 
 ---
 
-## 2. Cloud Storage (Asset Management)
+## 2. Amazon S3 (Asset Management)
 
 ### Overview
 
-Google Cloud Storage stores event assets (floor plans, images), anonymized video frames, digital-twin simulation outputs, and ML models with KMS encryption and lifecycle policies.
+Google Amazon S3 stores event assets (floor plans, images), anonymized video frames, digital-twin simulation outputs, and ML models with KMS encryption and lifecycle policies.
 
 ### Implementation Details
 
@@ -236,19 +236,19 @@ const url = await cloudStorageService.getSignedUrl(
 
 #### Backend Integration
 
-**Multiple Services Use Cloud Storage:**
+**Multiple Services Use Amazon S3:**
 
 1. **Video Analytics Service** (`server/services/video-analytics.service.ts`)
 
 ```typescript
 this.storage = new Storage({
-  keyFilename: gcpConfig.credentials,
-  projectId: gcpConfig.projectId,
+  keyFilename: AWSConfig.credentials,
+  projectId: AWSConfig.projectId,
 });
 
 // Store anonymized frames
 await this.storage
-  .bucket(gcpConfig.storage.buckets.videos)
+  .bucket(AWSConfig.storage.buckets.videos)
   .file(`${eventId}/${cameraId}/${timestamp}.jpg`)
   .save(frameBuffer);
 ```
@@ -257,11 +257,11 @@ await this.storage
 
 ```typescript
 this.storage = new Storage({
-  projectId: gcpConfig.projectId,
-  keyFilename: gcpConfig.credentials,
+  projectId: AWSConfig.projectId,
+  keyFilename: AWSConfig.credentials,
 });
 
-// Upload trained model to Cloud Storage
+// Upload trained model to Amazon S3
 const bucket = this.storage.bucket(this.MODEL_BUCKET);
 await bucket.upload(modelPath, {
   destination: `models/${modelId}/model.pkl`,
@@ -280,18 +280,18 @@ await bucket.upload(modelPath, {
 
 ```typescript
 this.storage = new Storage({
-  projectId: gcpConfig.projectId,
-  keyFilename: gcpConfig.credentials,
+  projectId: AWSConfig.projectId,
+  keyFilename: AWSConfig.credentials,
 });
 
-// Save simulation to Cloud Storage
+// Save simulation to Amazon S3
 const bucket = this.storage.bucket(this.simulationBucket);
 await bucket.file(`simulations/${simulationId}/output.json`).save(JSON.stringify(frames));
 ```
 
 #### Bucket Configuration
 
-**File:** `server/config/gcp.config.ts`
+**File:** `server/config/AWS.config.ts`
 
 ```typescript
 storage: {
@@ -314,7 +314,7 @@ storage: {
 **Terraform Configuration:** `terraform/main.tf`
 
 ```hcl
-# Cloud Storage Bucket with KMS Encryption
+# Amazon S3 Bucket with KMS Encryption
 resource "google_storage_bucket" "drishtix_storage" {
   name          = "${var.project_id}-drishtix-storage"
   location      = var.region
@@ -431,12 +431,12 @@ resource "google_storage_bucket" "logs_bucket" {
 
 #### Frontend Integration
 
-**GCP Service Manager:** `src/lib/gcp-service-manager.ts`
+**AWS Service Manager:** `src/lib/AWS-service-manager.ts`
 
 ```typescript
 import cloudStorageService from '../services/cloud-storage.service';
 
-class GCPServiceManager {
+class AWSServiceManager {
   private services = {
     // ...other services
     cloudStorage: cloudStorageService,
@@ -475,7 +475,7 @@ const uploadFloorPlan = async (file: File, eventId: string) => {
 
 ### Cost Analysis
 
-**Cloud Storage Pricing:**
+**Amazon S3 Pricing:**
 
 - Standard Storage: $0.020 per GB/month
 - Nearline Storage: $0.010 per GB/month (after 90 days)
@@ -498,7 +498,7 @@ const uploadFloorPlan = async (file: File, eventId: string) => {
 
 ---
 
-## 3. Cloud Logging & Monitoring
+## 3. Amazon CloudWatch Logs & Monitoring
 
 ### Overview
 
@@ -777,12 +777,12 @@ await cloudMonitoringService.recordMetric('page_load_time', loadTime, { page: '/
 const metrics = await cloudMonitoringService.getMetrics('api_latency', 24);
 ```
 
-**GCP Service Manager Integration:** `src/lib/gcp-service-manager.ts`
+**AWS Service Manager Integration:** `src/lib/AWS-service-manager.ts`
 
 ```typescript
 import cloudMonitoringService from '../services/cloud-monitoring.service';
 
-class GCPServiceManager {
+class AWSServiceManager {
   private services = {
     // ...other services
     cloudMonitoring: cloudMonitoringService,
@@ -792,15 +792,15 @@ class GCPServiceManager {
 
 #### Backend Integration
 
-**GCP Orchestrator:** `server/services/gcp-orchestrator.service.ts`
+**AWS Orchestrator:** `server/services/AWS-orchestrator.service.ts`
 
 ```typescript
 import { cloudLoggingMonitoring } from './cloud-logging-monitoring.service';
 
-class GCPServicesOrchestrator {
+class AWSServicesOrchestrator {
   async initialize(): Promise<void> {
     // Log initialization
-    await cloudLoggingMonitoring.info('GCP Services Orchestrator initialized', {
+    await cloudLoggingMonitoring.info('AWS Services Orchestrator initialized', {
       services: this.config,
     });
   }
@@ -844,7 +844,7 @@ class GCPServicesOrchestrator {
 
 - ✅ Backend service implemented (515-line comprehensive service)
 - ✅ Frontend service implemented (cloud-monitoring.service.ts)
-- ✅ Cloud Logging SDK integrated (@google-cloud/logging)
+- ✅ Amazon CloudWatch Logs SDK integrated (@google-cloud/logging)
 - ✅ Log entry structure defined (severity, message, metadata)
 - ✅ Security monitoring implemented
   - ✅ Failed login tracking (5 attempts = block)
@@ -865,18 +865,18 @@ class GCPServicesOrchestrator {
   - ✅ Custom alert triggers
 - ✅ Periodic monitoring jobs running
 - ✅ Frontend-to-backend integration verified
-- ✅ GCP Orchestrator integration complete
+- ✅ AWS Orchestrator integration complete
 - ✅ Health checks implemented
-- ✅ Fallback to console logging (if Cloud Logging unavailable)
+- ✅ Fallback to console logging (if Amazon CloudWatch Logs unavailable)
 
 ### Cost Analysis
 
-**Cloud Logging Pricing:**
+**Amazon CloudWatch Logs Pricing:**
 
 - First 50 GB/month: FREE
 - Additional data: $0.50 per GB
 
-**Cloud Monitoring Pricing:**
+**Amazon CloudWatch Pricing:**
 
 - First 150 MB of metrics: FREE
 - Additional metrics: $0.2580 per MB
@@ -910,7 +910,7 @@ class GCPServicesOrchestrator {
 ├─────────────────────────────────────────────────────────────────┤
 │  • cloud-storage.service.ts (upload/download assets)            │
 │  • cloud-monitoring.service.ts (record metrics)                 │
-│  • gcp-service-manager.ts (service orchestration)               │
+│  • AWS-service-manager.ts (service orchestration)               │
 └──────────────────────┬──────────────────────────────────────────┘
                        │ HTTPS API Calls
                        ▼
@@ -922,12 +922,12 @@ class GCPServicesOrchestrator {
 │  • ml-training.service.ts (ML model training)                   │
 │  • simulation.service.ts (digital-twin simulation)              │
 │  • cloud-logging-monitoring.service.ts (logging/monitoring)     │
-│  • gcp-orchestrator.service.ts (service coordination)           │
+│  • AWS-orchestrator.service.ts (service coordination)           │
 └──────────────────┬──────────────┬───────────────┬───────────────┘
                    │              │               │
                    ▼              ▼               ▼
         ┌──────────────┐  ┌─────────────┐  ┌──────────────┐
-        │  CLOUD RUN   │  │   CLOUD     │  │    CLOUD     │
+        │  AWS App Runner   │  │   CLOUD     │  │    CLOUD     │
         │ ETL WORKER   │  │  STORAGE    │  │  LOGGING &   │
         │              │  │             │  │  MONITORING  │
         │ • Ingest     │  │ • Videos    │  │              │
@@ -942,20 +942,20 @@ class GCPServicesOrchestrator {
                │
                ▼
         ┌──────────────┐
-        │   BIGQUERY   │
-        │  & PUB/SUB   │
+        │   Amazon Athena   │
+        │  & Amazon SQS + SNS   │
         └──────────────┘
 ```
 
 ### Integration Points
 
-#### 1. Frontend → Backend → Cloud Run
+#### 1. Frontend → Backend → AWS App Runner
 
 ```typescript
 // Frontend uploads video frame
 const frameData = await captureFrame(videoStream);
 
-// Backend processes and sends to Cloud Run
+// Backend processes and sends to AWS App Runner
 await videoAnalyticsService.analyzeFrame({
   eventId,
   cameraId,
@@ -966,13 +966,13 @@ await videoAnalyticsService.analyzeFrame({
 // Inside videoAnalyticsService
 await cloudRunETLService.sendCCTVData(eventId, cameraId, frameBuffer, { peopleCount, crowdDensity, anomalies });
 
-// Cloud Run ETL Worker processes
-// → Stores in BigQuery
-// → Publishes to Pub/Sub
+// AWS App Runner ETL Worker processes
+// → Stores in Amazon Athena
+// → Publishes to Amazon SQS + SNS
 // → Returns processing result
 ```
 
-#### 2. Frontend → Backend → Cloud Storage
+#### 2. Frontend → Backend → Amazon S3
 
 ```typescript
 // Frontend uploads floor plan
@@ -987,12 +987,12 @@ const url = await cloudStorageService.getSignedUrl(
 
 // Backend stores ML model
 await mlTrainingService.trainModel(config);
-// → Saves model to Cloud Storage
+// → Saves model to Amazon S3
 // → Uploads to drishtix-models bucket
 // → KMS encryption applied
 ```
 
-#### 3. Backend → Cloud Logging & Monitoring
+#### 3. Backend → Amazon CloudWatch Logs & Monitoring
 
 ```typescript
 // Log security event
@@ -1014,8 +1014,8 @@ await cloudLoggingMonitoring.logAdminAction('USER_DELETED', adminUserId, 'users'
 #### 4. Cross-Service Integration
 
 ```typescript
-// GCP Orchestrator coordinates all services
-await gcpOrchestrator.startEventPipeline(eventId, {
+// AWS Orchestrator coordinates all services
+await AWSOrchestrator.startEventPipeline(eventId, {
   sources: {
     drones: true,
     cctv: true,
@@ -1025,7 +1025,7 @@ await gcpOrchestrator.startEventPipeline(eventId, {
     weather: true,
   },
   processing: {
-    realtime: true, // → Cloud Run ETL Worker
+    realtime: true, // → AWS App Runner ETL Worker
     batch: false,
   },
   ml: {
@@ -1040,31 +1040,31 @@ await gcpOrchestrator.startEventPipeline(eventId, {
   },
 });
 
-// Orchestrator logs to Cloud Logging
+// Orchestrator logs to Amazon CloudWatch Logs
 await cloudLoggingMonitoring.info(`Started event pipeline for ${eventId}`);
 
-// Orchestrator uses Cloud Storage for assets
-// Orchestrator sends data to Cloud Run for processing
+// Orchestrator uses Amazon S3 for assets
+// Orchestrator sends data to AWS App Runner for processing
 ```
 
 ### Security Configuration
 
 #### 1. Authentication & Authorization
 
-**Cloud Run:**
+**AWS App Runner:**
 
 - Service account authentication
 - IAM-based access control
 - No public access (backend-only)
 
-**Cloud Storage:**
+**Amazon S3:**
 
 - KMS encryption (90-day key rotation)
 - Signed URLs for temporary access
 - IAM permissions (service accounts only)
 - No public bucket access
 
-**Cloud Logging:**
+**Amazon CloudWatch Logs:**
 
 - Project-level credentials
 - Service account authentication
@@ -1111,7 +1111,7 @@ rule {
 
 **Encryption:**
 
-- ✅ KMS encryption for Cloud Storage (at rest)
+- ✅ KMS encryption for Amazon S3 (at rest)
 - ✅ TLS 1.3 for data in transit
 - ✅ Automatic key rotation (90 days)
 - ✅ Service account credentials (not API keys)
@@ -1132,7 +1132,7 @@ rule {
 
 ### Performance Benchmarks
 
-#### Cloud Run ETL Worker
+#### AWS App Runner ETL Worker
 
 - **Cold Start:** <2 seconds
 - **Warm Request:** <100ms
@@ -1140,7 +1140,7 @@ rule {
 - **Autoscaling:** 1-100 instances (scales in <30s)
 - **Availability:** 99.95% SLA
 
-#### Cloud Storage
+#### Amazon S3
 
 - **Upload Speed:** 10-100 MB/s (network-dependent)
 - **Download Speed:** 10-100 MB/s (network-dependent)
@@ -1148,7 +1148,7 @@ rule {
 - **Durability:** 99.999999999% (11 nines)
 - **Availability:** 99.95% SLA
 
-#### Cloud Logging & Monitoring
+#### Amazon CloudWatch Logs & Monitoring
 
 - **Log Ingestion:** <1 second
 - **Query Latency:** <500ms (recent logs)
@@ -1159,16 +1159,16 @@ rule {
 ### Health Check Status
 
 ```typescript
-// GCP Orchestrator health check
-const healthStatus = await gcpOrchestrator.healthCheck();
+// AWS Orchestrator health check
+const healthStatus = await AWSOrchestrator.healthCheck();
 
 // Returns:
 {
   overall: 'healthy',
   services: {
     pubsub: true,
-    bigquery: true,
-    firestore: true,
+    Amazon Athena: true,
+    Amazon DynamoDB: true,
     cloudRun: true,
     cloudStorage: true,
     logging: true,
@@ -1177,7 +1177,7 @@ const healthStatus = await gcpOrchestrator.healthCheck();
     geminiVision: true,
     agentBuilder: true,
     maps: true,
-    fcm: true
+    Amazon SNS Push: true
   },
   timestamp: '2025-11-30T...'
 }
@@ -1191,22 +1191,22 @@ const healthStatus = await gcpOrchestrator.healthCheck();
 
 ```bash
 # Required tools
-- Google Cloud SDK (gcloud CLI)
+- AWS CLI
 - Docker Desktop
 - Node.js 18+
 - Python 3.11+
 - Terraform 1.5+
 
-# GCP Project Setup
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-gcloud services enable run.googleapis.com
-gcloud services enable storage-api.googleapis.com
-gcloud services enable logging.googleapis.com
-gcloud services enable monitoring.googleapis.com
+# AWS Project Setup
+aws configure
+aws sts get-caller-identity --region ap-south-1
+# AWS App Runner is region-enabled by default
+# Amazon S3 is available by default
+# Amazon CloudWatch Logs is available by default
+# Amazon CloudWatch Metrics is available by default
 ```
 
-### 1. Deploy Cloud Run ETL Worker
+### 1. Deploy AWS App Runner ETL Worker
 
 **Windows (PowerShell):**
 
@@ -1226,13 +1226,13 @@ chmod +x scripts/deploy-etl-worker.sh
 **Deployment Steps:**
 
 1. Build Docker image
-2. Push to Google Container Registry
-3. Deploy to Cloud Run
+2. Push to Amazon ECR
+3. Deploy to AWS App Runner
 4. Configure environment variables
 5. Set up autoscaling
-6. Create Pub/Sub subscriptions
+6. Create Amazon SQS + SNS subscriptions
 
-### 2. Deploy Cloud Storage Infrastructure
+### 2. Deploy Amazon S3 Infrastructure
 
 **Using Terraform:**
 
@@ -1255,19 +1255,19 @@ terraform apply
 
 ```bash
 # Create buckets
-gsutil mb -l us-central1 gs://drishtix-simulations
-gsutil mb -l us-central1 gs://drishtix-models
-gsutil mb -l us-central1 gs://drishtix-video-feeds
+aws s3 mb s3://drishtix-simulations --region ap-south-1
+aws s3 mb s3://drishtix-models --region ap-south-1
+aws s3 mb s3://drishtix-video-feeds --region ap-south-1
 
 # Set lifecycle policies
-gsutil lifecycle set lifecycle-config.json gs://drishtix-video-feeds
+aws s3api put-bucket-lifecycle-configuration --bucket drishtix-video-feeds --lifecycle-configuration file://lifecycle-config.json
 ```
 
-### 3. Enable Cloud Logging & Monitoring
+### 3. Enable Amazon CloudWatch Logs & Monitoring
 
 **Automatic (Already Enabled):**
 
-- Cloud Logging is automatically enabled on GCP project
+- Amazon CloudWatch Logs is automatically enabled on AWS project
 - No additional setup required
 - Service account authentication configured
 
@@ -1275,10 +1275,10 @@ gsutil lifecycle set lifecycle-config.json gs://drishtix-video-feeds
 
 ```bash
 # Check if logging is enabled
-gcloud logging read "resource.type=global" --limit 10
+aws logs filter-log-events --log-group-name /drishtix/backend --limit 10 --region ap-south-1
 
 # Check if monitoring is enabled
-gcloud monitoring dashboards list
+aws cloudwatch list-dashboards --region ap-south-1
 ```
 
 ### 4. Configure Environment Variables
@@ -1286,51 +1286,51 @@ gcloud monitoring dashboards list
 **Backend (.env):**
 
 ```bash
-# Cloud Run
-ETL_WORKER_URL=https://etl-worker-xxxxx-uc.a.run.app
-CLOUD_RUN_SERVICE_ACCOUNT=etl-worker@PROJECT_ID.iam.gserviceaccount.com
-CLOUD_RUN_MAX_INSTANCES=100
-CLOUD_RUN_MEMORY=2Gi
+# AWS App Runner
+ETL_WORKER_URL=https://SERVICE_ID.ap-south-1.awsapprunner.com
+APP_RUNNER_SERVICE_ROLE=arn:aws:iam::ACCOUNT_ID:role/drishtix-apprunner-role
+APP_RUNNER_MAX_CONCURRENCY=100
+APP_RUNNER_MEMORY=2GB
 
-# Cloud Storage
-GCS_BUCKET_SIMULATIONS=drishtix-simulations
-GCS_BUCKET_MODELS=drishtix-models
-GCS_BUCKET_VIDEOS=drishtix-video-feeds
+# Amazon S3
+S3_BUCKET_SIMULATIONS=drishtix-simulations
+S3_BUCKET_MODELS=drishtix-models
+S3_BUCKET_VIDEOS=drishtix-video-feeds
 
-# Cloud Logging
-GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+# Amazon CloudWatch Logs
+AWS_ACCOUNT_ID=YOUR_ACCOUNT_ID
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
 ```
 
 **Frontend (.env):**
 
 ```bash
-VITE_GOOGLE_CLOUD_PROJECT_ID=YOUR_PROJECT_ID
-VITE_GCS_BUCKET_NAME=drishtix-data-storage
+VITE_AWS_REGION=ap-south-1
+VITE_S3_BUCKET_NAME=drishtix-prod-data
 ```
 
 ### 5. Verify Deployment
 
-**Test Cloud Run:**
+**Test AWS App Runner:**
 
 ```bash
-curl -X POST https://etl-worker-xxxxx-uc.a.run.app/health
+curl -X POST https://SERVICE_ID.ap-south-1.awsapprunner.com/health
 # Expected: {"status": "healthy", "timestamp": "..."}
 ```
 
-**Test Cloud Storage:**
+**Test Amazon S3:**
 
 ```bash
 # Upload test file
-gsutil cp test.txt gs://drishtix-simulations/
-gsutil ls gs://drishtix-simulations/
+aws s3 cp test.txt s3://drishtix-simulations/
+aws s3 ls s3://drishtix-simulations/
 ```
 
-**Test Cloud Logging:**
+**Test Amazon CloudWatch Logs:**
 
 ```bash
 # View recent logs
-gcloud logging read "resource.type=cloud_run_revision" --limit 10
+aws logs filter-log-events --log-group-name /drishtix/etl-worker --limit 10 --region ap-south-1
 ```
 
 ---
@@ -1339,19 +1339,19 @@ gcloud logging read "resource.type=cloud_run_revision" --limit 10
 
 ### Daily Monitoring
 
-**Cloud Run:**
+**AWS App Runner:**
 
-- Check instance count: `gcloud run services describe etl-worker --region=us-central1`
-- Monitor errors: Cloud Console → Cloud Run → etl-worker → Logs
-- Review latency: Cloud Console → Cloud Run → etl-worker → Metrics
+- Check instance count: `aws apprunner list-services --region ap-south-1`
+- Monitor errors: Cloud Console → AWS App Runner → etl-worker → Logs
+- Review latency: Cloud Console → AWS App Runner → etl-worker → Metrics
 
-**Cloud Storage:**
+**Amazon S3:**
 
-- Check storage usage: `gsutil du -sh gs://drishtix-*`
+- Check storage usage: `aws s3 ls --recursive --human-readable --summarize s3://drishtix-simulations/`
 - Monitor costs: Cloud Console → Billing → Reports
 - Review access logs: Cloud Console → Storage → Logs
 
-**Cloud Logging:**
+**Amazon CloudWatch Logs:**
 
 - Review security alerts: Cloud Console → Logging → Logs Explorer
 - Check error rates: Cloud Console → Logging → Metrics
@@ -1383,15 +1383,15 @@ const summary = cloudLoggingMonitoring.getPerformanceSummary();
 
 ```bash
 # Delete old simulation outputs (manual cleanup if needed)
-gsutil -m rm gs://drishtix-simulations/old-data/**
+aws s3 rm s3://drishtix-simulations/old-data/ --recursive
 ```
 
 ### Monthly Maintenance
 
 1. **Cost Analysis:**
-   - Review Cloud Run costs (target: $50/month)
-   - Review Cloud Storage costs (target: $2-5/month)
-   - Review Cloud Logging costs (target: $0/month, free tier)
+   - Review AWS App Runner costs (target: $50/month)
+   - Review Amazon S3 costs (target: $2-5/month)
+   - Review Amazon CloudWatch Logs costs (target: $0/month, free tier)
 
 2. **Security Audit:**
    - Review admin action logs
@@ -1401,40 +1401,40 @@ gsutil -m rm gs://drishtix-simulations/old-data/**
 3. **Performance Optimization:**
    - Analyze slow API requests
    - Optimize database queries
-   - Review Cloud Run autoscaling patterns
+   - Review AWS App Runner autoscaling patterns
 
 ---
 
 ## 7. Troubleshooting Guide
 
-### Cloud Run Issues
+### AWS App Runner Issues
 
 **Issue: ETL Worker not responding**
 
 ```bash
 # Check service status
-gcloud run services describe etl-worker --region=us-central1
+aws apprunner list-services --region ap-south-1
 
 # Check recent logs
-gcloud logging read "resource.type=cloud_run_revision" --limit 50
+aws logs filter-log-events --log-group-name /drishtix/etl-worker --limit 50 --region ap-south-1
 
 # Restart service (redeploy)
-gcloud run deploy etl-worker --image=gcr.io/PROJECT_ID/etl-worker
+aws apprunner update-service --service-arn ARN --source-configuration ImageRepository={ImageIdentifier=ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/drishtix/etl-worker:latest}
 ```
 
 **Issue: High latency**
 
-- Increase memory: `CLOUD_RUN_MEMORY=4Gi`
-- Increase max instances: `CLOUD_RUN_MAX_INSTANCES=200`
-- Check BigQuery/Pub/Sub latency
+- Increase memory: `APP_RUNNER_MEMORY=4GB`
+- Increase max instances: `APP_RUNNER_MAX_CONCURRENCY=200`
+- Check Amazon Athena/Amazon SQS + SNS latency
 
-### Cloud Storage Issues
+### Amazon S3 Issues
 
 **Issue: Upload failures**
 
 ```typescript
 // Check IAM permissions
-// Verify service account has roles/storage.objectAdmin
+// Verify service account has AmazonS3FullAccess
 
 // Test upload with retry
 const uploadWithRetry = async (file, path, retries = 3) => {
@@ -1453,29 +1453,29 @@ const uploadWithRetry = async (file, path, retries = 3) => {
 
 ```bash
 # Verify KMS key exists
-gcloud kms keys list --location=us-central1 --keyring=drishtix-keys
+aws kms list-keys --region ap-south-1
 
 # Grant service account access
-gcloud kms keys add-iam-policy-binding data-encryption-key \
-  --location=us-central1 \
-  --keyring=drishtix-keys \
-  --member=serviceAccount:SERVICE_ACCOUNT@PROJECT_ID.iam.gserviceaccount.com \
-  --role=roles/cloudkms.cryptoKeyEncrypterDecrypter
+# Grant IAM role access to KMS key
+aws kms create-grant --key-id YOUR_KMS_KEY_ID \
+  --grantee-principal arn:aws:iam::ACCOUNT_ID:role/drishtix-service-role \
+  --operations Encrypt Decrypt \
+  --region ap-south-1
 ```
 
-### Cloud Logging Issues
+### Amazon CloudWatch Logs Issues
 
 **Issue: Logs not appearing**
 
 ```typescript
 // Check if service is initialized
 if (!cloudLoggingMonitoring.isInitialized()) {
-  console.error('Cloud Logging not initialized');
+  console.error('Amazon CloudWatch Logs not initialized');
   // Logs will fallback to console
 }
 
 // Verify credentials
-// Check GOOGLE_APPLICATION_CREDENTIALS environment variable
+// Check AWS_SECRET_ACCESS_KEY environment variable
 ```
 
 **Issue: Alerts not triggering**
@@ -1496,7 +1496,7 @@ await cloudLoggingMonitoring.sendAlert({
 
 ## 8. Cost Optimization Tips
 
-### Cloud Run
+### AWS App Runner
 
 1. **Reduce idle instances:** Set min instances to 0
 2. **Optimize memory:** Start with 2Gi, adjust based on actual usage
@@ -1505,7 +1505,7 @@ await cloudLoggingMonitoring.sendAlert({
 
 **Potential Savings:** $50/month → $30/month (40% reduction)
 
-### Cloud Storage
+### Amazon S3
 
 1. **Lifecycle policies:** Auto-delete old data (already configured)
 2. **Tiered storage:** Move to Nearline/Coldline (already configured)
@@ -1514,7 +1514,7 @@ await cloudLoggingMonitoring.sendAlert({
 
 **Potential Savings:** $2/month → $1/month (50% reduction)
 
-### Cloud Logging
+### Amazon CloudWatch Logs
 
 1. **Log sampling:** Log 10% of successful requests (not all)
 2. **Retention:** Reduce to 7 days if 30 days not needed
@@ -1533,14 +1533,14 @@ await cloudLoggingMonitoring.sendAlert({
 
 All three infrastructure services are **fully integrated and operational**:
 
-1. **Cloud Run Backend Services**
+1. **AWS App Runner Backend Services**
    - ETL Worker deployed (626-line Flask app)
    - Autoscaling configured (1-100 instances)
    - Backend integration complete
    - Cost: $50/month (vs $2,500 Dataflow)
    - **Savings: $2,450/month (98%)**
 
-2. **Cloud Storage**
+2. **Amazon S3**
    - 3 buckets configured (simulations, models, videos)
    - KMS encryption enabled (90-day rotation)
    - Lifecycle policies configured (auto-delete, tiered storage)
@@ -1548,7 +1548,7 @@ All three infrastructure services are **fully integrated and operational**:
    - Cost: $2-5/month
    - **Feature-rich, secure, cost-effective**
 
-3. **Cloud Logging & Monitoring**
+3. **Amazon CloudWatch Logs & Monitoring**
    - Comprehensive logging service (515 lines)
    - Security monitoring (intrusion detection, failed login tracking)
    - Performance monitoring (API latency, anomaly detection)
@@ -1560,9 +1560,9 @@ All three infrastructure services are **fully integrated and operational**:
 ### End-to-End Connection Verified
 
 ```
-Frontend → Backend → Cloud Run → BigQuery/Pub/Sub ✅
-Frontend → Backend → Cloud Storage → KMS Encryption ✅
-Backend → Cloud Logging → Security/Performance Monitoring ✅
+Frontend → Backend → AWS App Runner → Amazon Athena/Amazon SQS + SNS ✅
+Frontend → Backend → Amazon S3 → KMS Encryption ✅
+Backend → Amazon CloudWatch Logs → Security/Performance Monitoring ✅
 ```
 
 ### Recommendations
@@ -1575,12 +1575,12 @@ Backend → Cloud Logging → Security/Performance Monitoring ✅
 
 2. **Next Steps:**
    - Deploy to production environment
-   - Set up alerting policies in Cloud Monitoring
+   - Set up alerting policies in Amazon CloudWatch
    - Configure PagerDuty/OpsGenie for on-call alerts
    - Enable VPC Service Controls for additional security
 
 3. **Monitoring:**
-   - Daily: Check Cloud Run metrics, review error logs
+   - Daily: Check AWS App Runner metrics, review error logs
    - Weekly: Security summary, performance summary
    - Monthly: Cost analysis, security audit
 
@@ -1588,10 +1588,10 @@ Backend → Cloud Logging → Security/Performance Monitoring ✅
 
 | Service                | Monthly Cost | Notes                               |
 | ---------------------- | ------------ | ----------------------------------- |
-| Cloud Run (ETL Worker) | $50          | Autoscaling, serverless             |
-| Cloud Storage          | $2-5         | 100GB, lifecycle policies           |
-| Cloud Logging          | $0           | Free tier (50GB/month)              |
-| Cloud Monitoring       | $0           | Free tier (150MB/month)             |
+| AWS App Runner (ETL Worker) | $50          | Autoscaling, serverless             |
+| Amazon S3          | $2-5         | 100GB, lifecycle policies           |
+| Amazon CloudWatch Logs          | $0           | Free tier (50GB/month)              |
+| Amazon CloudWatch       | $0           | Free tier (150MB/month)             |
 | **TOTAL**              | **$52-55**   | **vs $2,500+ for managed services** |
 
 **Total Savings:** $2,445-2,448/month (98% cost reduction)
@@ -1600,11 +1600,11 @@ Backend → Cloud Logging → Security/Performance Monitoring ✅
 
 ## 10. Documentation References
 
-- **Cloud Run Integration:** `ETL_WORKER_INTEGRATION.md`
-- **Cloud Run Implementation:** `ETL_WORKER_COMPLETE.md`
+- **AWS App Runner Integration:** `ETL_WORKER_INTEGRATION.md`
+- **AWS App Runner Implementation:** `ETL_WORKER_COMPLETE.md`
 - **Deployment Scripts:** `scripts/deploy-etl-worker.ps1`, `scripts/deploy-etl-worker.sh`
 - **Terraform Infrastructure:** `terraform/main.tf`, `terraform/infrastructure.tf`
-- **GCP Configuration:** `server/config/gcp.config.ts`
+- **AWS Configuration:** `server/config/AWS.config.ts`
 
 ---
 

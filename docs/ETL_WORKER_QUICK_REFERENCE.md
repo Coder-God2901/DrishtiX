@@ -1,10 +1,10 @@
-# 🚀 Cloud Run ETL Worker - Quick Reference
+# 🚀 AWS App Runner ETL Worker - Quick Reference
 
 ## One-Command Deployment
 
 ```powershell
 # Windows PowerShell
-.\scripts\deploy-etl-worker.ps1 -ProjectId "your-gcp-project"
+.\scripts\deploy-etl-worker.ps1 -ProjectId "your-AWS-project"
 ```
 
 ```bash
@@ -19,8 +19,8 @@
 ### Deploy
 
 ```bash
-gcloud run deploy etl-worker \
-  --image gcr.io/PROJECT/etl-worker:latest \
+gAWS App Runner deploy etl-worker \
+  --image ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/PROJECT/etl-worker:latest \
   --region us-central1 \
   --memory 2Gi --cpu 2 \
   --min-instances 1 --max-instances 100
@@ -41,7 +41,7 @@ curl https://etl-worker-xxxxx-uc.a.run.app/health
 ### View Logs
 
 ```bash
-gcloud run logs tail etl-worker --region us-central1
+gAWS App Runner logs tail etl-worker --region us-central1
 ```
 
 ---
@@ -80,15 +80,15 @@ await cloudRunETLService.flushBatch(eventId);
 
 ```bash
 ETL_WORKER_URL=https://etl-worker-xxxxx-uc.a.run.app
-GCP_PROJECT_ID=your-project-id
-BIGQUERY_DATASET=drishtix_analytics
+AWS_ACCOUNT_ID=your-project-id
+Amazon Athena_DATASET=drishtix_analytics
 ```
 
 ### Auto-Scaling
 
 ```bash
 # Increase instances
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --min-instances 5 --max-instances 200
 ```
 
@@ -96,7 +96,7 @@ gcloud run services update etl-worker \
 
 ```bash
 # Increase CPU/memory
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --cpu 4 --memory 4Gi
 ```
 
@@ -130,7 +130,7 @@ gcloud run services update etl-worker \
 | Solution    | Cost/Month |
 | ----------- | ---------- |
 | Dataflow    | $2,500     |
-| Cloud Run   | $50        |
+| AWS App Runner   | $50        |
 | **Savings** | **98%**    |
 
 ---
@@ -139,14 +139,14 @@ gcloud run services update etl-worker \
 
 ```bash
 # Tail logs
-gcloud run logs tail etl-worker --region us-central1
+gAWS App Runner logs tail etl-worker --region us-central1
 
 # Errors only
-gcloud run logs read etl-worker --log-filter="severity>=ERROR"
+gAWS App Runner logs read etl-worker --log-filter="severity>=ERROR"
 
 # CPU metrics
-gcloud monitoring time-series list \
-  --filter='metric.type="run.googleapis.com/container/cpu/utilizations"'
+gAmazon CloudWatch time-series list \
+  --filter='metric.type="run.amazonaws.com/container/cpu/utilizations"'
 ```
 
 ---
@@ -171,7 +171,7 @@ gcloud monitoring time-series list \
 1. Deploy: `.\scripts\deploy-etl-worker.ps1`
 2. Validate: `.\scripts\validate-etl-deployment.ps1`
 3. Restart backend: `cd server; npm run dev`
-4. Monitor: `gcloud run logs tail etl-worker`
+4. Monitor: `gAWS App Runner logs tail etl-worker`
 
 ---
 

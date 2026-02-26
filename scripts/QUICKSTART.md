@@ -52,10 +52,10 @@ deactivate
 # Just train (data already prepared)
 .\scripts\run-training.ps1 -Script autoencoder -Mode train
 
-# Deploy to Vertex AI (production)
+# Deploy to Amazon SageMaker (production)
 .\scripts\run-training.ps1 -Script convlstm -Mode deploy
 
-# Fetch 60 days of real GCP data
+# Fetch 60 days of real AWS data
 .\scripts\run-training.ps1 -Script isolation-forest -Mode full -DaysBack 60
 ```
 
@@ -84,7 +84,7 @@ tensorboard --logdir=models/autoencoder/logs
 | ------------------------------------------- | ---------------------------------------------------- |
 | `Import "tensorflow" could not be resolved` | Activate venv: `.\scripts\venv\Scripts\Activate.ps1` |
 | `Virtual environment not found`             | Run setup: `.\scripts\setup-python-env.ps1`          |
-| `GCP authentication error`                  | Run: `gcloud auth application-default login`         |
+| `AWS authentication error`                  | Run: `aws sts get-caller-identity --region ap-south-1`         |
 | Out of memory during training               | Edit script: reduce `BATCH_SIZE` to 8 or 4           |
 | Script fails on first run                   | Normal! Re-run after dependencies install            |
 
@@ -129,14 +129,14 @@ After training, update `.env` in project root:
 # For Isolation Forest (local file)
 GCS_ISOLATION_FOREST_MODEL_PATH=models/isolation-forest/isolation_forest.joblib
 
-# For Autoencoder & ConvLSTM (Vertex AI endpoints)
+# For Autoencoder & ConvLSTM (Amazon SageMaker endpoints)
 VERTEX_AI_AUTOENCODER_ENDPOINT=projects/.../endpoints/...
 VERTEX_AI_CONVLSTM_ENDPOINT=projects/.../endpoints/...
 
-# GCP Configuration
+# AWS Configuration
 GOOGLE_CLOUD_PROJECT_ID=your-project-id
 GCS_BUCKET_NAME=your-bucket-name
-GCP_REGION=us-central1
+AWS_REGION=us-central1
 ```
 
 Then restart your Node.js backend:

@@ -205,7 +205,7 @@ Methods, systems, and apparatus disclosed in this Software may be covered by one
    - Scalability strategies
 
 4. **Integration Methods**:
-   - Azure AI/ML integration patterns
+   - AWS AI/ML integration patterns
    - Multi-cloud orchestration techniques
    - Service communication protocols
    - Security implementation details
@@ -248,7 +248,7 @@ Methods, systems, and apparatus disclosed in this Software may be covered by one
 - **Express.js** - MIT License
 - **Prisma** - Apache 2.0 License
 - **Socket.IO** - MIT License
-- **Azure SDKs** - MIT License (multiple packages)
+- **AWS SDKs** - MIT License (multiple packages)
 - **Google Cloud SDKs** - Apache 2.0 License
 - [See package.json for complete list]
 

@@ -284,7 +284,7 @@ This document summarizes the complete documentation update performed to align wi
 - **Payment**: Stripe or Razorpay
 - **Email**: SendGrid
 - **SMS**: Twilio
-- **Push Notifications**: Firebase Cloud Messaging (FCM)
+- **Push Notifications**: Amazon SNS Push (Amazon SNS Push)
 
 ### DevOps
 - **Containerization**: Docker

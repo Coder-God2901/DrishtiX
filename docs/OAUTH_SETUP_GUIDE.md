@@ -22,7 +22,7 @@ EventSphere now supports advanced OAuth authentication with Google, Facebook, an
   - Gradient design with animations
   - Demo credentials display
 
-- **Firebase Integration**
+- **Amazon Cognito+S3 Integration**
   - Google Sign-In with popup/redirect support
   - Facebook Sign-In
   - GitHub Sign-In
@@ -53,11 +53,11 @@ EventSphere now supports advanced OAuth authentication with Google, Facebook, an
 
 ## Setup Instructions
 
-### 1. Firebase Console Configuration
+### 1. Amazon Cognito+S3 Console Configuration
 
 #### Enable Authentication Providers
 
-1. Go to [Firebase Console](https://console.firebase.google.com/)
+1. Go to [Amazon Cognito+S3 Console](https://console.Amazon Cognito+S3.google.com/)
 2. Select your project
 3. Navigate to **Authentication** → **Sign-in method**
 
@@ -75,9 +75,9 @@ EventSphere now supports advanced OAuth authentication with Google, Facebook, an
 1. Create Facebook App at developers.facebook.com
 2. Enable Facebook Login product
 3. Copy App ID and App Secret
-4. Add to Firebase Console
+4. Add to Amazon Cognito+S3 Console
 5. Configure OAuth redirect URI:
-   https://YOUR-PROJECT.firebaseapp.com/__/auth/handler
+   https://YOUR-PROJECT.Amazon Cognito+S3app.com/__/auth/handler
 ```
 
 #### GitHub Sign-In
@@ -85,9 +85,9 @@ EventSphere now supports advanced OAuth authentication with Google, Facebook, an
 ```
 1. Create OAuth App at github.com/settings/developers
 2. Copy Client ID and Client Secret
-3. Add to Firebase Console
+3. Add to Amazon Cognito+S3 Console
 4. Configure callback URL:
-   https://YOUR-PROJECT.firebaseapp.com/__/auth/handler
+   https://YOUR-PROJECT.Amazon Cognito+S3app.com/__/auth/handler
 ```
 
 ### 2. Environment Variables
@@ -95,19 +95,19 @@ EventSphere now supports advanced OAuth authentication with Google, Facebook, an
 Update your `.env` file:
 
 ```bash
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+# Amazon Cognito+S3 Configuration
+VITE_Amazon Cognito+S3_API_KEY=your_api_key
+VITE_Amazon Cognito+S3_AUTH_DOMAIN=your-project.Amazon Cognito+S3app.com
+VITE_Amazon Cognito+S3_PROJECT_ID=your-project-id
+VITE_Amazon Cognito+S3_STORAGE_BUCKET=your-project.appspot.com
+VITE_Amazon Cognito+S3_MESSAGING_SENDER_ID=your_sender_id
+VITE_Amazon Cognito+S3_APP_ID=your_app_id
+VITE_Amazon Cognito+S3_MEASUREMENT_ID=your_measurement_id
 
 # Backend
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk@your-project.iam.gserviceaccount.com
+Amazon Cognito+S3_PROJECT_ID=your-project-id
+Amazon Cognito+S3_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+Amazon Cognito+S3_CLIENT_EMAIL=Amazon Cognito+S3-adminsdk@your-project.iam.gserviceaccount.com
 ```
 
 ### 3. Database Migration
@@ -139,7 +139,7 @@ npm run dev
 2. Google OAuth popup/redirect
 3. User authorizes EventSphere
 4. Backend receives ID token
-5. Verify token with Firebase Admin
+5. Verify token with Amazon Cognito+S3 Admin
 6. Create new user in database
 7. Generate JWT tokens
 8. Return user + tokens to frontend
@@ -161,7 +161,7 @@ npm run dev
 ### Token Verification
 
 - All OAuth tokens verified server-side
-- Firebase Admin SDK validation
+- Amazon Cognito+S3 Admin SDK validation
 - JWT token generation for API access
 
 ### Error Handling
@@ -220,14 +220,14 @@ npm run dev
 
 ```typescript
 // Popup (recommended for desktop)
-const user = await firebaseService.signInWithGoogle(false);
+const user = await Amazon Cognito+S3Service.signInWithGoogle(false);
 
 // Redirect (recommended for mobile)
-await firebaseService.signInWithGoogle(true);
+await Amazon Cognito+S3Service.signInWithGoogle(true);
 
 // Handle redirect result
 useEffect(() => {
-  const result = await firebaseService.handleRedirectResult();
+  const result = await Amazon Cognito+S3Service.handleRedirectResult();
   if (result?.user) {
     // Process login
   }
@@ -239,8 +239,8 @@ useEffect(() => {
 ```typescript
 // Request additional permissions
 const provider = new GoogleAuthProvider();
-provider.addScope('https://www.googleapis.com/auth/calendar');
-provider.addScope('https://www.googleapis.com/auth/contacts');
+provider.addScope('https://www.amazonaws.com/auth/calendar');
+provider.addScope('https://www.amazonaws.com/auth/contacts');
 ```
 
 ### Account Linking
@@ -258,17 +258,17 @@ user@example.com
 
 ### Test Accounts
 
-Use Firebase Test Users for development:
+Use Amazon Cognito+S3 Test Users for development:
 
 ```javascript
-// Firebase Console → Authentication → Users → Add test user
+// Amazon Cognito+S3 Console → Authentication → Users → Add test user
 email: test@example.com
 provider: Google
 ```
 
 ### Local Testing
 
-1. Add `localhost` to Firebase authorized domains
+1. Add `localhost` to Amazon Cognitoorized domains
 2. Test popup and redirect flows
 3. Verify token exchange
 4. Check database user creation
@@ -280,7 +280,7 @@ provider: Google
 ```typescript
 // Fallback to redirect
 if (error.code === 'auth/popup-blocked') {
-  await firebaseService.signInWithGoogle(true);
+  await Amazon Cognito+S3Service.signInWithGoogle(true);
 }
 ```
 
@@ -296,8 +296,8 @@ if (error.code === 'auth/account-exists-with-different-credential') {
 ### Token Verification Failed
 
 ```
-1. Check Firebase service account credentials
-2. Verify FIREBASE_PROJECT_ID matches
+1. Check Amazon Cognito+S3 service account credentials
+2. Verify Amazon Cognito+S3_PROJECT_ID matches
 3. Ensure private key is properly formatted
 4. Check token expiration
 ```
@@ -307,8 +307,8 @@ if (error.code === 'auth/account-exists-with-different-credential') {
 ### Lazy Loading
 
 ```typescript
-// Load Firebase only when needed
-const { firebaseService } = await import('@/services/firebase.service');
+// Load Amazon Cognito+S3 only when needed
+const { Amazon Cognito+S3Service } = await import('@/services/Amazon Cognito+S3.service');
 ```
 
 ### Prefetching
@@ -332,7 +332,7 @@ localStorage.setItem('user_avatar', user.photoURL);
 
 ## Production Checklist
 
-- [ ] Firebase project in production mode
+- [ ] Amazon Cognito+S3 project in production mode
 - [ ] OAuth providers configured
 - [ ] Authorized domains added
 - [ ] Environment variables set
@@ -391,7 +391,7 @@ analytics.logEvent('oauth_login', {
 
 For issues or questions:
 
-- Check Firebase Console logs
+- Check Amazon Cognito+S3 Console logs
 - Review backend API logs
 - Test with curl/Postman
 - Verify environment variables
@@ -399,7 +399,7 @@ For issues or questions:
 
 ## Resources
 
-- [Firebase Authentication Docs](https://firebase.google.com/docs/auth)
+- [Amazon Cognitoentication Docs](https://Amazon Cognito+S3.google.com/docs/auth)
 - [Google OAuth 2.0](https://developers.google.com/identity/protocols/oauth2)
 - [Facebook Login](https://developers.facebook.com/docs/facebook-login)
 - [GitHub OAuth Apps](https://docs.github.com/en/developers/apps/building-oauth-apps)

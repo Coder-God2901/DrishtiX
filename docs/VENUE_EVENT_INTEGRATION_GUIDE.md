@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive guide to the **Venue Boundary Mapping** and **Dynamic Event Creator** features, which are fully integrated with real-time backend services, Google Cloud Platform (GCP), and WebSocket communication.
+This document provides a comprehensive guide to the **Venue Boundary Mapping** and **Dynamic Event Creator** features, which are fully integrated with real-time backend services, Amazon Web Services (AWS) (AWS), and WebSocket communication.
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ This document provides a comprehensive guide to the **Venue Boundary Mapping** a
 | Layer          | Technology                                     | Purpose                            |
 | -------------- | ---------------------------------------------- | ---------------------------------- |
 | **Frontend**   | React + TypeScript                             | UI Components                      |
-| **Maps**       | Google Maps JavaScript API + React Google Maps | Interactive mapping                |
+| **Maps**       | Amazon Location Service JavaScript API + React Amazon Location Service | Interactive mapping                |
 | **Geospatial** | Turf.js                                        | Geometry validation & calculations |
 | **Backend**    | Express + TypeScript                           | API & Business Logic               |
 | **Real-Time**  | Socket.IO                                      | Live updates                       |
@@ -35,7 +35,7 @@ This document provides a comprehensive guide to the **Venue Boundary Mapping** a
 ```
 Frontend Component
     ↓
-Google Maps Drawing Manager
+Amazon Location Service Drawing Manager
     ↓
 GeoJSON Conversion
     ↓
@@ -209,7 +209,7 @@ saveVenueLayout(eventId, boundary, zones, gates, routes):
 
 **Features:**
 
-- Google Maps integration with Drawing Manager
+- Amazon Location Service integration with Drawing Manager
 - Boundary polygon creation with validation
 - Multi-zone creation with metadata
   - Zone types: Stage, Gate, Food, Medical, VIP, Parking, Restroom, Restricted
@@ -619,7 +619,7 @@ Find optimal path with crowd avoidance.
 
 1. **Node.js** >= 18.x
 2. **PostgreSQL** >= 14.x (with PostGIS extension)
-3. **Google Maps API Key** with the following APIs enabled:
+3. **Amazon Location Service Key** with the following APIs enabled:
    - Maps JavaScript API
    - Drawing Library
    - Geometry Library
@@ -630,7 +630,7 @@ Find optimal path with crowd avoidance.
 #### Root `.env`
 
 ```env
-# Google Maps
+# Amazon Location Service
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
 # WebSocket
@@ -646,7 +646,7 @@ VITE_API_URL=http://localhost:3000/api
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/eventsphere
 
-# Google Maps
+# Amazon Location Service
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
 # Server
@@ -688,9 +688,9 @@ pnpm dev
 pnpm dev
 ```
 
-### Google Maps API Setup
+### Amazon Location Service Setup
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+1. Go to [Google Cloud Console](https://console.aws.amazon.com/)
 2. Create a new project or select existing
 3. Enable the following APIs:
    - Maps JavaScript API
@@ -845,7 +845,7 @@ curl -X POST http://localhost:3000/api/events/evt_123/navigate \
 
 ## Troubleshooting
 
-### Google Maps Not Loading
+### Amazon Location Service Not Loading
 
 **Issue:** Map shows gray screen
 
@@ -944,7 +944,7 @@ curl -X POST http://localhost:3000/api/events/evt_123/navigate \
 ## Support & Resources
 
 - **Turf.js Documentation:** https://turfjs.org/docs/
-- **Google Maps API:** https://developers.google.com/maps
+- **Amazon Location Service:** https://developers.google.com/maps
 - **Prisma Documentation:** https://www.prisma.io/docs
 - **Socket.IO Documentation:** https://socket.io/docs/
 

@@ -15,7 +15,7 @@
 - **Responsibilities**:
   - Overall project direction and vision
   - Architecture decisions
-  - Azure AI/ML services integration
+  - AWS AI/ML services integration
   - Security and compliance
   - Release management
   - Community oversight
@@ -100,7 +100,7 @@
 1. **Contribution History**: 20+ merged pull requests
 2. **Code Quality**: Consistent adherence to project standards
 3. **Community Engagement**: Active participation in discussions
-4. **Domain Expertise**: Deep knowledge in Azure AI/ML, crowd safety, or related areas
+4. **Domain Expertise**: Deep knowledge in AWS AI/ML, crowd safety, or related areas
 5. **Time Commitment**: 10+ hours/week for maintainer duties
 6. **Professional Conduct**: Exemplary adherence to Code of Conduct
 
@@ -136,7 +136,7 @@
 
 ### Recent Milestones
 
-- ✅ Azure AI/ML integration (5 services)
+- ✅ AWS AI/ML integration (5 services)
 - ✅ Production-ready transformation (Grade A security/quality)
 - ✅ Legal protection framework (proprietary license)
 - ✅ Comprehensive audit documentation (94.7% coverage)
@@ -148,7 +148,7 @@
 ### Special Thanks
 
 - **Contributors**: All community members who submit PRs, report issues, and provide feedback
-- **Azure AI Team**: For excellent AI/ML services and support
+- **AWS AI Team**: For excellent AI/ML services and support
 - **Open Source Community**: For the amazing tools and libraries we build upon
 - **Early Adopters**: For trusting DrishtiX with their crowd safety needs
 

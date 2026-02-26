@@ -52,7 +52,7 @@ DrishtiX/
 │   │   └── routes/       # React Router config
 ├── ml-service/           # ML Service (Python/FastAPI)
 ├── vision-service/       # YOLO Vision (Python)
-├── functions/            # Cloud Functions
+├── functions/            # AWS Lambda
 ├── workers/              # ETL Workers
 └── docs/                 # 40+ documentation files
 ```
@@ -70,11 +70,11 @@ DrishtiX/
 
 #### ✅ Single Responsibility Principle (SRP)
 
-**Example**: `azure-ml.service.ts`
+**Example**: `AWS-ml.service.ts`
 
 ```typescript
-class AzureMLService {
-  // ✅ Focused on Azure ML operations only
+class AWSMLService {
+  // ✅ Focused on Amazon SageMaker operations only
   async trainCrowdForecastingModel() {}
   async deployModel() {}
   async predict() {}
@@ -184,8 +184,8 @@ class AzureMLService {
 
 **TypeScript/JavaScript**:
 
-- **Files**: kebab-case (`azure-ml.service.ts`)
-- **Classes**: PascalCase (`AzureMLService`)
+- **Files**: kebab-case (`AWS-ml.service.ts`)
+- **Classes**: PascalCase (`AWSMLService`)
 - **Functions**: camelCase (`trainCrowdForecastingModel`)
 - **Constants**: UPPER_SNAKE_CASE (`API_BASE_URL`)
 - **Interfaces**: PascalCase with `I` prefix optional (`MLPipeline`)
@@ -274,9 +274,9 @@ async trainCrowdForecastingModel(config: ModelConfig): Promise<TrainingJob> {
 **Feature Documentation** (`docs/`):
 
 - ✅ `API_REFERENCE_V2.md` - API documentation (comprehensive)
-- ✅ `AZURE_INTEGRATION_GUIDE.md` - Azure setup (500+ lines)
+- ✅ `AWS_INTEGRATION_GUIDE.md` - AWS setup (500+ lines)
 - ✅ `ML_SERVICE_README.md` - ML service guide
-- ✅ `GCP_SETUP_COMPLETE_GUIDE.md` - GCP configuration
+- ✅ `AWS_SETUP_COMPLETE_GUIDE.md` - AWS configuration
 - ✅ `DEPLOYMENT_CHECKLIST.md` - Deployment guide
 - ... and 35+ more documentation files
 
@@ -347,11 +347,11 @@ const avgWaitTime = avgQueueLength / arrivalRate;
 **Example**:
 
 ```typescript
-describe('AzureMLService', () => {
+describe('AWSMLService', () => {
   describe('trainCrowdForecastingModel', () => {
     it('should successfully train a model with valid config', async () => {
       const config = mockModelConfig();
-      const result = await azureMLService.trainCrowdForecastingModel(config);
+      const result = await AWSMLService.trainCrowdForecastingModel(config);
 
       expect(result.jobId).toBeDefined();
       expect(result.status).toBe('queued');
@@ -360,7 +360,7 @@ describe('AzureMLService', () => {
     it('should throw error with insufficient training data', async () => {
       const config = mockModelConfig({ dataPoints: 10 });
 
-      await expect(azureMLService.trainCrowdForecastingModel(config)).rejects.toThrow('Insufficient training data');
+      await expect(AWSMLService.trainCrowdForecastingModel(config)).rejects.toThrow('Insufficient training data');
     });
   });
 });
@@ -477,10 +477,10 @@ describe('AzureMLService', () => {
 **Architecture**:
 
 - Stateless backend services
-- Load balancing (Azure Load Balancer)
+- Load balancing (AWS Load Balancer)
 - Distributed caching (Redis Cluster)
-- Message queue (Azure Service Bus)
-- Auto-scaling (Azure App Service)
+- Message queue (Amazon SQS + SNS)
+- Auto-scaling (AWS App Service)
 
 **Tested Capacity**: 10,000 concurrent users ✅
 
@@ -500,10 +500,10 @@ describe('AzureMLService', () => {
 
 ```typescript
 try {
-  const result = await azureMLService.trainModel(config);
+  const result = await AWSMLService.trainModel(config);
   return res.status(200).json({ success: true, data: result });
 } catch (error) {
-  console.error('[Azure ML] Training failed:', error);
+  console.error('[Amazon SageMaker] Training failed:', error);
 
   if (error instanceof ValidationError) {
     return res.status(400).json({
@@ -658,7 +658,7 @@ class ServiceUnavailableError extends Error {}
 1. **Presentation** - React components
 2. **Service** - Business logic services
 3. **Data** - Prisma ORM, repositories
-4. **Infrastructure** - Azure, GCP, Firebase
+4. **Infrastructure** - AWS, AWS, Amazon Cognito+S3
 
 **Layer Separation**: 94% ✅
 

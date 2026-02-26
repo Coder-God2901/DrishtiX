@@ -322,7 +322,7 @@ For production use, deploy with:
 4. **Database Integration**: Store detection history and analytics
 5. **Advanced Filtering**: Confidence threshold adjustment per label
 6. **Multi-camera Support**: Monitor multiple camera feeds
-7. **Cloud Storage**: Save processed videos to AWS S3 or Azure Blob
+7. **Amazon S3**: Save processed videos to AWS S3 or Amazon S3
 8. **API Mode**: RESTful API for integration with other systems
 
 ## Conclusion

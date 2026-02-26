@@ -1,0 +1,34 @@
+{
+  "Comment": "AWS Glue Data Catalog schema — replaces BigQuery crowd_predictions table",
+  "DatabaseName": "drishtix_analytics",
+  "TableName": "crowd_predictions",
+  "Description": "SageMaker LSTM crowd density prediction results",
+  "TableType": "EXTERNAL_TABLE",
+  "Parameters": {
+    "classification": "parquet",
+    "compressionType": "snappy",
+    "s3Location": "s3://drishtix-prod-data/analytics/crowd_predictions/"
+  },
+  "StorageDescriptor": {
+    "Columns": [
+      { "Name": "prediction_id",               "Type": "string",    "Comment": "Unique identifier for the prediction" },
+      { "Name": "event_id",                     "Type": "string",    "Comment": "Event identifier" },
+      { "Name": "zone_id",                      "Type": "string",    "Comment": "Zone identifier within the venue" },
+      { "Name": "predicted_density",            "Type": "double",    "Comment": "Predicted crowd density value (0.0 - 1.0)" },
+      { "Name": "confidence",                   "Type": "double",    "Comment": "Prediction confidence score (0.0 - 1.0)" },
+      { "Name": "prediction_horizon_minutes",   "Type": "bigint",    "Comment": "Forecast horizon in minutes" },
+      { "Name": "model_version",                "Type": "string",    "Comment": "SageMaker model version used" },
+      { "Name": "sagemaker_endpoint",           "Type": "string",    "Comment": "SageMaker endpoint name used for inference" }
+    ],
+    "Location": "s3://drishtix-prod-data/analytics/crowd_predictions/",
+    "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+    "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+    "SerdeInfo": {
+      "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+    }
+  },
+  "PartitionKeys": [
+    { "Name": "dt",       "Type": "string", "Comment": "Partition by date (YYYY-MM-DD)" },
+    { "Name": "event_id", "Type": "string", "Comment": "Partition by event" }
+  ]
+}
