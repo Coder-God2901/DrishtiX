@@ -1,12 +1,12 @@
-# ML Service - Local Docker Replacement for Vertex AI
+# ML Service - Local Docker Replacement for Amazon SageMaker
 
 ## 🎯 Overview
 
-This ML service **replaces Google Vertex AI** with local Docker containers running TensorFlow and scikit-learn models.
+This ML service **replaces Google Amazon SageMaker** with local Docker containers running TensorFlow and scikit-learn models.
 
 ### Cost Comparison
 
-| Component         | Vertex AI (Before) | Local Docker (Now) | **Savings**      |
+| Component         | Amazon SageMaker (Before) | Local Docker (Now) | **Savings**      |
 | ----------------- | ------------------ | ------------------ | ---------------- |
 | Model Training    | $50/month          | $5/month           | **90% ↓**        |
 | Inference Serving | $50/month          | $5/month           | **90% ↓**        |
@@ -16,10 +16,10 @@ This ML service **replaces Google Vertex AI** with local Docker containers runni
 
 ## 🏗️ Architecture
 
-### Before (Vertex AI)
+### Before (Amazon SageMaker)
 
 ```
-Backend → Vertex AI Endpoints → $$$
+Backend → Amazon SageMaker Endpoints → $$$
 - ConvLSTM: $30/month
 - Autoencoder: $30/month
 - Model Registry: $20/month
@@ -123,7 +123,7 @@ Response:
 
 ### 2. Model Training (`ml-service/train_models.py`)
 
-Trains 3 models using data from BigQuery:
+Trains 3 models using data from Amazon Athena:
 
 - **ConvLSTM**: 4 models (SPORTS, CONCERT, GENERAL, ENTRY_EXIT)
 - **Autoencoder**: Anomaly detection model
@@ -145,14 +145,14 @@ docker exec ml-service python train_models.py
 
 #### **Updated Services**:
 
-- ✅ `local-ml.service.ts` - New ML client (replaces Vertex AI)
+- ✅ `local-ml.service.ts` - New ML client (replaces Amazon SageMaker)
 - ✅ `anomaly-detection.service.ts` - Uses local ML
 - ✅ `crowd-forecasting.service.ts` - Uses local ML
 
 #### **Removed Dependencies**:
 
 - ❌ `vertex-ai-anomaly.service.ts` (deprecated)
-- ❌ Vertex AI SDK imports
+- ❌ Amazon SageMaker SDK imports
 - ❌ `google-cloud-aiplatform` package
 
 ---
@@ -180,7 +180,7 @@ docker build -t ml-service:latest .
 docker run -d \
   -p 8000:8000 \
   -v $(pwd)/models:/app/models \
-  -e GCP_PROJECT_ID=your-project \
+  -e AWS_ACCOUNT_ID=your-project \
   --name ml-service \
   ml-service:latest
 
@@ -207,11 +207,11 @@ spec:
     spec:
       containers:
         - name: ml-service
-          image: gcr.io/your-project/ml-service:latest
+          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/your-project/ml-service:latest
           ports:
             - containerPort: 8000
           env:
-            - name: GCP_PROJECT_ID
+            - name: AWS_ACCOUNT_ID
               value: 'your-project'
           volumeMounts:
             - name: models
@@ -295,7 +295,7 @@ curl -X POST http://localhost:8000/api/detect-anomaly \
 
 ## 📊 Performance Benchmarks
 
-| Metric                  | Vertex AI | Local Docker | Status            |
+| Metric                  | Amazon SageMaker | Local Docker | Status            |
 | ----------------------- | --------- | ------------ | ----------------- |
 | Inference Latency       | 200-500ms | **50-150ms** | ✅ 3x faster      |
 | Training Time           | 30 min    | 45 min       | ⚠️ 1.5x slower    |
@@ -312,8 +312,8 @@ curl -X POST http://localhost:8000/api/detect-anomaly \
 ```bash
 # ML Service
 ML_SERVICE_ENDPOINT=http://ml-service:8000  # Backend → ML service
-GCP_PROJECT_ID=your-project-id
-GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcp-key.json
+AWS_ACCOUNT_ID=your-project-id
+AWS_SECRET_ACCESS_KEY=/app/credentials/AWS-key.json
 
 # Remove these (no longer needed):
 # VERTEX_AI_ENDPOINT=...
@@ -346,7 +346,7 @@ Mount this directory as a volume to persist models:
 
 ## 🛠️ Model Training
 
-### Initial Training (Requires BigQuery Data)
+### Initial Training (Requires Amazon Athena Data)
 
 ```bash
 # SSH into ML container
@@ -357,7 +357,7 @@ python train_models.py
 
 # Expected output:
 # ════════════════════════════════════════════════════════════
-# Starting ML Training - Local Replacement for Vertex AI
+# Starting ML Training - Local Replacement for Amazon SageMaker
 # ════════════════════════════════════════════════════════════
 #
 # 📊 Training ConvLSTM for GENERAL...
@@ -375,7 +375,7 @@ python train_models.py
 # ════════════════════════════════════════════════════════════
 # ✅ All models trained successfully!
 # ════════════════════════════════════════════════════════════
-# Cost savings: $100/month (Vertex AI) → $10/month (Docker)
+# Cost savings: $100/month (Amazon SageMaker) → $10/month (Docker)
 ```
 
 ### Re-training (Weekly Recommended)
@@ -568,10 +568,10 @@ IsolationForest(
 - [x] Update anomaly detection service
 - [x] Update crowd forecasting service
 - [x] Update docker-compose.yml
-- [ ] Train initial models (requires BigQuery data)
-- [ ] Remove Vertex AI environment variables
-- [ ] Delete old Vertex AI services
-- [ ] Update Terraform to remove Vertex AI resources
+- [ ] Train initial models (requires Amazon Athena data)
+- [ ] Remove Amazon SageMaker environment variables
+- [ ] Delete old Amazon SageMaker services
+- [ ] Update Terraform to remove Amazon SageMaker resources
 - [ ] Test end-to-end inference
 - [ ] Deploy to production
 
@@ -589,4 +589,4 @@ IsolationForest(
 
 **Last Updated**: November 30, 2025  
 **Status**: ✅ Ready for production deployment  
-**Cost Savings**: $90/month (90% reduction from Vertex AI)
+**Cost Savings**: $90/month (90% reduction from Amazon SageMaker)

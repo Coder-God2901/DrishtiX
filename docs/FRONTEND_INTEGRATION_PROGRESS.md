@@ -14,7 +14,7 @@ All major frontend components have been successfully migrated from mock data to 
 
 2. **Comprehensive API Service** (`src/services/api.service.ts`) ✅
    - Typed wrappers for all backend endpoints
-   - Organized by domain: auth, events, predictions, incidents, alerts, responders, attendee, gcp, cameras, crowdDensity
+   - Organized by domain: auth, events, predictions, incidents, alerts, responders, attendee, AWS, cameras, crowdDensity
    - Built on existing `api-client.ts` with JWT token interceptor
    - Error handling and response transformation
 
@@ -42,7 +42,7 @@ All major frontend components have been successfully migrated from mock data to 
    - **After**: `getAvailableRespondersFunction()` and `findSuitableResponders()` now fetch from `apiClient.get('/responders')`
    - Filters by status ('available', 'on_scene')
    - Calculates distance and matches responder type to incident type
-   - Still uses Vertex AI agent (real integration already existed)
+   - Still uses Amazon SageMaker agent (real integration already existed)
 
 3. **`src/pages/DashboardDemo.tsx`** ✅ COMPLETE
    - **Before**: Extensive mock data for predictions, incidents, responders, cameras, traffic incidents
@@ -60,8 +60,8 @@ All major frontend components have been successfully migrated from mock data to 
      - Shows loading spinner during data fetch
 
 4. **`src/pages/Analytics.tsx`** ✅ VERIFIED
-   - Already uses BigQuery API endpoints
-   - Fetches from `/gcp/bigquery/predictions`, `/gcp/bigquery/incidents`, `/gcp/bigquery/crowd-density`
+   - Already uses Amazon Athena API endpoints
+   - Fetches from `/AWS/Amazon Athena/predictions`, `/AWS/Amazon Athena/incidents`, `/AWS/Amazon Athena/crowd-density`
    - Real-time analytics with time range filters
    - Export to CSV functionality
 
@@ -184,11 +184,11 @@ All major frontend components have been successfully migrated from mock data to 
 - `POST /attendee/sos` - Create SOS request
 - `POST /attendee/feedback` - Submit event feedback
 
-### GCP Services
+### AWS Services
 
-- **BigQuery**: `POST /gcp/bigquery/query`, `GET /gcp/bigquery/analytics/:eventId`
-- **Vertex AI**: `POST /gcp/vertex-ai/predict`, `POST /gcp/vertex-ai/analyze-video`
-- **Pub/Sub**: `POST /gcp/pubsub/publish`
+- **Amazon Athena**: `POST /AWS/Amazon Athena/query`, `GET /AWS/Amazon Athena/analytics/:eventId`
+- **Amazon SageMaker**: `POST /AWS/vertex-ai/predict`, `POST /AWS/vertex-ai/analyze-video`
+- **Amazon SQS + SNS**: `POST /AWS/pubsub/publish`
 
 ### Cameras & Crowd Density
 
@@ -264,7 +264,7 @@ The following components still contain some mock data but are lower priority as 
 - ✅ Event creation and publishing
 - ✅ Live monitoring dashboard with real-time updates
 - ✅ Alert response and team management
-- ✅ Analytics and reporting (BigQuery integration)
+- ✅ Analytics and reporting (Amazon Athena integration)
 
 ### Attendee Workflows ✅
 
@@ -290,7 +290,7 @@ The following components still contain some mock data but are lower priority as 
 - [x] Alert creation and dismissal
 - [x] Responder tracking and assignment
 - [x] Attendee operations (join, check-in, SOS, feedback)
-- [x] BigQuery analytics integration
+- [x] Amazon Athena analytics integration
 - [x] Error handling and fallback behavior
 
 ## 🚀 Deployment Readiness
@@ -306,7 +306,7 @@ All critical user flows are fully integrated with real-time backend APIs. The ap
 5. **Track responders** with live location updates
 6. **Send alerts** to organizers and attendees
 7. **Collect feedback** for AI self-learning
-8. **Analyze data** through BigQuery integration
+8. **Analyze data** through Amazon Athena integration
 
 ### Next Steps for Production:
 

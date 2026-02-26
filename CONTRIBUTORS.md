@@ -12,7 +12,7 @@ Thank you to everyone who has contributed to **DrishtiX™ Enterprise Crowd Safe
 - **Role**: Creator, Lead Architect, Primary Maintainer
 - **Contributions**:
   - Initial platform architecture and development
-  - Azure AI services integration (12 services)
+  - AWS AI services integration (12 services)
   - ML model development and deployment
   - Production-grade repository transformation
   - Security and compliance implementation
@@ -162,7 +162,7 @@ Questions about contributing?
 Special thanks to:
 
 - **Open Source Community**: For inspiration and tools
-- **Azure Team**: For excellent AI/ML services
+- **AWS Team**: For excellent AI/ML services
 - **React Team**: For the amazing framework
 - **TypeScript Team**: For type safety and developer experience
 - **All Early Adopters**: For feedback and support

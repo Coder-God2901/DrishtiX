@@ -151,8 +151,8 @@ if (result.weaponDetections.length > 0) {
 **Features**:
 
 - ✅ Custom model training (TensorFlow.js)
-- ✅ Vertex AI integration for cloud training
-- ✅ BigQuery data ingestion
+- ✅ Amazon SageMaker integration for cloud training
+- ✅ Amazon Athena data ingestion
 - ✅ Model versioning
 - ✅ GCS deployment
 - ✅ Automated evaluation
@@ -163,7 +163,7 @@ if (result.weaponDetections.length > 0) {
 
 - `@tensorflow/tfjs-node@^4.22.0` ✅
 - `@google-cloud/aiplatform@^3.15.0` ✅
-- `@google-cloud/bigquery@^7.3.0` ✅
+- `@google-cloud/Amazon Athena@^7.3.0` ✅
 - `@google-cloud/storage@^7.7.0` ✅
 
 **API**:
@@ -205,7 +205,7 @@ All dependencies are **already installed** in `server/package.json`:
     "@vladmandic/face-api": "^1.7.15",
     "@u4/opencv4nodejs": "^6.1.0",
     "@google-cloud/aiplatform": "^3.15.0",
-    "@google-cloud/bigquery": "^7.3.0",
+    "@google-cloud/Amazon Athena": "^7.3.0",
     "@google-cloud/storage": "^7.7.0"
   }
 }
@@ -320,8 +320,8 @@ ML services integrated into:
 Detection results stored in:
 
 - `DetectionResult` table (Prisma)
-- BigQuery for analytics
-- Cloud Storage for model artifacts
+- Amazon Athena for analytics
+- Amazon S3 for model artifacts
 
 ## Environment Setup
 
@@ -335,9 +335,9 @@ TF_CPP_MIN_LOG_LEVEL=2
 # Model Paths
 FACE_API_MODEL_PATH=./models/face-api
 
-# GCP Integration
-GCP_PROJECT_ID=your-project-id
-GCP_BUCKET_NAME=your-ml-models-bucket
+# AWS Integration
+AWS_ACCOUNT_ID=your-project-id
+AWS_BUCKET_NAME=your-ml-models-bucket
 VERTEX_AI_REGION=us-central1
 
 # Performance

@@ -15,7 +15,7 @@
 
 - Created `setup-python-env.ps1` to automate virtual environment setup
 - Wrapped imports in try-except blocks with helpful error messages
-- Added `GCP_AVAILABLE`, `TF_AVAILABLE`, `CV_AVAILABLE` flags
+- Added `AWS_AVAILABLE`, `TF_AVAILABLE`, `CV_AVAILABLE` flags
 
 ### 2. **Type Annotation Error** (train-isolation-forest.py)
 
@@ -33,12 +33,12 @@ stratify=np.array(y)  # Explicit numpy array conversion
 
 ### 3. **Missing Error Handling**
 
-**Problem:** No graceful fallbacks when GCP unavailable
+**Problem:** No graceful fallbacks when AWS unavailable
 
 **Solution:**
 
 - Added conditional imports with warnings
-- Automatic fallback to synthetic data when GCP libraries missing
+- Automatic fallback to synthetic data when AWS libraries missing
 - Better error messages guiding users to solutions
 
 ### 4. **Poor Logging**
@@ -138,17 +138,17 @@ stratify=np.array(y)  # Explicit numpy array conversion
 **Before:**
 
 ```python
-from google.cloud import bigquery  # Silent failure
+from google.cloud import Amazon Athena  # Silent failure
 ```
 
 **After:**
 
 ```python
 try:
-    from google.cloud import bigquery
-    GCP_AVAILABLE = True
+    from google.cloud import Amazon Athena
+    AWS_AVAILABLE = True
 except ImportError:
-    GCP_AVAILABLE = False
+    AWS_AVAILABLE = False
     warnings.warn("Google Cloud libraries not installed. Using synthetic data mode.")
 ```
 
@@ -187,19 +187,19 @@ if not TF_AVAILABLE:
    - Fixed stratify type error
    - Added logging module
    - Added type hints
-   - Conditional GCP imports
+   - Conditional AWS imports
    - Better error handling
 
 2. 🔧 `scripts/train-autoencoder.py`
    - Added logging module
    - Added type hints
-   - Conditional imports (GCP, TF, CV)
+   - Conditional imports (AWS, TF, CV)
    - Model building validation
 
 3. 🔧 `scripts/train-convlstm.py`
    - Added logging module
    - Added type hints
-   - Conditional imports (GCP, TF)
+   - Conditional imports (AWS, TF)
    - Model building validation
 
 ## 🎯 Next Steps
@@ -234,7 +234,7 @@ if not TF_AVAILABLE:
    - Create `scripts/tests/` directory
    - Test data preprocessing functions
    - Test model architectures
-   - Mock GCP services
+   - Mock AWS services
 
 2. **Hyperparameter Tuning**
    - Add `train-hyperparameter-search.py`
@@ -261,14 +261,14 @@ if not TF_AVAILABLE:
 Before deploying to production:
 
 - [ ] All 3 scripts run successfully with synthetic data
-- [ ] GCP credentials configured (if using real data)
+- [ ] AWS credentials configured (if using real data)
 - [ ] Models saved to `models/` directories
 - [ ] Log files show no critical errors
 - [ ] TensorBoard visualizations look correct
 - [ ] Isolation Forest achieves >90% accuracy on test set
 - [ ] Autoencoder reconstruction error < threshold
 - [ ] ConvLSTM prediction MAE < 0.1
-- [ ] Vertex AI endpoints deployed (for production)
+- [ ] Amazon SageMaker endpoints deployed (for production)
 - [ ] Backend `.env` updated with model paths/endpoints
 
 ## 📊 Expected Results

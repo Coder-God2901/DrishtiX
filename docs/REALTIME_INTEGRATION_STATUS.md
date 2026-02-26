@@ -14,15 +14,15 @@ Your platform has a **hybrid integration status** - some components are fully re
 
 | Technology           | Status         | Location                           |
 | -------------------- | -------------- | ---------------------------------- |
-| **GCP Pub/Sub Hook** | ✅ Implemented | `src/hooks/useGCPRealtime.ts`      |
-| **Firebase Service** | ✅ Implemented | `src/services/firebase.service.ts` |
+| **AWS Amazon SQS + SNS Hook** | ✅ Implemented | `src/hooks/useAWSRealtime.ts`      |
+| **Amazon Cognito+S3 Service** | ✅ Implemented | `src/services/Amazon Cognito+S3.service.ts` |
 | **Socket.IO Hook**   | ✅ Implemented | `src/hooks/useWebSocket.ts`        |
 | **API Client**       | ✅ Implemented | `src/lib/api-client.ts`            |
 | **Event Service**    | ✅ Implemented | `src/services/event.service.ts`    |
 
 ### 🔴 **Missing Implementations**
 
-- Firebase methods: `subscribeToTeamLocations`, `subscribeToTeamMembers`
+- Amazon Cognito+S3 methods: `subscribeToTeamLocations`, `subscribeToTeamMembers`
 - API endpoints: `getByEvent` for alerts, incidents, predictions
 - Complete Socket.IO global instance initialization
 
@@ -57,15 +57,15 @@ User Input → React State → HTTP POST → Backend → Database
 
 - [ ] Socket.IO event: `event:created` → Notify organizer dashboard
 - [ ] Socket.IO event: `event:validation` → Live field validation
-- [ ] Firebase: Store event metadata for real-time sync
-- [ ] GCP Pub/Sub: Trigger downstream services on creation
+- [ ] Amazon Cognito+S3: Store event metadata for real-time sync
+- [ ] AWS Amazon SQS + SNS: Trigger downstream services on creation
 
 **Missing Endpoints**:
 
 - `POST /events` - ✅ Exists
 - `GET /events/templates` - ✅ Exists
 - ❌ `WS: event:created` - Missing
-- ❌ `Firebase: events/{eventId}` - Missing
+- ❌ `Amazon Cognito+S3: events/{eventId}` - Missing
 
 ---
 
@@ -77,7 +77,7 @@ User Input → React State → HTTP POST → Backend → Database
 
 ```typescript
 // File: src/components/features/venue-mapping.tsx
-- Uses Google Maps Drawing Manager (client-side only)
+- Uses Amazon Location Service Drawing Manager (client-side only)
 - Stores boundary/zones/gates in local React state
 - apiClient.post(`/events/${eventId}/venue-layout`, layout) called on save
 - ❌ No real-time collaboration features
@@ -88,23 +88,23 @@ User Input → React State → HTTP POST → Backend → Database
 **Data Flow**:
 
 ```
-Google Maps → Local State → Manual Save → HTTP POST → Backend
+Amazon Location Service → Local State → Manual Save → HTTP POST → Backend
                                     ↓
                             No Real-Time Sync
 ```
 
 **Required for Full Integration**:
 
-- [ ] Firebase: `events/{eventId}/venue` → Real-time venue updates
+- [ ] Amazon Cognito+S3: `events/{eventId}/venue` → Real-time venue updates
 - [ ] Socket.IO: `venue:boundary-updated` → Multi-user collaboration
 - [ ] Socket.IO: `venue:zone-added` → Live zone creation
-- [ ] GCP: NavGraph generation API endpoint
+- [ ] AWS: NavGraph generation API endpoint
 - [ ] WebSocket: Live validation feedback (polygon closure, containment)
 
 **Missing Implementations**:
 
 - ❌ Real-time collaboration (multiple organizers drawing simultaneously)
-- ❌ Auto-save venue data to Firebase
+- ❌ Auto-save venue data to Amazon Cognito+S3
 - ❌ NavGraph generation service
 - ❌ Zone conflict detection (overlapping polygons)
 
@@ -112,14 +112,14 @@ Google Maps → Local State → Manual Save → HTTP POST → Backend
 
 ### 3️⃣ **Team & Role Management** 🟡 PARTIALLY REAL-TIME
 
-**Status**: Socket.IO + Firebase (Incomplete Firebase Methods)
+**Status**: Socket.IO + Amazon Cognito+S3 (Incomplete Amazon Cognito+S3 Methods)
 
 **Current Implementation**:
 
 ```typescript
 // File: src/components/features/team-management.tsx
 - ✅ Socket.IO: team:member-status events connected
-- ⚠️ Firebase: subscribeToTeamMembers() - METHOD MISSING
+- ⚠️ Amazon Cognito+S3: subscribeToTeamMembers() - METHOD MISSING
 - ❌ Real-time location tracking not connected
 - ❌ RBAC permissions not synced in real-time
 ```
@@ -128,7 +128,7 @@ Google Maps → Local State → Manual Save → HTTP POST → Backend
 
 ```typescript
 // Line 80 - COMPILATION ERROR
-firebaseService.subscribeToTeamMembers((members: any[]) => {
+Amazon Cognito+S3Service.subscribeToTeamMembers((members: any[]) => {
 // Property 'subscribeToTeamMembers' does not exist
 ```
 
@@ -137,18 +137,18 @@ firebaseService.subscribeToTeamMembers((members: any[]) => {
 ```
 Socket.IO: Status Updates ✅
      ↓
-Firebase: Team Data ❌ (Missing Method)
+Amazon Cognito+S3: Team Data ❌ (Missing Method)
      ↓
 React State → UI
 ```
 
 **Required Fixes**:
 
-1. **Add to firebase.service.ts**:
+1. **Add to Amazon Cognito+S3.service.ts**:
 
 ```typescript
 subscribeToTeamMembers(callback: (members: any[]) => void): () => void {
-  if (!this.db) throw new Error('Firebase not initialized');
+  if (!this.db) throw new Error('Amazon Cognito+S3 not initialized');
 
   const unsubscribe = onSnapshot(
     collection(this.db, 'team_members'),
@@ -165,7 +165,7 @@ subscribeToTeamMembers(callback: (members: any[]) => void): () => void {
 }
 
 subscribeToTeamLocations(callback: (locations: any[]) => void): () => void {
-  if (!this.db) throw new Error('Firebase not initialized');
+  if (!this.db) throw new Error('Amazon Cognito+S3 not initialized');
 
   const unsubscribe = onSnapshot(
     collection(this.db, 'team_locations'),
@@ -189,14 +189,14 @@ const [showNewTeamDialog, setShowNewTeamDialog] = useState(false);
 
 ### 4️⃣ **Real-Time Operations Dashboard** ✅ FULLY CONNECTED
 
-**Status**: Triple Integration (GCP + Firebase + Socket.IO)
+**Status**: Triple Integration (AWS + Amazon Cognito+S3 + Socket.IO)
 
 **Current Implementation**:
 
 ```typescript
 // File: src/components/features/operations-dashboard.tsx
-✅ useGCPRealtime: predictions, videoFrames, alerts, anomalies
-✅ Firebase: subscribeToTeamLocations (❌ Method missing - needs fix)
+✅ useAWSRealtime: predictions, videoFrames, alerts, anomalies
+✅ Amazon Cognito+S3: subscribeToTeamLocations (❌ Method missing - needs fix)
 ✅ Socket.IO: alert updates
 ✅ Live heatmap rendering
 ✅ KPI monitoring
@@ -206,18 +206,18 @@ const [showNewTeamDialog, setShowNewTeamDialog] = useState(false);
 
 ```typescript
 // Line 97 - COMPILATION ERROR
-firebaseService.subscribeToTeamLocations((locations: any[]) => {
+Amazon Cognito+S3Service.subscribeToTeamLocations((locations: any[]) => {
 // Property 'subscribeToTeamLocations' does not exist
 ```
 
 **Data Sources**:
 
-- GCP Pub/Sub → Crowd predictions ✅
-- GCP Pub/Sub → Video analytics ✅
-- Firebase → Team locations ⚠️ (Method missing)
+- AWS Amazon SQS + SNS → Crowd predictions ✅
+- AWS Amazon SQS + SNS → Video analytics ✅
+- Amazon Cognito+S3 → Team locations ⚠️ (Method missing)
 - Socket.IO → Alert updates ✅
 
-**Fix Required**: Same as Feature #3 (add Firebase methods)
+**Fix Required**: Same as Feature #3 (add Amazon Cognito+S3 methods)
 
 ---
 
@@ -230,7 +230,7 @@ firebaseService.subscribeToTeamLocations((locations: any[]) => {
 ```typescript
 // File: src/components/features/predictive-scheduling.tsx
 - Uses static mock data: recommendationsData, forecastOutputs
-- ❌ No GCP Vertex AI integration
+- ❌ No AWS Amazon SageMaker integration
 - ❌ No real-time forecast updates
 - ❌ No Socket.IO for recommendation alerts
 ```
@@ -247,11 +247,11 @@ Static JSON File → React State → UI
 
 ```typescript
 // Add to component
-import { useGCPRealtime } from '@/hooks/useGCPRealtime';
+import { useAWSRealtime } from '@/hooks/useAWSRealtime';
 import { predictiveAnalyticsService } from '@/services/predictive-analytics.service';
 
 // Inside component
-const { predictions } = useGCPRealtime({
+const { predictions } = useAWSRealtime({
   eventId,
   enablePredictions: true,
 });
@@ -277,32 +277,32 @@ useEffect(() => {
 **Missing Services**:
 
 - ❌ `predictive-analytics.service.ts` not connected to UI
-- ❌ Vertex AI forecasting endpoint not exposed
-- ❌ BigQuery ML integration missing
+- ❌ Amazon SageMaker forecasting endpoint not exposed
+- ❌ Amazon Athena ML integration missing
 
 ---
 
 ### 6️⃣ **Automated Risk Alerts & Incident Management** ✅ FULLY CONNECTED
 
-**Status**: Triple Integration (GCP + Firebase + Socket.IO)
+**Status**: Triple Integration (AWS + Amazon Cognito+S3 + Socket.IO)
 
 **Current Implementation**:
 
 ```typescript
 // File: src/components/features/alerts-dispatch.tsx
-✅ useGCPRealtime: incidents, alerts
-✅ Firebase: subscribeToIncidents
+✅ useAWSRealtime: incidents, alerts
+✅ Amazon Cognito+S3: subscribeToIncidents
 ✅ Socket.IO: incident:new, incident:status-update
-✅ Auto-merging GCP + Firebase data
+✅ Auto-merging AWS + Amazon Cognito+S3 data
 ✅ Toast notifications on new incidents
 ```
 
 **Data Flow**:
 
 ```
-GCP ML Detection → Pub/Sub → useGCPRealtime Hook
+AWS ML Detection → Amazon SQS + SNS → useAWSRealtime Hook
                                     ↓
-Firebase RTDB ← Cloud Function ← GCP Alert
+Amazon Cognito+S3 RTDB ← Cloud Function ← AWS Alert
      ↓                               ↓
 subscribeToIncidents        Socket.IO Broadcast
      ↓                               ↓
@@ -317,13 +317,13 @@ UI Update
 
 ### 7️⃣ **Attendee Routing & Navigation** 🟡 PARTIAL REAL-TIME
 
-**Status**: GCP Connected (Missing Navigation Graph)
+**Status**: AWS Connected (Missing Navigation Graph)
 
 **Current Implementation**:
 
 ```typescript
 // File: src/components/features/attendee-routing.tsx
-✅ useGCPRealtime: crowd predictions for routing
+✅ useAWSRealtime: crowd predictions for routing
 ⚠️ Type error: predictions.zoneId not typed
 ❌ Navigation graph not connected
 ❌ A* routing algorithm not implemented
@@ -341,7 +341,7 @@ id: pred.zoneId || `zone-${idx}`,
 **Fix Required**:
 
 ```typescript
-// Update useGCPRealtime.ts interface
+// Update useAWSRealtime.ts interface
 export interface RealtimePrediction {
   eventId: string;
   timestamp: Date;
@@ -363,7 +363,7 @@ export interface RealtimePrediction {
 
 ### 8️⃣ **Digital Twin Simulation** ✅ PARTIALLY CONNECTED
 
-**Status**: Socket.IO Connected (No GCP Streaming)
+**Status**: Socket.IO Connected (No AWS Streaming)
 
 **Current Implementation**:
 
@@ -372,7 +372,7 @@ export interface RealtimePrediction {
 ✅ Socket.IO: simulation:update events
 ✅ Scenario trigger notifications
 ✅ Playback state broadcast
-❌ No GCP agent-based simulation engine
+❌ No AWS agent-based simulation engine
 ❌ No real-time heatmap from simulation
 ❌ No historical data replay
 ```
@@ -382,14 +382,14 @@ export interface RealtimePrediction {
 ```
 Frontend Simulation → Socket.IO → Broadcast to Clients
                            ↓
-                    No GCP Backend
+                    No AWS Backend
 ```
 
 **Required for Full Integration**:
 
-- [ ] GCP Cloud Run: Agent-based simulation engine
-- [ ] Pub/Sub: Stream simulation heatgrids
-- [ ] BigQuery: Historical data for replay mode
+- [ ] AWS AWS App Runner: Agent-based simulation engine
+- [ ] Amazon SQS + SNS: Stream simulation heatgrids
+- [ ] Amazon Athena: Historical data for replay mode
 - [ ] Three.js/Pixi.js: Advanced 3D rendering
 
 ---
@@ -407,7 +407,7 @@ Frontend Simulation → Socket.IO → Broadcast to Clients
 | Team Data           | ✅         | ✅       | 🟡 Partial   |
 | Alerts              | ✅         | ✅       | ✅           |
 | Incidents           | ✅         | ✅       | ✅           |
-| Real-Time Telemetry | ✅ GCP     | ✅       | ✅           |
+| Real-Time Telemetry | ✅ AWS     | ✅       | ✅           |
 
 ### 🔴 **Missing Data Models**
 
@@ -424,11 +424,11 @@ Frontend Simulation → Socket.IO → Broadcast to Clients
 
 ### 🔴 **High Priority Fixes**
 
-1. **Firebase Missing Methods** (Affects 2 Features)
+1. **Amazon Cognito+S3 Missing Methods** (Affects 2 Features)
    - `subscribeToTeamLocations()`
    - `subscribeToTeamMembers()`
    - **Impact**: Operations Dashboard, Team Management broken
-   - **Fix**: Add methods to `firebase.service.ts`
+   - **Fix**: Add methods to `Amazon Cognito+S3.service.ts`
 
 2. **Predictive Scheduling Not Connected** (Feature #5)
    - No real-time forecasts
@@ -453,8 +453,8 @@ Frontend Simulation → Socket.IO → Broadcast to Clients
 
 5. **Venue Mapping No Real-Time Sync**
    - Multi-user collaboration impossible
-   - No auto-save to Firebase
-   - **Fix**: Add Firebase venue sync
+   - No auto-save to Amazon Cognito+S3
+   - **Fix**: Add Amazon Cognito+S3 venue sync
 
 6. **Type Errors**
    - `RealtimePrediction.zoneId` missing
@@ -463,10 +463,10 @@ Frontend Simulation → Socket.IO → Broadcast to Clients
 
 ### 🟢 **Working Components**
 
-- ✅ Video Feed Grid (GCP + Socket.IO)
-- ✅ Alerts Dispatch (GCP + Firebase + Socket.IO)
-- ✅ Responder Dispatch (GCP + Firebase + Socket.IO)
-- ✅ HotspotMap (GCP + Firebase)
+- ✅ Video Feed Grid (AWS + Socket.IO)
+- ✅ Alerts Dispatch (AWS + Amazon Cognito+S3 + Socket.IO)
+- ✅ Responder Dispatch (AWS + Amazon Cognito+S3 + Socket.IO)
+- ✅ HotspotMap (AWS + Amazon Cognito+S3)
 - ✅ ML Training Dashboard (Socket.IO)
 
 ---
@@ -479,20 +479,20 @@ Your specification describes:
 
 ```
 Backend Services:
-- Firebase / Firestore (NoSQL, Real-time)
-- Google Cloud Functions
-- Cloud Run (Simulation & Routing engines)
-- Vertex AI
-- BigQuery ML
+- Amazon Cognito+S3 / Amazon DynamoDB (NoSQL, Real-time)
+- Google AWS Lambda
+- AWS App Runner (Simulation & Routing engines)
+- Amazon SageMaker
+- Amazon Athena ML
 ```
 
 **Current Reality**:
 
-- ✅ Firebase initialized, but methods incomplete
-- ⚠️ GCP services exist but not all exposed as APIs
-- ❌ Cloud Run simulation engine not implemented
+- ✅ Amazon Cognito+S3 initialized, but methods incomplete
+- ⚠️ AWS services exist but not all exposed as APIs
+- ❌ AWS App Runner simulation engine not implemented
 - ❌ Routing engine missing
-- ⚠️ Vertex AI service exists (`predictive-analytics.service.ts`) but not connected
+- ⚠️ Amazon SageMaker service exists (`predictive-analytics.service.ts`) but not connected
 
 ---
 
@@ -500,8 +500,8 @@ Backend Services:
 
 ### **Phase 1: Fix Critical Bugs** (1-2 days)
 
-1. Add Firebase missing methods
-2. Fix type errors in `useGCPRealtime.ts`
+1. Add Amazon Cognito+S3 missing methods
+2. Fix type errors in `useAWSRealtime.ts`
 3. Add missing API endpoints (`getByEvent`)
 4. Fix UI state variables (`showNewTeamDialog`)
 
@@ -516,7 +516,7 @@ Backend Services:
 
 1. NavGraph generation service
 2. A\* routing algorithm
-3. Cloud Run simulation engine
+3. AWS App Runner simulation engine
 4. Advanced 3D digital twin rendering
 
 ---
@@ -527,8 +527,8 @@ Backend Services:
 
 - ✅ **Incident Management**: Production-ready
 - ✅ **Video Analytics**: Production-ready
-- 🟡 **Operations Dashboard**: Needs Firebase fixes
-- 🟡 **Team Management**: Needs Firebase fixes
+- 🟡 **Operations Dashboard**: Needs Amazon Cognito+S3 fixes
+- 🟡 **Team Management**: Needs Amazon Cognito+S3 fixes
 - 🔴 **Predictive Scheduling**: Not connected
 - 🔴 **Venue Mapping**: No real-time sync
 - 🔴 **Attendee Routing**: No NavGraph backend

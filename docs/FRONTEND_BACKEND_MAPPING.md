@@ -1219,12 +1219,12 @@ CREATE INDEX idx_crowd_heatmap_time ON crowd_heatmap(recorded_at DESC);
    - Send OTPs, alerts, confirmations
 
 3. **Maps & Geolocation**
-   - Google Maps API (already referenced in code)
+   - Amazon Location Service (already referenced in code)
    - Mapbox (alternative)
    - Indoor positioning system integration
 
 4. **Push Notifications**
-   - Firebase Cloud Messaging (FCM)
+   - Amazon SNS Push (Amazon SNS Push)
    - Apple Push Notification Service (APNS)
    - OneSignal integration
 

@@ -47,13 +47,13 @@ DrishtiX is an enterprise-grade predictive crowd safety platform designed to mon
 ```
 Presentation Layer  →  Business Logic Layer  →  Data Access Layer
       ↓                        ↓                       ↓
-   React UI           Services/Orchestrators      Firestore/BigQuery
+   React UI           Services/Orchestrators      Amazon DynamoDB/Amazon Athena + AWS Glue
 ```
 
 ### 2. Loose Coupling
 
 - Services communicate via well-defined APIs
-- Event-driven communication using Cloud Pub/Sub
+- Event-driven communication using Amazon SQS + SNS
 - No direct database access across service boundaries
 
 ### 3. High Cohesion
@@ -78,9 +78,9 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 
 ### 6. Observability
 
-- Structured logging (Cloud Logging)
-- Distributed tracing (Cloud Trace)
-- Metrics collection (Cloud Monitoring)
+- Structured logging (Amazon CloudWatch Logs)
+- Distributed tracing (AWS X-Ray)
+- Metrics collection (Amazon CloudWatch)
 - Custom SLIs/SLOs
 
 ---
@@ -136,7 +136,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │           Cloud Load Balancer (Global)               │   │
 │  │  - SSL/TLS Termination                               │   │
-│  │  - DDoS Protection (Cloud Armor)                     │   │
+│  │  - DDoS Protection (AWS WAF)                     │   │
 │  │  - Rate Limiting (100 req/min per IP)                │   │
 │  └────────────────────┬─────────────────────────────────┘   │
 │                       │                                      │
@@ -145,7 +145,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 │  ┌──────▼──────┐ ┌───▼──────┐ ┌───▼──────┐                 │
 │  │   REST API  │ │ GraphQL  │ │ WebSocket│                 │
 │  │   Gateway   │ │   API    │ │   API    │                 │
-│  │(Cloud Run)  │ │(Cloud Run)│ │(Functions)│                │
+│  │(AWS App Runner)  │ │(AWS App Runner)│ │(Functions)│                │
 │  └─────────────┘ └──────────┘ └──────────┘                 │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
@@ -160,7 +160,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 **Responsibilities**:
 
 - Request routing and load balancing
-- Authentication and authorization (Firebase Auth)
+- Authentication and authorization (Amazon Cognito)
 - API versioning (v1, v2)
 - Request/response transformation
 - Circuit breaking and retry logic
@@ -182,7 +182,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 │                                                                      │
 │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐        │
 │  │ Proof Validation│ │ Location Alert │  │  WhatsApp      │        │
-│  │ - GCP Vision   │  │  - Geofencing  │  │  - Reporting   │        │
+│  │ - AWS Vision   │  │  - Geofencing  │  │  - Reporting   │        │
 │  │ - TensorFlow.js│  │  - Multi-ch.   │  │  - Integration │        │
 │  └────────────────┘  └────────────────┘  └────────────────┘        │
 │                                                                      │
@@ -195,7 +195,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐        │
 │  │Facial Recognition│ │  AR Overlays  │  │  Agent Orch.   │        │
 │  │ - Check-in     │  │  - Drone Feed  │  │  - Workflows   │        │
-│  │ - Vertex AI    │  │  - Three.js    │  │  - Coordination│        │
+│  │ - Amazon SageMaker    │  │  - Three.js    │  │  - Coordination│        │
 │  └────────────────┘  └────────────────┘  └────────────────┘        │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
@@ -242,7 +242,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐        │
-│  │  Firestore     │  │  Realtime DB   │  │   BigQuery     │        │
+│  │  Amazon DynamoDB     │  │  Realtime DB   │  │   Amazon Athena + AWS Glue     │        │
 │  │  Repository    │  │  Repository    │  │   Repository   │        │
 │  │  - Events      │  │  - GPS Tracks  │  │  - Analytics   │        │
 │  │  - Incidents   │  │  - Real-time   │  │  - Reports     │        │
@@ -250,7 +250,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 │                                                                      │
 │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐        │
 │  │ Storage Client │  │  Cache Client  │  │  Queue Client  │        │
-│  │ - Firebase     │  │  - Redis       │  │  - Pub/Sub     │        │
+│  │ - cognito     │  │  - Redis       │  │  - Amazon SQS + SNS     │        │
 │  │ - Media Files  │  │  - Hot Data    │  │  - Jobs        │        │
 │  └────────────────┘  └────────────────┘  └────────────────┘        │
 │                                                                      │
@@ -278,7 +278,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 │  ├──────────────────────────────────────────────────────────────┤   │
 │  │                                                              │   │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │   │
-│  │  │  Firestore   │  │  Realtime DB │  │   BigQuery   │      │   │
+│  │  │  Amazon DynamoDB   │  │  Realtime DB │  │   Amazon Athena + AWS Glue   │      │   │
 │  │  │  (NoSQL)     │  │  (NoSQL)     │  │  (Analytics) │      │   │
 │  │  │              │  │              │  │              │      │   │
 │  │  │ - Events     │  │ - GPS Data   │  │ - Historical │      │   │
@@ -293,8 +293,8 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 │  ├──────────────────────────────────────────────────────────────┤   │
 │  │                                                              │   │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │   │
-│  │  │Firebase      │  │    Redis     │  │   Cloud      │      │   │
-│  │  │Storage       │  │   (Cache)    │  │   Pub/Sub    │      │   │
+│  │  │cognito      │  │    Redis     │  │   Cloud      │      │   │
+│  │  │Storage       │  │   (Cache)    │  │   Amazon SQS + SNS    │      │   │
 │  │  │              │  │              │  │              │      │   │
 │  │  │ - Proofs     │  │ - Sessions   │  │ - Events     │      │   │
 │  │  │ - Images     │  │ - Geospatial │  │ - Messages   │      │   │
@@ -308,11 +308,11 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 
 **Database Strategy**:
 
-- **Firestore**: Operational data (events, users, incidents)
+- **Amazon DynamoDB**: Operational data (events, users, incidents)
 - **Realtime DB**: High-frequency updates (GPS, live state)
-- **BigQuery**: Analytics and reporting
+- **Amazon Athena + AWS Glue**: Analytics and reporting
 - **Redis**: Caching and geospatial queries
-- **Cloud Pub/Sub**: Message queue and event bus
+- **Amazon SQS + SNS**: Message queue and event bus
 
 ---
 
@@ -335,7 +335,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
                     └────────────────┼─────────────────┘
                                      │
                           ┌──────────▼──────────┐
-                          │   Cloud Armor WAF   │
+                          │   AWS WAF WAF   │
                           │  - DDoS Protection  │
                           │  - Rate Limiting    │
                           └──────────┬──────────┘
@@ -349,7 +349,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
                     ┌────────────────┼────────────────┐
                     │                │                │
             ┌───────▼────────┐ ┌────▼─────┐ ┌───────▼────────┐
-            │ Firebase       │ │ Cloud    │ │  Cloud         │
+            │ cognito       │ │ Cloud    │ │  Cloud         │
             │ Hosting        │ │ Run      │ │  Functions     │
             │ (Static)       │ │ (API)    │ │ (Webhooks)     │
             └───────┬────────┘ └────┬─────┘ └───────┬────────┘
@@ -362,7 +362,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
           │  SERVICE LAYER    │           │   EVENT BUS         │
           │                   │           │                     │
           │ ┌───────────────┐ │           │ ┌─────────────────┐ │
-          │ │ Event Service │ │           │ │  Cloud Pub/Sub  │ │
+          │ │ Event Service │ │           │ │  Amazon SQS + SNS  │ │
           │ └───────────────┘ │           │ └─────────────────┘ │
           │ ┌───────────────┐ │           │ ┌─────────────────┐ │
           │ │ Alert Service │ │◄──────────┤ │  Event Topics   │ │
@@ -394,7 +394,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
           │         DATA ACCESS LAYER                 │
           │                                           │
           │ ┌──────────┐ ┌──────────┐ ┌────────────┐ │
-          │ │Firestore │ │Redis     │ │Realtime DB │ │
+          │ │Amazon DynamoDB │ │Redis     │ │Realtime DB │ │
           │ │Repository│ │Repository│ │Repository  │ │
           │ └──────────┘ └──────────┘ └────────────┘ │
           └─────────┬─────────────────────────────────┘
@@ -403,11 +403,11 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
           │       STORAGE & DATABASES                 │
           │                                           │
           │ ┌──────────┐ ┌──────────┐ ┌────────────┐ │
-          │ │Firestore │ │Firebase  │ │Realtime DB │ │
+          │ │Amazon DynamoDB │ │cognito  │ │Realtime DB │ │
           │ │(Primary) │ │Storage   │ │(GPS Data)  │ │
           │ └──────────┘ └──────────┘ └────────────┘ │
           │ ┌──────────┐ ┌──────────┐ ┌────────────┐ │
-          │ │BigQuery  │ │Redis     │ │Pub/Sub     │ │
+          │ │Amazon Athena + AWS Glue  │ │Redis     │ │Amazon SQS + SNS     │ │
           │ │(Analytics│ │(Cache)   │ │(Queue)     │ │
           │ └──────────┘ └──────────┘ └────────────┘ │
           └───────────────────────────────────────────┘
@@ -415,7 +415,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
           ┌───────────────────┼───────────────────┐
           │                   │                   │
     ┌─────▼─────┐      ┌──────▼──────┐    ┌──────▼──────┐
-    │ GCP Vision│      │  Vertex AI  │    │   Gemini    │
+    │ AWS Vision│      │  Amazon SageMaker  │    │   Gemini    │
     │    API    │      │  (ML Models)│    │   (NLP)     │
     └───────────┘      └─────────────┘    └─────────────┘
           │                   │                   │
@@ -436,7 +436,7 @@ Presentation Layer  →  Business Logic Layer  →  Data Access Layer
 ### Interaction 1: Attendee Reports Incident
 
 ```
-Attendee          Twilio          Cloud           Proof          Location       FCM
+Attendee          Twilio          Cloud           Proof          Location       Amazon SNS Push
 (WhatsApp)        Webhook         Function        Validation     Alert          Service
    │                │                │               │              │              │
    ├──Message──────►│                │               │              │              │
@@ -445,10 +445,10 @@ Attendee          Twilio          Cloud           Proof          Location       
    │                │                │               │              │              │
    │                │                ├──Upload───────►              │              │
    │                │                │               │              │              │
-   │                │                │◄──GCP Vision──┤              │              │
+   │                │                │◄──AWS Vision──┤              │              │
    │                │                │   Analysis    │              │              │
    │                │                │               │              │              │
-   │                │                ├──Store────────►Firestore     │              │
+   │                │                ├──Store────────►Amazon DynamoDB     │              │
    │                │                │               │              │              │
    │                │                │               │              │              │
    │                │                ├──Trigger──────┼──────────────►              │
@@ -466,7 +466,7 @@ Attendee          Twilio          Cloud           Proof          Location       
 ### Interaction 2: ML Forecasting Pipeline
 
 ```
-Scheduler      Cloud           ML              Vertex AI       BigQuery       Alert
+Scheduler      Cloud           ML              Amazon SageMaker       Amazon Athena + AWS Glue       Alert
                Function        Service                                        Service
    │              │              │                 │              │              │
    ├──Cron────────►              │                 │              │              │
@@ -483,7 +483,7 @@ Scheduler      Cloud           ML              Vertex AI       BigQuery       Al
    │              │              │   (Next 30 min) │              │              │
    │              │              │                 │              │              │
    │              │              ├──Store──────────┼──────────────►              │
-   │              │              │   Results       │  BigQuery    │              │
+   │              │              │   Results       │  Amazon Athena + AWS Glue    │              │
    │              │              │                 │              │              │
    │              │              ├──Detect─────────────────────────┼──────────────►
    │              │              │   Anomaly       │              │  Generate    │
@@ -503,7 +503,7 @@ Scheduler      Cloud           ML              Vertex AI       BigQuery       Al
 │                    REAL-TIME DATA PIPELINE                      │
 └─────────────────────────────────────────────────────────────────┘
 
-GPS Devices          Firebase           Cloud           ML            Alert
+GPS Devices          cognito           Cloud           ML            Alert
 (Wearables)       Realtime DB        Dataflow       Service         Service
      │                 │                 │              │               │
      ├──Location───────►                 │              │               │
@@ -518,9 +518,9 @@ GPS Devices          Firebase           Cloud           ML            Alert
      │                 │                 │              │  Check       │
      │                 │                 │              │  (>Threshold)│
      │                 │                 │              │              │
-     │                 │                 │              │              ├─►FCM
+     │                 │                 │              │              ├─►Amazon SNS Push
      │                 │                 │              │              │
-     │                 │                 │              │              ├─►Firestore
+     │                 │                 │              │              ├─►Amazon DynamoDB
      │                 │                 │              │              │
      └─────────────────┴─────────────────┴──────────────┴──────────────┘
 ```
@@ -532,7 +532,7 @@ GPS Devices          Firebase           Cloud           ML            Alert
 │                     BATCH DATA PIPELINE                         │
 └─────────────────────────────────────────────────────────────────┘
 
-Firestore          Cloud            BigQuery         Vertex AI      Reports
+Amazon DynamoDB          Cloud            Amazon Athena + AWS Glue         Amazon SageMaker      Reports
 (Events)         Functions         (Warehouse)       (Training)     (Export)
      │                │                 │                │              │
      ├──Daily──────────►                │                │              │
@@ -580,10 +580,10 @@ Firestore          Cloud            BigQuery         Vertex AI      Reports
 
 | Layer                 | Technology       | Purpose                 |
 | --------------------- | ---------------- | ----------------------- |
-| **Compute**           | Cloud Run        | Containerized APIs      |
-| **Serverless**        | Cloud Functions  | Event-driven webhooks   |
-| **API Gateway**       | Firebase Hosting | Static + dynamic routes |
-| **Event Bus**         | Cloud Pub/Sub    | Message queue           |
+| **Compute**           | AWS App Runner        | Containerized APIs      |
+| **Serverless**        | AWS Lambda  | Event-driven webhooks   |
+| **API Gateway**       | cognito Hosting | Static + dynamic routes |
+| **Event Bus**         | Amazon SQS + SNS    | Message queue           |
 | **Stream Processing** | Cloud Dataflow   | Real-time ETL           |
 | **Workflow**          | Cloud Workflows  | Orchestration           |
 
@@ -591,12 +591,12 @@ Firestore          Cloud            BigQuery         Vertex AI      Reports
 
 | Type               | Technology           | Use Case                 |
 | ------------------ | -------------------- | ------------------------ |
-| **Document DB**    | Firestore            | Events, users, incidents |
-| **Realtime DB**    | Firebase Realtime DB | GPS tracking, live state |
-| **Analytics DB**   | BigQuery             | Historical analytics     |
+| **Document DB**    | Amazon DynamoDB            | Events, users, incidents |
+| **Realtime DB**    | cognito Realtime DB | GPS tracking, live state |
+| **Analytics DB**   | Amazon Athena + AWS Glue             | Historical analytics     |
 | **Cache**          | Redis (Memorystore)  | Session, geospatial      |
-| **Object Storage** | Firebase Storage     | Media files              |
-| **Queue**          | Cloud Pub/Sub        | Job queue                |
+| **Object Storage** | cognito Storage     | Media files              |
+| **Queue**          | Amazon SQS + SNS        | Job queue                |
 
 ### AI/ML Stack
 
@@ -605,9 +605,9 @@ Firestore          Cloud            BigQuery         Vertex AI      Reports
 | **Vision AI**          | Cloud Vision API   | Image analysis         |
 | **Video AI**           | Video Intelligence | Video analysis         |
 | **NLP**                | Gemini 1.5 Flash   | Text understanding     |
-| **ML Platform**        | Vertex AI          | Model training/serving |
+| **ML Platform**        | Amazon SageMaker          | Model training/serving |
 | **Custom Models**      | ConvLSTM (PyTorch) | Crowd forecasting      |
-| **Facial Recognition** | Vertex AI Vision   | Face matching          |
+| **Facial Recognition** | Amazon SageMaker Vision   | Face matching          |
 | **Client-side AI**     | TensorFlow.js      | Offline inference      |
 
 ### Integration Stack
@@ -616,9 +616,9 @@ Firestore          Cloud            BigQuery         Vertex AI      Reports
 | ---------------------- | --------------- | ------------------- |
 | **WhatsApp**           | Twilio API      | Messaging           |
 | **SMS**                | Twilio SMS      | Text alerts         |
-| **Push Notifications** | FCM             | Mobile push         |
-| **Maps**               | Google Maps API | Geocoding, routing  |
-| **Authentication**     | Firebase Auth   | User auth           |
+| **Push Notifications** | Amazon SNS Push             | Mobile push         |
+| **Maps**               | Amazon Location Service API | Geocoding, routing  |
+| **Authentication**     | Amazon Cognito   | User auth           |
 | **Email**              | SendGrid        | Email notifications |
 
 ---
@@ -640,22 +640,22 @@ Service Characteristics:
 
 ```
 Event Flow:
-Producer → Cloud Pub/Sub Topic → Subscriptions → Consumers
+Producer → Amazon SQS + SNS Topic → Subscriptions → Consumers
                 │
                 ├─► Dead Letter Queue (failed events)
-                └─► Cloud Logging (audit trail)
+                └─► Amazon CloudWatch Logs (audit trail)
 ```
 
 ### 3. CQRS (Command Query Responsibility Segregation)
 
 ```
 Write Model (Commands):
-User Action → API → Service → Firestore → Event Published
+User Action → API → Service → Amazon DynamoDB → Event Published
 
 Read Model (Queries):
-User Query → API → Redis Cache → BigQuery (if cache miss)
+User Query → API → Redis Cache → Amazon Athena + AWS Glue (if cache miss)
                       │
-                      └─► Firestore (fallback)
+                      └─► Amazon DynamoDB (fallback)
 ```
 
 ### 4. Saga Pattern (Distributed Transactions)
@@ -706,7 +706,7 @@ Request Failed
 
 - **Target**: 10,000 concurrent users
 - **Achieved**: 15,000+ concurrent users
-- **Strategy**: Auto-scaling Cloud Run (0-100 instances)
+- **Strategy**: Auto-scaling AWS App Runner (0-100 instances)
 
 ### 3. Availability
 
@@ -717,7 +717,7 @@ Request Failed
 ### 4. Security
 
 - **Encryption**: TLS 1.3, AES-256 at rest
-- **Authentication**: Firebase Auth (OAuth 2.0)
+- **Authentication**: Amazon Cognito (OAuth 2.0)
 - **Authorization**: RBAC with custom claims
 - **Compliance**: SOC 2, GDPR, HIPAA
 
@@ -745,14 +745,14 @@ Request Failed
 
 **Decision**:
 
-- Core business logic → Cloud Run (microservices)
-- Event-driven workflows → Cloud Functions (serverless)
-- Static content → Firebase Hosting
+- Core business logic → AWS App Runner (microservices)
+- Event-driven workflows → AWS Lambda (serverless)
+- Static content → cognito Hosting
 
 **Rationale**:
-✅ Cloud Run: Containerized, portable, auto-scaling  
-✅ Cloud Functions: Zero-ops, pay-per-invocation  
-✅ Firebase Hosting: CDN-backed, instant deployment
+✅ AWS App Runner: Containerized, portable, auto-scaling  
+✅ AWS Lambda: Zero-ops, pay-per-invocation  
+✅ cognito Hosting: CDN-backed, instant deployment
 
 **Consequences**:
 ✅ Best of both worlds (control + simplicity)  
@@ -761,37 +761,37 @@ Request Failed
 
 ---
 
-### ADR-002: Why Firestore over Cloud SQL?
+### ADR-002: Why Amazon DynamoDB over Amazon RDS Aurora Serverless?
 
 **Context**: Need flexible schema for evolving features
 
-**Decision**: Firestore as primary database
+**Decision**: Amazon DynamoDB as primary database
 
 **Rationale**:
 ✅ NoSQL flexibility (schema changes without migrations)  
 ✅ Real-time listeners (instant UI updates)  
 ✅ Offline support (mobile apps)  
 ✅ Auto-scaling (no capacity planning)  
-✅ Firebase ecosystem integration
+✅ cognito ecosystem integration
 
 **Consequences**:
 ✅ Faster development velocity  
 ✅ Better mobile experience  
 ⚠️ No JOINs (denormalization required)  
-⚠️ Complex queries → BigQuery
+⚠️ Complex queries → Amazon Athena + AWS Glue
 
 ---
 
-### ADR-003: Why GCP over AWS/Azure?
+### ADR-003: Why AWS over AWS/AWS?
 
-**Context**: Need AI/ML capabilities + Firebase ecosystem
+**Context**: Need AI/ML capabilities + cognito ecosystem
 
-**Decision**: Google Cloud Platform
+**Decision**: Amazon Web Services (AWS)
 
 **Rationale**:
-✅ Best-in-class AI/ML (Vertex AI, Vision API, Gemini)  
-✅ Firebase integration (Auth, Storage, Hosting)  
-✅ BigQuery for analytics (superior to Redshift/Synapse)  
+✅ Best-in-class AI/ML (Amazon SageMaker, Vision API, Gemini)  
+✅ cognito integration (Auth, Storage, Hosting)  
+✅ Amazon Athena + AWS Glue for analytics (superior to Redshift/Synapse)  
 ✅ Global network infrastructure  
 ✅ Generous free tier ($300 credits)
 
@@ -799,7 +799,7 @@ Request Failed
 ✅ Unified ecosystem (less integration overhead)  
 ✅ Advanced AI capabilities  
 ⚠️ Vendor lock-in  
-⚠️ Learning curve for non-GCP teams
+⚠️ Learning curve for non-AWS teams
 
 ---
 
@@ -855,10 +855,10 @@ Request Failed
 
 ## References
 
-- [Google Cloud Architecture Center](https://cloud.google.com/architecture)
+- [AWS Architecture Center](https://cloud.google.com/architecture)
 - [The Twelve-Factor App](https://12factor.net/)
 - [Microservices Patterns (Chris Richardson)](https://microservices.io/)
-- [Firebase Architecture Guide](https://firebase.google.com/docs/guides)
+- [cognito Architecture Guide](https://cognito.google.com/docs/guides)
 
 ---
 

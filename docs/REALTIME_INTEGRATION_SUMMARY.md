@@ -83,8 +83,8 @@ ENABLE_SIMULATION_FALLBACK=false  # Real data only
 **Startup Sequence**:
 
 ```
-1. Initialize GCP Services
-2. Initialize Pub/Sub listeners
+1. Initialize AWS Services
+2. Initialize Amazon SQS + SNS listeners
 3. Start real-time workers
 4. Start Event Lifecycle Manager ← NEW
 5. Server ready
@@ -243,7 +243,7 @@ npm run dev
 Expected log output:
 
 ```
-✓ GCP Services Orchestrator ready
+✓ AWS Services Orchestrator ready
 ✓ Real-time workers started
 🚀 Starting Event Lifecycle Manager...
 ✓ Event Lifecycle Manager initialized - Automatic real-time data collection enabled

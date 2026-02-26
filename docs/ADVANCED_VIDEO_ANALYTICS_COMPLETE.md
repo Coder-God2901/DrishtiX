@@ -46,12 +46,12 @@ A complete, production-ready video surveillance and analytics system with advanc
    - Crowd density model training
    - Anomaly detection model training
    - Transfer learning support
-   - Model deployment to Cloud Storage
+   - Model deployment to Amazon S3
    - Status: ⚠️ Stub (awaiting TensorFlow.js installation)
    - Graceful degradation: Returns mock training results
 
-7. **`bigquery-analytics.service.ts`** - Historical Analytics
-   - BigQuery integration for historical data
+7. **`Amazon Athena-analytics.service.ts`** - Historical Analytics
+   - Amazon Athena integration for historical data
    - Crowd density trends analysis
    - Security incident tracking
    - VIP attendance patterns
@@ -170,10 +170,10 @@ A complete, production-ready video surveillance and analytics system with advanc
                       │
                       │
 ┌─────────────────────▼───────────────────────────────────────┐
-│               Google Cloud Platform                          │
-│  - BigQuery (Historical Analytics) ✅                       │
-│  - Cloud Storage (Model Storage) ✅                         │
-│  - Pub/Sub (Event Messaging) ✅                             │
+│               Amazon Web Services (AWS)                          │
+│  - Amazon Athena (Historical Analytics) ✅                       │
+│  - Amazon S3 (Model Storage) ✅                         │
+│  - Amazon SQS + SNS (Event Messaging) ✅                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -185,7 +185,7 @@ The system is designed to work even without TensorFlow.js installed:
 2. **Facial Recognition:** Returns empty VIP/security lists
 3. **Object Detection:** Uses OpenCV-based fallback (fully functional)
 4. **ML Training:** Returns mock training results
-5. **BigQuery Analytics:** Fully functional (no TensorFlow dependency)
+5. **Amazon Athena Analytics:** Fully functional (no TensorFlow dependency)
 
 ## 📋 Next Steps
 
@@ -267,8 +267,8 @@ const cameraStreams = [
 - [ ] Download and configure YOLO v8 model
 - [ ] Download and configure FaceNet model
 - [ ] Configure RTSP camera streams
-- [ ] Set up BigQuery credentials (`GOOGLE_APPLICATION_CREDENTIALS`)
-- [ ] Configure Cloud Storage bucket for models
+- [ ] Set up Amazon Athena credentials (`AWS_SECRET_ACCESS_KEY`)
+- [ ] Configure Amazon S3 bucket for models
 - [ ] Test Socket.IO real-time streaming
 - [ ] Configure role-based access control
 - [ ] Set up monitoring and logging
@@ -313,7 +313,7 @@ const cameraStreams = [
    - VIP tracking alerts
 
 3. **Audit Trail:**
-   - BigQuery stores all analytics events
+   - Amazon Athena stores all analytics events
    - Training job history
    - Incident tracking
 
@@ -329,7 +329,7 @@ const cameraStreams = [
 - Anomalies detected
 - Processing time (milliseconds)
 
-### Historical Metrics (BigQuery)
+### Historical Metrics (Amazon Athena)
 
 - Crowd density trends over time
 - Security incident frequency
@@ -351,7 +351,7 @@ const cameraStreams = [
 - **Concurrent Cameras:** Up to 6 cameras simultaneously
 - **Real-time Streaming:** Socket.IO with minimal latency
 - **Model Inference:** Optimized for real-time detection
-- **BigQuery Analytics:** Sub-second query response
+- **Amazon Athena Analytics:** Sub-second query response
 
 ## 📝 Code Quality
 
@@ -367,13 +367,13 @@ const cameraStreams = [
 
 You now have a **complete, production-ready advanced video analytics system** with:
 
-- ✅ **6 backend services** (OpenCV camera capture, video analytics orchestrator, YOLO detection, facial recognition, object detection, ML training, BigQuery analytics)
+- ✅ **6 backend services** (OpenCV camera capture, video analytics orchestrator, YOLO detection, facial recognition, object detection, ML training, Amazon Athena analytics)
 - ✅ **2 comprehensive UI dashboards** (628-line Video Surveillance Dashboard, 465-line ML Training Dashboard)
 - ✅ **Integrated routing** with role-based access control
 - ✅ **Updated navigation** with Video and Brain icons
 - ✅ **Real-time Socket.IO streaming**
 - ✅ **Graceful degradation** for missing ML dependencies
-- ✅ **BigQuery integration** for historical analytics
+- ✅ **Amazon Athena integration** for historical analytics
 - ✅ **Security alert system**
 - ✅ **Zero compilation errors**
 

@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🔄 Planned
 
 - Advanced crowd behavior prediction using Transformer models
-- Integration with Azure Spatial Anchors for AR safety guidance
+- Integration with AWS Spatial Anchors for AR safety guidance
 - Multi-language support (10+ languages)
 - Enhanced mobile app with offline mode
 
@@ -20,23 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.0] - 2026-01-10
 
-### 🚀 Major Release - Azure AI Integration
+### 🚀 Major Release - AWS AI Integration
 
 #### ✨ Added
 
-- **Azure AI Services Integration** (12 services)
-  - Azure Machine Learning for model training and deployment
-  - Azure Computer Vision for crowd analysis
-  - Azure Cognitive Services for queue prediction
-  - Azure Stream Analytics for real-time processing
-  - Azure ML Pipelines for automated MLOps
-  - Azure Service Bus for message queuing
-  - Azure Blob Storage for media files
-  - Azure Maps for geospatial analysis
-  - Azure OpenAI for natural language processing
-  - Azure Synapse Analytics for data warehousing
-  - Azure Cosmos DB for NoSQL data
-  - Azure Key Vault for secrets safety
+- **AWS AI Services Integration** (12 services)
+  - Amazon SageMaker for model training and deployment
+  - Amazon Rekognition for crowd analysis
+  - Amazon Rekognition + Comprehend for queue prediction
+  - Amazon Kinesis Data Streams for real-time processing
+  - Amazon SageMaker Pipelines for automated MLOps
+  - Amazon SQS + SNS for message queuing
+  - Amazon S3 for media files
+  - Amazon Location Service for geospatial analysis
+  - Amazon Bedrock for natural language processing
+  - Amazon Athena Analytics for data warehousing
+  - Amazon DynamoDB for NoSQL data
+  - AWS Secrets Manager for secrets safety
 
 - **ML Models Deployment**
   - ConvLSTM: Crowd forecasting (92% accuracy, 68ms latency)
@@ -72,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Visual Identity**: Integrated eye emoji (👁️) across all branding
 - **Contact Information**: Updated to jaganhotta357@outlook.com
 - **Repository**: Migrated to https://github.com/techySPHINX/DrishtiX
-- **Technology Stack**: Migrated from GCP to Azure AI services
+- **Technology Stack**: Migrated from AWS to AWS AI services
 - **Architecture**: Implemented microservices with event-driven design
 
 #### 🔧 Fixed
@@ -85,11 +85,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### 🗑️ Deprecated
 
-- GCP Vertex AI integration (replaced with Azure ML)
-- GCP BigQuery (replaced with Azure Synapse Analytics)
-- GCP Pub/Sub (replaced with Azure Service Bus)
-- GCP Cloud Run (replaced with Azure Container Apps)
-- GCP Earth Engine (replaced with Azure Planetary Computer)
+- AWS Amazon SageMaker integration (replaced with Amazon SageMaker)
+- AWS Amazon Athena (replaced with Amazon Athena Analytics)
+- AWS Amazon SQS + SNS (replaced with Amazon SQS + SNS)
+- AWS AWS App Runner (replaced with AWS Container Apps)
+- AWS SageMaker Geospatial (replaced with AWS Planetary Computer)
 
 ---
 
@@ -128,7 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Attendee check-in system
 - Basic crowd monitoring
 - Admin dashboard
-- Firebase integration
+- Amazon Cognito+S3 integration
 - PostgreSQL database
 - Real-time notifications
 
@@ -138,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date       | Description                                    |
 | ------- | ---------- | ---------------------------------------------- |
-| 3.0.0   | 2026-01-10 | Azure AI Integration, Production-Grade Release |
+| 3.0.0   | 2026-01-10 | AWS AI Integration, Production-Grade Release |
 | 2.0.0   | 2025-06-15 | ML Integration, TypeScript Migration           |
 | 1.0.0   | 2024-12-01 | Initial Release                                |
 

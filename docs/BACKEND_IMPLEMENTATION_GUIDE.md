@@ -638,7 +638,7 @@ curl http://localhost:3000/api/events?status=LIVE&category=Music
 - [x] List notifications endpoint
 - [x] Mark as read endpoint
 - [x] Send bulk notifications
-- [x] Push notification service (FCM)
+- [x] Push notification service (Amazon SNS Push)
 - [x] Email notification service
 - [x] SMS notification service
 - [x] Notification preferences
@@ -1338,8 +1338,8 @@ AWS_SECRET_ACCESS_KEY=your-secret-key
 AWS_S3_BUCKET=drishtix-uploads
 AWS_REGION=us-east-1
 
-# Push Notifications (FCM)
-FCM_SERVER_KEY=your-fcm-server-key
+# Push Notifications (Amazon SNS Push)
+Amazon SNS Push_SERVER_KEY=your-Amazon SNS Push-server-key
 
 # Monitoring
 SENTRY_DSN=your-sentry-dsn

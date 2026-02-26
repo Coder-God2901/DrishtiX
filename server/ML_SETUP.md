@@ -107,13 +107,13 @@ The following dependencies are already in `server/package.json`:
 
 **File**: `server/services/ml-training.service.ts` (659 lines)
 
-- **Framework**: TensorFlow.js + Vertex AI
+- **Framework**: TensorFlow.js + Amazon SageMaker
 - **Features**:
   - Custom model training (crowd density, anomaly detection)
   - Model versioning and deployment to GCS
-  - BigQuery integration for training data
+  - Amazon Athena integration for training data
   - Automated model evaluation
-  - Vertex AI custom training jobs
+  - Amazon SageMaker custom training jobs
 - **Usage**:
   ```typescript
   const config: ModelConfig = {
@@ -174,7 +174,7 @@ Expected output:
    ✓ COCO-SSD + OpenCV integration, 4 methods available
 
 ✅ ML Training Service
-   ✓ TensorFlow.js + Vertex AI integration, 4 methods available
+   ✓ TensorFlow.js + Amazon SageMaker integration, 4 methods available
 
 ═══════════════════════════════════════════════════════
 Summary: 5 PASSED, 0 FAILED

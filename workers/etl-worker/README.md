@@ -1,4 +1,4 @@
-# Cloud Run ETL Worker Deployment
+# AWS App Runner ETL Worker Deployment
 
 ## Overview
 
@@ -8,7 +8,7 @@ This is a **cost-effective replacement** for Google Cloud Dataflow. It provides:
 - Multi-source data merging (CCTV, Drones, GPS, Weather, Social)
 - Grid-based aggregation
 - Feature engineering for ML models
-- Pub/Sub and BigQuery integration
+- Amazon SQS + SNS and Amazon Athena integration
 
 ## Features
 
@@ -29,9 +29,9 @@ This is a **cost-effective replacement** for Google Cloud Dataflow. It provides:
 
 ### Output Channels
 
-- **Pub/Sub**: Real-time ML model feeds
-- **BigQuery**: Batch analytics and historical data
-- **Firestore**: Event metadata updates
+- **Amazon SQS + SNS**: Real-time ML model feeds
+- **Amazon Athena**: Batch analytics and historical data
+- **Amazon DynamoDB**: Event metadata updates
 
 ## Deployment
 
@@ -41,17 +41,17 @@ This is a **cost-effective replacement** for Google Cloud Dataflow. It provides:
 cd workers/etl-worker
 
 # Build
-docker build -t gcr.io/YOUR-PROJECT-ID/etl-worker:latest .
+docker build -t ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/YOUR-PROJECT-ID/etl-worker:latest .
 
 # Push to GCR
-docker push gcr.io/YOUR-PROJECT-ID/etl-worker:latest
+docker push ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/YOUR-PROJECT-ID/etl-worker:latest
 ```
 
-### 2. Deploy to Cloud Run
+### 2. Deploy to AWS App Runner
 
 ```bash
-gcloud run deploy etl-worker \
-  --image gcr.io/YOUR-PROJECT-ID/etl-worker:latest \
+gAWS App Runner deploy etl-worker \
+  --image ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/YOUR-PROJECT-ID/etl-worker:latest \
   --platform managed \
   --region us-central1 \
   --memory 2Gi \
@@ -60,20 +60,20 @@ gcloud run deploy etl-worker \
   --concurrency 80 \
   --min-instances 1 \
   --max-instances 100 \
-  --set-env-vars GCP_PROJECT_ID=YOUR-PROJECT-ID \
+  --set-env-vars AWS_ACCOUNT_ID=YOUR-PROJECT-ID \
   --service-account etl-worker@YOUR-PROJECT-ID.iam.gserviceaccount.com \
   --allow-unauthenticated
 ```
 
-### 3. Configure Pub/Sub Push Subscription
+### 3. Configure Amazon SQS + SNS Push Subscription
 
 ```bash
-# Create subscription that pushes to Cloud Run
-gcloud pubsub subscriptions create etl-worker-sub \
-  --topic=raw-data-stream \
-  --push-endpoint=https://etl-worker-XXXXX-uc.a.run.app/process \
-  --ack-deadline=300 \
-  --push-auth-service-account=etl-worker@YOUR-PROJECT-ID.iam.gserviceaccount.com
+# Subscribe SQS queue to SNS topic for push-style processing
+aws sns subscribe \
+  --topic-arn arn:aws:sns:ap-south-1:ACCOUNT_ID:drishtix-raw-data-stream \
+  --protocol sqs \
+  --notification-endpoint arn:aws:sqs:ap-south-1:ACCOUNT_ID:drishtix-etl-worker-sub \
+  --region ap-south-1
 ```
 
 ## API Endpoints
@@ -177,13 +177,13 @@ Health check
          │
          ▼
 ┌─────────────────────────────────────────────────────────┐
-│              Pub/Sub: raw-data-stream                   │
-│          (Push subscription to Cloud Run)               │
+│              Amazon SQS + SNS: raw-data-stream                   │
+│          (Push subscription to AWS App Runner)               │
 └────────┬────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────┐
-│            Cloud Run ETL Worker                         │
+│            AWS App Runner ETL Worker                         │
 │                                                          │
 │  1. Grid Conversion (GPS → 50m grid cells)             │
 │  2. Data Merging (combine all sources)                 │
@@ -195,7 +195,7 @@ Health check
          ├─────────────────┬─────────────────┐
          ▼                 ▼                 ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│   Pub/Sub    │  │   BigQuery   │  │  Firestore   │
+│   Amazon SQS + SNS    │  │   Amazon Athena   │  │  Amazon DynamoDB   │
 │ (ML Models)  │  │ (Analytics)  │  │  (Metadata)  │
 └──────────────┘  └──────────────┘  └──────────────┘
 ```
@@ -213,7 +213,7 @@ Example:
 
 ## Data Flow Example
 
-**Input** (from Pub/Sub):
+**Input** (from Amazon SQS + SNS):
 
 ```json
 {
@@ -237,7 +237,7 @@ Example:
 7. Add social sentiment (0.8, low panic)
 8. Calculate confidence (0.92 - 3 sources)
 
-**Output** (to Pub/Sub + BigQuery):
+**Output** (to Amazon SQS + SNS + Amazon Athena):
 
 ```json
 {
@@ -269,33 +269,38 @@ Example:
 
 ## Monitoring
 
-### Cloud Logging
+### Amazon CloudWatch Logs
 
 ```bash
 # View logs
-gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=etl-worker" --limit 50
+gAmazon CloudWatch Logs read "resource.type=cloud_run_revision AND resource.labels.service_name=etl-worker" --limit 50
 
 # Filter errors
-gcloud logging read "resource.type=cloud_run_revision AND severity>=ERROR" --limit 20
+gAmazon CloudWatch Logs read "resource.type=cloud_run_revision AND severity>=ERROR" --limit 20
 ```
 
 ### Metrics
 
-- Request count: `run.googleapis.com/request_count`
-- Request latency: `run.googleapis.com/request_latencies`
-- Instance count: `run.googleapis.com/container/instance_count`
-- Memory usage: `run.googleapis.com/container/memory/utilizations`
+- Request count: `run.amazonaws.com/request_count`
+- Request latency: `run.amazonaws.com/request_latencies`
+- Instance count: `run.amazonaws.com/container/instance_count`
+- Memory usage: `run.amazonaws.com/container/memory/utilizations`
 
 ### Alerts
 
 ```bash
-# Create alert for high error rate
-gcloud alpha monitoring policies create \
-  --notification-channels=CHANNEL_ID \
-  --display-name="ETL Worker High Error Rate" \
-  --condition-display-name="Error rate > 5%" \
-  --condition-threshold-value=0.05 \
-  --condition-threshold-duration=300s
+# Create CloudWatch alarm for high error rate
+aws cloudwatch put-metric-alarm \
+  --alarm-name "drishtix-etl-worker-high-error-rate" \
+  --alarm-description "Error rate > 5%" \
+  --metric-name Errors \
+  --namespace AWS/Lambda \
+  --statistic Sum \
+  --period 300 \
+  --threshold 0.05 \
+  --comparison-operator GreaterThanThreshold \
+  --alarm-actions arn:aws:sns:ap-south-1:ACCOUNT_ID:drishtix-alerts \
+  --region ap-south-1
 ```
 
 ## Testing
@@ -307,8 +312,8 @@ gcloud alpha monitoring policies create \
 pip install -r requirements.txt
 
 # Set environment
-export GCP_PROJECT_ID=your-project-id
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+export AWS_ACCOUNT_ID=your-project-id
+export AWS_SECRET_ACCESS_KEY=/path/to/service-account.json
 
 # Run locally
 python main.py
@@ -345,9 +350,9 @@ ab -n 1000 -c 100 -p test-data.json -T application/json \
 
 | Solution          | Monthly Cost (10M requests) | Latency | Scalability |
 | ----------------- | --------------------------- | ------- | ----------- |
-| **Cloud Run ETL** | **$50**                     | 150ms   | Excellent   |
+| **AWS App Runner ETL** | **$50**                     | 150ms   | Excellent   |
 | Dataflow          | $2,500                      | 500ms   | Good        |
-| Cloud Functions   | $200                        | 300ms   | Limited     |
+| AWS Lambda   | $200                        | 300ms   | Limited     |
 | GKE               | $400                        | 100ms   | Complex     |
 
 ## Troubleshooting
@@ -355,8 +360,8 @@ ab -n 1000 -c 100 -p test-data.json -T application/json \
 ### High Latency
 
 - Increase `--cpu` and `--memory`
-- Check BigQuery insert performance
-- Monitor Pub/Sub publish latency
+- Check Amazon Athena insert performance
+- Monitor Amazon SQS + SNS publish latency
 
 ### Out of Memory
 
@@ -367,13 +372,13 @@ ab -n 1000 -c 100 -p test-data.json -T application/json \
 ### Failed Requests
 
 - Check service account permissions
-- Verify Pub/Sub topic/subscription exists
-- Check BigQuery table schema
+- Verify Amazon SQS + SNS topic/subscription exists
+- Check Amazon Athena table schema
 
 ## Next Steps
 
-1. ✅ Deploy to Cloud Run
-2. ✅ Configure Pub/Sub push subscription
+1. ✅ Deploy to AWS App Runner
+2. ✅ Configure Amazon SQS + SNS push subscription
 3. ✅ Set up monitoring and alerts
 4. 🔄 Integrate with backend Node.js service
 5. 🔄 Test with live event data

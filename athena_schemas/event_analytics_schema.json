@@ -1,0 +1,34 @@
+{
+  "Comment": "AWS Glue Data Catalog schema — replaces BigQuery event_analytics table",
+  "DatabaseName": "drishtix_analytics",
+  "TableName": "event_analytics",
+  "Description": "Per-event daily analytics aggregates stored in S3 Parquet",
+  "TableType": "EXTERNAL_TABLE",
+  "Parameters": {
+    "classification": "parquet",
+    "compressionType": "snappy",
+    "s3Location": "s3://drishtix-prod-data/analytics/event_analytics/"
+  },
+  "StorageDescriptor": {
+    "Columns": [
+      { "Name": "event_id",              "Type": "string",  "Comment": "Event identifier" },
+      { "Name": "date",                  "Type": "date",    "Comment": "Analytics date" },
+      { "Name": "total_attendees",       "Type": "bigint",  "Comment": "Total number of attendees" },
+      { "Name": "peak_crowd_density",    "Type": "double",  "Comment": "Peak crowd density value" },
+      { "Name": "incidents_count",       "Type": "bigint",  "Comment": "Total number of incidents" },
+      { "Name": "avg_dwell_time_minutes","Type": "double",  "Comment": "Average dwell time in minutes" },
+      { "Name": "zone_analytics",        "Type": "string",  "Comment": "Zone-specific analytics (JSON string)" },
+      { "Name": "dynamodb_stream_seq",   "Type": "string",  "Comment": "DynamoDB Stream sequence number for dedup" }
+    ],
+    "Location": "s3://drishtix-prod-data/analytics/event_analytics/",
+    "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+    "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+    "SerdeInfo": {
+      "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+    }
+  },
+  "PartitionKeys": [
+    { "Name": "year",  "Type": "string", "Comment": "Partition by year (YYYY)" },
+    { "Name": "month", "Type": "string", "Comment": "Partition by month (MM)" }
+  ]
+}

@@ -150,10 +150,10 @@ PORT=3000
 FRONTEND_URL="http://localhost:5173"
 NODE_ENV="development"
 
-# Firebase (for FCM)
-FIREBASE_PROJECT_ID=""
-FIREBASE_PRIVATE_KEY=""
-FIREBASE_CLIENT_EMAIL=""
+# Amazon Cognito+S3 (for Amazon SNS Push)
+Amazon Cognito+S3_PROJECT_ID=""
+Amazon Cognito+S3_PRIVATE_KEY=""
+Amazon Cognito+S3_CLIENT_EMAIL=""
 
 # Payment (Optional)
 STRIPE_SECRET_KEY=""

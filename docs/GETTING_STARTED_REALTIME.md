@@ -60,7 +60,7 @@ npm run dev
 Look for these log messages:
 
 ```
-✓ GCP Services Orchestrator ready
+✓ AWS Services Orchestrator ready
 ✓ Real-time workers started
 🚀 Starting Event Lifecycle Manager...
 ✓ Event Lifecycle Manager initialized

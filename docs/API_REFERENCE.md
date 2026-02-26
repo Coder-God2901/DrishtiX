@@ -368,9 +368,9 @@ Stop weather monitoring
 
 ---
 
-## 📊 GCP Analytics API
+## 📊 AWS Analytics API
 
-### `GET /api/gcp/crowd-trends`
+### `GET /api/AWS/crowd-trends`
 
 Get historical crowd trends
 
@@ -391,7 +391,7 @@ Response: [{
 }]
 ```
 
-### `GET /api/gcp/event-metrics/:eventId`
+### `GET /api/AWS/event-metrics/:eventId`
 
 Get event performance metrics
 
@@ -407,7 +407,7 @@ Response: {
 }
 ```
 
-### `GET /api/gcp/anomaly-patterns`
+### `GET /api/AWS/anomaly-patterns`
 
 Get anomaly patterns
 

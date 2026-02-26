@@ -1,8 +1,8 @@
-# ✅ Cloud Run ETL Worker - Implementation Complete
+# ✅ AWS App Runner ETL Worker - Implementation Complete
 
 ## 📦 What Was Implemented
 
-A **production-ready Cloud Run ETL Worker** that replaces Google Cloud Dataflow with a cost-effective Python-based solution, achieving **50x cost reduction** (from $2,500/month to $50/month).
+A **production-ready AWS App Runner ETL Worker** that replaces Google Cloud Dataflow with a cost-effective Python-based solution, achieving **50x cost reduction** (from $2,500/month to $50/month).
 
 ---
 
@@ -11,7 +11,7 @@ A **production-ready Cloud Run ETL Worker** that replaces Google Cloud Dataflow 
 ### 1. **Python ETL Worker** (`workers/etl-worker/`)
 
 - ✅ `main.py` - 700+ line Flask application with complete ETL pipeline
-- ✅ `requirements.txt` - All dependencies (Pub/Sub, BigQuery, Flask, NumPy)
+- ✅ `requirements.txt` - All dependencies (Amazon SQS + SNS, Amazon Athena, Flask, NumPy)
 - ✅ `Dockerfile` - Production container with Gunicorn
 - ✅ `README.md` - Comprehensive deployment and usage guide
 
@@ -19,14 +19,14 @@ A **production-ready Cloud Run ETL Worker** that replaces Google Cloud Dataflow 
 
 - ✅ `cloudrun-etl.service.ts` - Node.js integration layer with:
   - Automatic batching (100 data points or 5 seconds)
-  - Retry logic and fallback to Pub/Sub
+  - Retry logic and fallback to Amazon SQS + SNS
   - Support for CCTV, Drone, GPS data
   - Weather and social context updates
   - Health monitoring
 
 ### 3. **Configuration Updates**
 
-- ✅ `server/config/gcp.config.ts` - Added `cloudRun.etlWorkerUrl`
+- ✅ `server/config/AWS.config.ts` - Added `cloudRun.etlWorkerUrl`
 - ✅ `server/services/video-analytics.service.ts` - Integrated ETL calls
 
 ### 4. **Deployment Scripts**
@@ -49,8 +49,8 @@ A **production-ready Cloud Run ETL Worker** that replaces Google Cloud Dataflow 
 ## 🏗️ ETL Pipeline Architecture
 
 ```
-Data Sources → Backend Services → Cloud Run ETL → BigQuery/Pub/Sub → Frontend
-    (7)             (Node.js)         (Python)         (GCP)         (React)
+Data Sources → Backend Services → AWS App Runner ETL → Amazon Athena/Amazon SQS + SNS → Frontend
+    (7)             (Node.js)         (Python)         (AWS)         (React)
 ```
 
 ### Data Processing Flow
@@ -58,7 +58,7 @@ Data Sources → Backend Services → Cloud Run ETL → BigQuery/Pub/Sub → Fro
 1. **Grid Conversion**: GPS coordinates → 50m x 50m grid cells
 2. **Multi-Source Merging**: Combines CCTV, Drone, GPS data with confidence scoring
 3. **Feature Engineering**: Adds temporal deltas (1m, 5m, 15m) and contextual data
-4. **Output Publishing**: Sends to Pub/Sub (ML predictions) and BigQuery (analytics)
+4. **Output Publishing**: Sends to Amazon SQS + SNS (ML predictions) and Amazon Athena (analytics)
 
 ---
 
@@ -81,19 +81,19 @@ Data Sources → Backend Services → Cloud Run ETL → BigQuery/Pub/Sub → Fro
 | Solution            | Monthly Cost (10M requests) | Savings |
 | ------------------- | --------------------------- | ------- |
 | **Google Dataflow** | $2,500                      | -       |
-| **Cloud Run ETL**   | $50                         | **98%** |
+| **AWS App Runner ETL**   | $50                         | **98%** |
 
 ---
 
 ## 🚀 Deployment Steps
 
-### 1. Deploy ETL Worker to Cloud Run
+### 1. Deploy ETL Worker to AWS App Runner
 
 **Windows:**
 
 ```powershell
 cd Events
-.\scripts\deploy-etl-worker.ps1 -ProjectId "your-gcp-project"
+.\scripts\deploy-etl-worker.ps1 -ProjectId "your-AWS-project"
 ```
 
 **Linux/macOS:**
@@ -110,8 +110,8 @@ Update `Events/.env`:
 
 ```bash
 ETL_WORKER_URL=https://etl-worker-xxxxx-uc.a.run.app
-GCP_PROJECT_ID=your-project-id
-BIGQUERY_DATASET=drishtix_analytics
+AWS_ACCOUNT_ID=your-project-id
+Amazon Athena_DATASET=drishtix_analytics
 ```
 
 ### 3. Validate Deployment
@@ -126,8 +126,8 @@ Expected output:
 ✓ PASS: ETL_WORKER_URL is set
 ✓ PASS: Health check passed
 ✓ PASS: Process endpoint working
-✓ PASS: Cloud Run service found
-✓ PASS: Pub/Sub subscription exists
+✓ PASS: AWS App Runner service found
+✓ PASS: Amazon SQS + SNS subscription exists
 ✓ All validations passed! ETL Worker is ready.
 ```
 
@@ -245,13 +245,13 @@ Health check
 
 ```bash
 # Tail logs
-gcloud run logs tail etl-worker --region us-central1
+gAWS App Runner logs tail etl-worker --region us-central1
 
 # Last 50 logs
-gcloud run logs read etl-worker --region us-central1 --limit 50
+gAWS App Runner logs read etl-worker --region us-central1 --limit 50
 
 # Errors only
-gcloud run logs read etl-worker --region us-central1 --log-filter="severity>=ERROR"
+gAWS App Runner logs read etl-worker --region us-central1 --log-filter="severity>=ERROR"
 ```
 
 ### Health Check
@@ -264,13 +264,13 @@ curl https://etl-worker-xxxxx-uc.a.run.app/health
 
 ```bash
 # CPU utilization
-gcloud monitoring time-series list \
-  --filter='metric.type="run.googleapis.com/container/cpu/utilizations"' \
+gAmazon CloudWatch time-series list \
+  --filter='metric.type="run.amazonaws.com/container/cpu/utilizations"' \
   --filter='resource.labels.service_name="etl-worker"'
 
 # Request count
-gcloud monitoring time-series list \
-  --filter='metric.type="run.googleapis.com/request_count"' \
+gAmazon CloudWatch time-series list \
+  --filter='metric.type="run.amazonaws.com/request_count"' \
   --filter='resource.labels.service_name="etl-worker"'
 ```
 
@@ -282,7 +282,7 @@ gcloud monitoring time-series list \
 
 ```bash
 # Increase instances for peak load
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --region us-central1 \
   --min-instances 5 \
   --max-instances 200
@@ -292,7 +292,7 @@ gcloud run services update etl-worker \
 
 ```bash
 # Increase CPU/memory
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --region us-central1 \
   --cpu 4 \
   --memory 4Gi
@@ -302,7 +302,7 @@ gcloud run services update etl-worker \
 
 ```bash
 # Increase timeout
-gcloud run services update etl-worker \
+gAWS App Runner services update etl-worker \
   --region us-central1 \
   --timeout 600  # 10 minutes
 ```
@@ -350,7 +350,7 @@ Events/
 │       └── README.md               # Deployment guide
 ├── server/
 │   ├── config/
-│   │   └── gcp.config.ts           # Added cloudRun.etlWorkerUrl
+│   │   └── AWS.config.ts           # Added cloudRun.etlWorkerUrl
 │   └── services/
 │       ├── cloudrun-etl.service.ts # Integration layer
 │       └── video-analytics.service.ts # Updated with ETL calls
@@ -369,13 +369,13 @@ Events/
 - [x] Docker containerization (Dockerfile)
 - [x] Dependencies configured (requirements.txt)
 - [x] Backend integration layer (cloudrun-etl.service.ts)
-- [x] GCP config updated (gcp.config.ts)
+- [x] AWS config updated (AWS.config.ts)
 - [x] Video analytics integrated (video-analytics.service.ts)
 - [x] Deployment scripts (PowerShell + Bash)
 - [x] Validation script (validate-etl-deployment.ps1)
 - [x] Comprehensive documentation (ETL_WORKER_INTEGRATION.md)
-- [ ] Deploy to Cloud Run (user action required)
-- [ ] Configure Pub/Sub subscription (automated by script)
+- [ ] Deploy to AWS App Runner (user action required)
+- [ ] Configure Amazon SQS + SNS subscription (automated by script)
 - [ ] Update .env with ETL_WORKER_URL (automated by script)
 - [ ] Test end-to-end data flow
 
@@ -386,15 +386,15 @@ Events/
 ### 1. Deploy ETL Worker (15 minutes)
 
 ```powershell
-.\scripts\deploy-etl-worker.ps1 -ProjectId "your-gcp-project"
+.\scripts\deploy-etl-worker.ps1 -ProjectId "your-AWS-project"
 ```
 
 This script will:
 
 - Build Docker image
 - Push to Google Container Registry
-- Deploy to Cloud Run
-- Create Pub/Sub push subscription
+- Deploy to AWS App Runner
+- Create Amazon SQS + SNS push subscription
 - Update .env file
 - Perform health check
 
@@ -416,7 +416,7 @@ npm run dev
 Monitor logs to see data flowing:
 
 ```bash
-gcloud run logs tail etl-worker --region us-central1
+gAWS App Runner logs tail etl-worker --region us-central1
 ```
 
 ---
@@ -435,15 +435,15 @@ gcloud run logs tail etl-worker --region us-central1
 ### Common Issues
 
 1. **ETL worker not receiving data**
-   - Check Pub/Sub subscription: `gcloud pubsub subscriptions describe etl-worker-sub`
-   - Verify push endpoint matches Cloud Run URL
+   - Check Amazon SQS + SNS subscription: `aws sqs get-queue-attributes --queue-url $(aws sqs get-queue-url --queue-name drishtix-etl-worker-sub --query QueueUrl --output text --region ap-south-1) --attribute-names All`
+   - Verify push endpoint matches AWS App Runner URL
 
 2. **High latency**
    - Increase min-instances: `--min-instances 5`
    - Increase CPU/memory: `--cpu 4 --memory 4Gi`
 
 3. **Memory errors**
-   - Check memory usage in Cloud Run metrics
+   - Check memory usage in AWS App Runner metrics
    - Increase memory limit: `--memory 4Gi`
 
 4. **Connection timeout**

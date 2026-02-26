@@ -1,7 +1,7 @@
-# How to Get a Real FCM Token for Testing
+# How to Get a Real Amazon SNS Push Token for Testing
 
 ## Why You Need This
-The FCM test currently uses a mock token which will always fail. To properly test Firebase Cloud Messaging, you need a real device token.
+The Amazon SNS Push test currently uses a mock token which will always fail. To properly test Amazon SNS Push, you need a real device token.
 
 ## Quick Option: Get Token from Browser Console
 
@@ -14,40 +14,40 @@ The FCM test currently uses a mock token which will always fail. To properly tes
 // Request notification permission first
 Notification.requestPermission().then(async (permission) => {
   if (permission === 'granted') {
-    const { getMessaging, getToken } = await import('firebase/messaging');
+    const { getMessaging, getToken } = await import('Amazon Cognito+S3/messaging');
     const messaging = getMessaging();
     
-    // You need to add your VAPID key here (from Firebase Console)
+    // You need to add your VAPID key here (from Amazon Cognito+S3 Console)
     const token = await getToken(messaging, {
-      vapidKey: 'YOUR_VAPID_KEY_FROM_FIREBASE_CONSOLE'
+      vapidKey: 'YOUR_VAPID_KEY_FROM_Amazon Cognito+S3_CONSOLE'
     });
     
-    console.log('FCM Token:', token);
-    console.log('Copy this token to setup_testing/.env as TEST_FCM_TOKEN');
+    console.log('Amazon SNS Push Token:', token);
+    console.log('Copy this token to setup_testing/.env as TEST_Amazon SNS Push_TOKEN');
   }
 });
 ```
 
-## Get VAPID Key from Firebase Console
+## Get VAPID Key from Amazon Cognito+S3 Console
 
-1. Go to **Firebase Console** → https://console.firebase.google.com
-2. Select project: **drishtix-479606**
+1. Go to **Amazon Cognito+S3 Console** → https://console.Amazon Cognito+S3.google.com
+2. Select project: **YOUR_AWS_ACCOUNT_ID**
 3. Click **⚙️ Settings** → **Project settings**
 4. Go to **Cloud Messaging** tab
 5. Scroll down to **Web configuration**
 6. Copy the **Web Push certificates** key (VAPID key)
-7. Replace `YOUR_VAPID_KEY_FROM_FIREBASE_CONSOLE` in the code above
+7. Replace `YOUR_VAPID_KEY_FROM_Amazon Cognito+S3_CONSOLE` in the code above
 
 ## Alternative: Get Token from Mobile App
 
 ### Android (Kotlin/Java):
 ```kotlin
-import com.google.firebase.messaging.FirebaseMessaging
+import com.google.Amazon Cognito+S3.messaging.Amazon Cognito+S3Messaging
 
-FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+Amazon Cognito+S3Messaging.getInstance().token.addOnCompleteListener { task ->
     if (task.isSuccessful) {
         val token = task.result
-        println("FCM Token: $token")
+        println("Amazon SNS Push Token: $token")
         // Copy this to .env
     }
 }
@@ -55,11 +55,11 @@ FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
 
 ### iOS (Swift):
 ```swift
-import FirebaseMessaging
+import Amazon Cognito+S3Messaging
 
 Messaging.messaging().token { token, error in
     if let token = token {
-        print("FCM Token: \\(token)")
+        print("Amazon SNS Push Token: \\(token)")
         // Copy this to .env
     }
 }
@@ -71,12 +71,12 @@ Messaging.messaging().token { token, error in
 2. Open `setup_testing/.env`
 3. Add the token:
 ```env
-TEST_FCM_TOKEN=your-long-fcm-token-here
+TEST_Amazon SNS Push_TOKEN=your-long-Amazon SNS Push-token-here
 ```
 
 4. Run tests again:
 ```bash
-npx ts-node test-firebase.ts
+npx ts-node test-Amazon Cognito+S3.ts
 ```
 
 ## Test Behavior
@@ -87,10 +87,10 @@ npx ts-node test-firebase.ts
 
 ## Quick Test Command
 
-After adding token, test just FCM:
+After adding token, test just Amazon SNS Push:
 ```bash
 cd setup_testing
-npx ts-node test-firebase.ts
+npx ts-node test-Amazon Cognito+S3.ts
 ```
 
 Look for: "✅ Notification sent successfully to real device"

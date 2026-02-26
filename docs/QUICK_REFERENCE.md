@@ -12,8 +12,8 @@
 
 - Node.js 18+
 - PostgreSQL 14+ with PostGIS
-- Google Cloud Platform account
-- Google Cloud SDK (`gcloud`)
+- Amazon Web Services (AWS) account
+- AWS CLI (`aws`)
 
 ### **Setup**
 
@@ -29,10 +29,10 @@ npm run db:migrate
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env with your GCP project ID and API keys
+# Edit .env with your AWS project ID and API keys
 
-# 4. Initialize GCP services
-npm run gcp:init
+# 4. Initialize AWS services
+npm run AWS:init
 
 # 5. Verify setup
 npm run health:check
@@ -72,8 +72,8 @@ npm run dev
 - **Weather Monitoring** - Real-time weather data
 - **Risk Assessment** - Multi-factor risk scoring
 - **AI Dispatch** - Automated emergency response
-- **Analytics** - Historical insights from BigQuery
-- **Google Maps** - Routing and geocoding
+- **Analytics** - Historical insights from Amazon Athena
+- **Amazon Location Service** - Routing and geocoding
 - **Database** - PostgreSQL + PostGIS with all models
 
 ### **⚠️ Placeholder Mode**
@@ -109,10 +109,10 @@ npm run db:generate      # Generate Prisma client
 npm run db:reset         # Reset database
 ```
 
-### **GCP & Infrastructure**
+### **AWS & Infrastructure**
 
 ```bash
-npm run gcp:init         # Initialize all GCP services
+npm run AWS:init         # Initialize all AWS services
 npm run health:check     # Verify setup
 ```
 
@@ -141,8 +141,8 @@ npm run coverage        # Code coverage
 
 ```env
 DATABASE_URL=postgresql://user:pass@localhost:5432/drishtix_db
-VITE_GOOGLE_CLOUD_PROJECT_ID=your-gcp-project-id
-GOOGLE_APPLICATION_CREDENTIALS=./config/gcp-service-account-key.json
+VITE_GOOGLE_CLOUD_PROJECT_ID=your-AWS-project-id
+AWS_SECRET_ACCESS_KEY=./config/AWS-service-account-key.json
 ```
 
 **Recommended (for full features):**
@@ -164,11 +164,11 @@ See [`.env.example`](./.env.example) for complete configuration.
 | **PostgreSQL**      | ✅ 100% | All tables with PostGIS |
 | **REST API**        | ✅ 95%  | 50+ endpoints           |
 | **Socket.IO**       | ✅ 100% | Real-time updates       |
-| **Pub/Sub**         | ✅ 100% | 9 topics configured     |
-| **BigQuery**        | ✅ 95%  | 6 tables ready          |
-| **Cloud Storage**   | ✅ 100% | 4 buckets               |
-| **Firebase**        | ✅ 100% | Auth, FCM, Firestore    |
-| **Google Maps**     | ✅ 90%  | Routing working         |
+| **Amazon SQS + SNS**         | ✅ 100% | 9 topics configured     |
+| **Amazon Athena**        | ✅ 95%  | 6 tables ready          |
+| **Amazon S3**   | ✅ 100% | 4 buckets               |
+| **Amazon Cognito+S3**        | ✅ 100% | Auth, Amazon SNS Push, Amazon DynamoDB    |
+| **Amazon Location Service**     | ✅ 90%  | Routing working         |
 | **Weather**         | ✅ 85%  | API integrated          |
 | **ML Forecasting**  | ⚠️ 40%  | Needs training          |
 | **Video Analytics** | ⚠️ 60%  | Needs cameras           |
@@ -187,12 +187,12 @@ See [`.env.example`](./.env.example) for complete configuration.
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
-│               INGESTION (Pub/Sub)                       │
+│               INGESTION (Amazon SQS + SNS)                       │
 │  9 topics • DLQ • Retry policies                        │
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
-│         STORAGE (PostgreSQL, BigQuery, GCS)            │
+│         STORAGE (PostgreSQL, Amazon Athena, GCS)            │
 │  20+ tables • 6 BQ tables • 4 buckets                   │
 └──────────────────────┬──────────────────────────────────┘
                        │
@@ -207,7 +207,7 @@ See [`.env.example`](./.env.example) for complete configuration.
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
-│    DELIVERY (REST API, WebSocket, FCM, Dashboard)     │
+│    DELIVERY (REST API, WebSocket, Amazon SNS Push, Dashboard)     │
 │  50+ endpoints • Real-time • Push notifications         │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -271,15 +271,15 @@ brew services list  # macOS
 psql -d drishtix_db -c "SELECT PostGIS_Version();"
 ```
 
-### **GCP Permission Denied**
+### **AWS Permission Denied**
 
 ```bash
 # Re-authenticate
-gcloud auth login
-gcloud auth application-default login
+aws configure --profile drishtix
+aws sts get-caller-identity --region ap-south-1
 
 # Verify service account
-gcloud iam service-accounts describe YOUR_SA@PROJECT.iam.gserviceaccount.com
+aws iam get-role --role-name drishtix-service-role
 ```
 
 ### **Port Already in Use**
@@ -336,15 +336,15 @@ npm run db:export-training-data
 # Train models
 npm run train:all
 
-# Deploy to Vertex AI
+# Deploy to Amazon SageMaker
 python scripts/deploy-models.py
 ```
 
 ### **Option C: Deploy to Cloud**
 
 ```bash
-# Build and deploy to Cloud Run
-gcloud run deploy drishtix-backend \
+# Build and deploy to AWS App Runner
+gAWS App Runner deploy drishtix-backend \
   --source . \
   --platform managed \
   --region us-central1
@@ -357,7 +357,7 @@ gcloud run deploy drishtix-backend \
 - **Lines of Code:** ~50,000+
 - **API Endpoints:** 50+
 - **Database Models:** 20+
-- **GCP Services:** 14
+- **AWS Services:** 14
 - **Real-Time Events:** 10+
 - **Services:** 30+
 - **Components:** 40+
@@ -392,7 +392,7 @@ Built with:
 
 - React, TypeScript, Vite
 - Express, Prisma, PostgreSQL
-- Google Cloud Platform
+- Amazon Web Services (AWS)
 - Socket.IO
 - TensorFlow, scikit-learn
 - And many other amazing open-source projects

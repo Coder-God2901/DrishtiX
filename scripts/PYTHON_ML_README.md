@@ -17,7 +17,7 @@ The ML training pipeline consists of three models:
 - Python 3.9 or higher
 - PowerShell (Windows)
 - ~2GB disk space for dependencies
-- (Optional) Google Cloud Platform account for production data
+- (Optional) Amazon Web Services (AWS) account for production data
 
 ### Step 1: Run the Setup Script
 
@@ -46,13 +46,13 @@ You should see `(venv)` in your terminal prompt.
 
 ### Step 3: Configure Environment Variables (Optional)
 
-For production use with Google Cloud Platform, create a `.env` file in the project root:
+For production use with Amazon Web Services (AWS), create a `.env` file in the project root:
 
 ```env
-GOOGLE_CLOUD_PROJECT_ID=your-gcp-project-id
+GOOGLE_CLOUD_PROJECT_ID=your-AWS-project-id
 GCS_BUCKET_NAME=your-bucket-name
-GCP_REGION=us-central1
-GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account-key.json
+AWS_REGION=us-central1
+AWS_SECRET_ACCESS_KEY=path/to/service-account-key.json
 ```
 
 ## 🎯 Usage
@@ -63,7 +63,7 @@ GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account-key.json
 # Full pipeline with synthetic data (for testing)
 python .\scripts\train-isolation-forest.py --mode full --use-synthetic
 
-# Fetch real data from BigQuery
+# Fetch real data from Amazon Athena
 python .\scripts\train-isolation-forest.py --mode fetch-data --days-back 90
 
 # Train model only
@@ -91,7 +91,7 @@ python .\scripts\train-autoencoder.py --mode fetch-data --days-back 90
 # Train model only
 python .\scripts\train-autoencoder.py --mode train
 
-# Deploy to Vertex AI
+# Deploy to Amazon SageMaker
 python .\scripts\train-autoencoder.py --mode deploy
 ```
 
@@ -108,13 +108,13 @@ python .\scripts\train-autoencoder.py --mode deploy
 # Full pipeline with synthetic data
 python .\scripts\train-convlstm.py --mode full --use-synthetic
 
-# Fetch crowd density data from BigQuery
+# Fetch crowd density data from Amazon Athena
 python .\scripts\train-convlstm.py --mode fetch-data --days-back 90
 
 # Train model only
 python .\scripts\train-convlstm.py --mode train
 
-# Deploy to Vertex AI
+# Deploy to Amazon SageMaker
 python .\scripts\train-convlstm.py --mode deploy
 ```
 
@@ -155,11 +155,11 @@ Reduce batch size in the script:
 BATCH_SIZE = 16  # Change to 8 or 4
 ```
 
-### GCP Authentication Errors
+### AWS Authentication Errors
 
 1. Install Google Cloud SDK: https://cloud.google.com/sdk/docs/install
-2. Authenticate: `gcloud auth application-default login`
-3. Set project: `gcloud config set project YOUR_PROJECT_ID`
+2. Authenticate: `aws sts get-caller-identity --region ap-south-1`
+3. Set project: `aws configure set region ap-south-1`
 
 ### TensorFlow GPU Issues
 
@@ -177,7 +177,7 @@ Key packages (see `requirements.txt` for full list):
 - **TensorFlow 2.13+** - Deep learning (Autoencoder, ConvLSTM)
 - **scikit-learn 1.3+** - Classical ML (Isolation Forest)
 - **OpenCV 4.8+** - Image processing
-- **Google Cloud SDK** - BigQuery, GCS, Vertex AI integration
+- **Google Cloud SDK** - Amazon Athena, GCS, Amazon SageMaker integration
 - **NumPy, Pandas** - Data manipulation
 
 ## 🏗️ Project Integration
@@ -186,11 +186,11 @@ After training, the models are used by:
 
 1. **Backend Services** (`server/services/`)
    - `anomaly.service.ts` - Loads Isolation Forest via Python subprocess
-   - `video-analytics.service.ts` - Calls Vertex AI endpoints for Autoencoder/ConvLSTM
+   - `video-analytics.service.ts` - Calls Amazon SageMaker endpoints for Autoencoder/ConvLSTM
 
-2. **GCP Infrastructure** (`terraform/`, `functions/`)
-   - Vertex AI endpoints for real-time inference
-   - BigQuery for feature storage
+2. **AWS Infrastructure** (`terraform/`, `functions/`)
+   - Amazon SageMaker endpoints for real-time inference
+   - Amazon Athena for feature storage
    - GCS for model artifacts
 
 ## 📝 Development Notes
@@ -248,7 +248,7 @@ python .\scripts\train-convlstm.py --mode deploy
 
 ### Step 3: Update Backend Configuration
 
-Add Vertex AI endpoint IDs to `.env`:
+Add Amazon SageMaker endpoint IDs to `.env`:
 
 ```env
 VERTEX_AI_AUTOENCODER_ENDPOINT=projects/123.../endpoints/456...
@@ -267,7 +267,7 @@ pnpm run deploy
 
 - [TensorFlow Documentation](https://www.tensorflow.org/guide)
 - [scikit-learn User Guide](https://scikit-learn.org/stable/user_guide.html)
-- [Google Cloud Vertex AI](https://cloud.google.com/vertex-ai/docs)
+- [Google Cloud Amazon SageMaker](https://cloud.google.com/vertex-ai/docs)
 - [Main Project README](../README.md)
 
 ## 🐛 Issues & Support

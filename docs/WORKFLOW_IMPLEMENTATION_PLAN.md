@@ -572,7 +572,7 @@ interface AlertResponseFlow {
 
 ```typescript
 // server/services/notification.service.ts
-- FCM (Firebase Cloud Messaging) integration
+- Amazon SNS Push (Amazon SNS Push) integration
 - Web Push API for browsers
 - Zone-specific targeting
 - Priority-based delivery
@@ -638,7 +638,7 @@ interface AlertResponseFlow {
     "react-qr-scanner": "^1.0.0", // QR code scanning
     "qrcode": "^1.5.3", // QR code generation
     "socket.io-client": "^4.6.0", // Real-time WebSocket
-    "firebase": "^10.7.0", // Push notifications (FCM)
+    "Amazon Cognito+S3": "^10.7.0", // Push notifications (Amazon SNS Push)
     "leaflet": "^1.9.4", // Interactive maps
     "react-leaflet": "^4.2.1", // React wrapper for Leaflet
     "date-fns": "^3.0.0", // Date formatting
@@ -654,7 +654,7 @@ interface AlertResponseFlow {
 {
   "dependencies": {
     "socket.io": "^4.6.0", // WebSocket server
-    "firebase-admin": "^12.0.0", // FCM push notifications
+    "Amazon Cognito+S3-admin": "^12.0.0", // Amazon SNS Push push notifications
     "qrcode": "^1.5.3", // QR generation
     "nanoid": "^5.0.0" // Event code generation
   }
@@ -765,7 +765,7 @@ enum SOSStatus {
 ### Scalability
 
 ```typescript
-// Use Redis for WebSocket pub/sub
+// Use Redis for WebSocket Amazon SQS + SNS
 // Implement rate limiting on API endpoints
 // Paginate event lists (50 per page)
 // Lazy load map tiles

@@ -1,42 +1,51 @@
-# DrishtiX - Predictive Crowd Safety Platform
+# DrishtiX — Predictive Crowd Safety Platform
 
 ## 🎯 Overview
 
-**DrishtiX** is a fully AI-powered, hardware-free, predictive crowd safety and situational awareness platform that transforms traditional event management into proactive, automated, and privacy-first incident prevention.
+**DrishtiX** is a fully AI-powered, hardware-free, predictive crowd safety and situational awareness platform that transforms traditional event management into proactive, automated, and privacy-first incident prevention — built entirely on **Amazon Web Services (AWS)**.
 
 ### Key Features
 
-- ✅ **Predictive Forecasting**: 15-20 minute advance warning of crowd bottlenecks
-- ✅ **Anomaly Detection**: Real-time panic, fire, violence, and surge detection using Gemini Vision
-- ✅ **Automated Dispatch**: AI-powered emergency responder routing with Google Maps
-- ✅ **Voice-First Interface**: Hands-free command center operations
+- ✅ **Predictive Forecasting**: 15-20 minute advance warning of crowd bottlenecks (Amazon SageMaker LSTM)
+- ✅ **Anomaly Detection**: Real-time panic, fire, violence, and surge detection using Amazon Rekognition
+- ✅ **Automated Dispatch**: AI-powered emergency responder routing with Amazon Location Service
+- ✅ **Voice-First Interface**: Hands-free command center via Amazon Transcribe + Amazon Lex
 - ✅ **Hardware-Free**: Simulation engine eliminates need for physical CCTV
-- ✅ **Privacy-First**: PII scrubbing with Cloud DLP
-- ✅ **Real-Time**: WebSocket + Pub/Sub streaming architecture
+- ✅ **Privacy-First**: PII scrubbing with Amazon Comprehend + Amazon Macie
+- ✅ **Real-Time**: WebSocket + Amazon SQS/SNS streaming architecture
+- ✅ **Cost-Effective**: ~$68/month production cost on AWS; $0 with AWS Credits
+
+---
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────┐
-│   Frontend  │  React + TypeScript + shadcn/ui
+│   Frontend  │  React + TypeScript + shadcn/ui (S3 + CloudFront)
 └──────┬──────┘
        │ WebSocket/HTTP
 ┌──────▼──────┐
-│   Backend   │  Express + Socket.IO + Prisma
+│   Backend   │  Express + Socket.IO + Prisma (AWS App Runner)
 └──────┬──────┘
        │
 ┌──────▼───────────────────────────────────────┐
-│         Google Cloud Platform Services       │
+│           Amazon Web Services (AWS)          │
 ├───────────────────────────────────────────────┤
-│ • Vertex AI (Forecasting)                    │
-│ • Gemini Vision (Anomaly Detection)          │
-│ • Pub/Sub (Real-time Streaming)              │
-│ • Cloud DLP (Privacy)                        │
-│ • Cloud Storage (Simulations)                │
-│ • BigQuery (Analytics)                       │
-│ • Google Maps (Routing)                      │
+│ • Amazon SageMaker (Crowd Forecasting ML)    │
+│ • Amazon Rekognition (Anomaly Detection)     │
+│ • Amazon SQS + SNS (Real-time Streaming)     │
+│ • Amazon Comprehend + Macie (Privacy/PII)    │
+│ • Amazon S3 (Storage & Data Lake)           │
+│ • Amazon Athena + Glue (Analytics)          │
+│ • Amazon Location Service (Routing & Maps)  │
+│ • Amazon DynamoDB (Primary Database)        │
+│ • Amazon Cognito (Authentication)           │
+│ • AWS Lambda (Event-driven Functions)       │
+│ • Amazon Bedrock (LLM / Voice AI)           │
 └───────────────────────────────────────────────┘
 ```
+
+---
 
 ## 🚀 Quick Start
 
@@ -44,9 +53,9 @@
 
 - Node.js >= 18
 - pnpm >= 8
-- PostgreSQL >= 14
-- Google Cloud Project with billing enabled
-- Google Cloud service account with permissions
+- PostgreSQL >= 14 (or Amazon RDS Aurora Serverless)
+- AWS Account with credits configured
+- AWS CLI v2 installed and configured (`aws configure`)
 
 ### Installation
 
@@ -54,7 +63,7 @@
 
 ```bash
 git clone <your-repo-url>
-cd Events
+cd DrishtiX
 ```
 
 2. **Install dependencies**
@@ -70,24 +79,27 @@ cp .env.example .env
 ```
 
 Edit `.env` and fill in:
-- `DATABASE_URL` - PostgreSQL connection string
-- `GCP_PROJECT_ID` - Your Google Cloud project ID
-- `GOOGLE_APPLICATION_CREDENTIALS` - Path to service account JSON
-- `GEMINI_API_KEY` - Gemini API key from AI Studio
-- `GOOGLE_MAPS_API_KEY` - Google Maps API key
+- `DATABASE_URL` — PostgreSQL / Aurora Serverless connection string
+- `AWS_REGION` — e.g. `ap-south-1`
+- `AWS_ACCESS_KEY_ID` — from IAM user or instance role
+- `AWS_SECRET_ACCESS_KEY` — from IAM user
+- `COGNITO_USER_POOL_ID` — from Cognito setup
+- `SAGEMAKER_ENDPOINT_NAME` — crowd forecasting endpoint
 
-4. **Run DrishtiX setup**
+4. **Deploy AWS infrastructure**
 
 ```bash
-pnpm drishtix:setup
+# Deploy all AWS CDK stacks
+npx cdk deploy --all
 ```
 
-This will:
-- Validate your GCP configuration
-- Create Pub/Sub topics
-- Create Cloud Storage buckets
-- Create BigQuery datasets and tables
-- Test Gemini API connection
+This will create:
+- Amazon Cognito User Pool
+- DynamoDB tables with streams
+- SQS queues and SNS topics
+- S3 buckets with lifecycle rules
+- Athena databases and Glue catalog
+- SageMaker serverless inference endpoint
 
 5. **Run database migrations**
 
@@ -105,81 +117,125 @@ This starts:
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3001
 
+---
+
 ## 📚 API Endpoints
 
 ### Predictions
-- `POST /api/predictions/forecast` - Generate crowd density forecast
-- `GET /api/predictions/:eventId` - Get predictions for event
-- `GET /api/predictions/:eventId/latest` - Get latest prediction
-- `GET /api/predictions/:eventId/hotspots` - Get current hotspots
+- `POST /api/predictions/forecast` — Generate crowd density forecast (SageMaker)
+- `GET /api/predictions/:eventId` — Get predictions for event
+- `GET /api/predictions/:eventId/latest` — Get latest prediction
+- `GET /api/predictions/:eventId/hotspots` — Get current hotspots
 
 ### Anomaly Detection
-- `POST /api/anomalies/detect` - Detect anomalies in visual feed
-- `GET /api/anomalies/:eventId` - Get anomaly history
-- `GET /api/anomalies/:eventId/current` - Get active anomalies
-- `GET /api/anomalies/:eventId/metrics` - Get detection metrics
+- `POST /api/anomalies/detect` — Detect anomalies (Amazon Rekognition)
+- `GET /api/anomalies/:eventId` — Get anomaly history (DynamoDB)
+- `GET /api/anomalies/:eventId/current` — Get active anomalies
+- `GET /api/anomalies/:eventId/metrics` — Get detection metrics
 
 ### Emergency Dispatch
-- `POST /api/dispatch/create` - Create dispatch plan
-- `PUT /api/dispatch/:id/approve` - Approve pending dispatch
-- `PUT /api/dispatch/:id/status` - Update dispatch status
-- `GET /api/dispatch/:eventId` - Get all dispatches
-- `GET /api/dispatch/:eventId/active` - Get active dispatches
+- `POST /api/dispatch/create` — Create dispatch plan (Location Service routes)
+- `PUT /api/dispatch/:id/approve` — Approve pending dispatch
+- `PUT /api/dispatch/:id/status` — Update dispatch status
+- `GET /api/dispatch/:eventId` — Get all dispatches
+- `GET /api/dispatch/:eventId/active` — Get active dispatches
 
 ### Voice AI
-- `POST /api/voice/command` - Process voice command
-- `POST /api/voice/translate` - Translate command
-- `DELETE /api/voice/history/:sessionId` - Clear conversation history
+- `POST /api/voice/command` — Process voice command (Amazon Lex + Bedrock)
+- `POST /api/voice/translate` — Translate command (Amazon Translate)
+- `DELETE /api/voice/history/:sessionId` — Clear conversation history
 
 ### Simulation
-- `POST /api/simulation/generate` - Generate simulation
-- `GET /api/simulation/list` - List simulations
-- `GET /api/simulation/:id` - Get simulation by ID
+- `POST /api/simulation/generate` — Generate simulation (stored in S3)
+- `GET /api/simulation/list` — List simulations
+- `GET /api/simulation/:id` — Get simulation by ID
 
-## 🔧 Configuration
+---
 
-### Google Cloud Setup
+## 🔧 AWS Service Configuration
 
-1. **Enable APIs**
-   - Vertex AI API
-   - Cloud Pub/Sub API
-   - Cloud Storage API
-   - BigQuery API
-   - Cloud DLP API
-   - Maps JavaScript API
-   - Routes API
+### Step 1 — Enable AWS Services
 
-2. **Create Service Account**
-   - Go to IAM & Admin > Service Accounts
-   - Create new service account
-   - Grant roles:
-     - Vertex AI User
-     - Pub/Sub Admin
-     - Storage Admin
-     - BigQuery Admin
-     - DLP User
-   - Download JSON key
+All services are managed via AWS CDK. For manual setup, ensure the following are configured:
 
-3. **Get API Keys**
-   - Gemini API: https://ai.google.dev/
-   - Google Maps: https://console.cloud.google.com/apis/credentials
+- Amazon Cognito (User Pools + Identity Pools)
+- Amazon DynamoDB (On-Demand tables)
+- Amazon SQS + SNS (queues + topics)
+- Amazon S3 (buckets: data lake, media, model artifacts)
+- Amazon Athena + AWS Glue (analytics queries)
+- Amazon SageMaker (model training + serverless inference)
+- Amazon Rekognition (image/video analysis)
+- Amazon Location Service (maps, geocoding, geofencing, routing)
+- Amazon Comprehend + Macie (NLP, PII detection)
+- Amazon Bedrock (foundation models for Voice AI)
+- AWS Lambda (event processors)
+- AWS Secrets Manager (credential storage)
 
-### Environment Variables
+### Step 2 — IAM Role Setup
 
-See `.env.example` for all available configuration options.
+Create an IAM role `drishtix-app-role` with these policies:
 
-Critical variables:
-```env
-GCP_PROJECT_ID=your-project-id
-GOOGLE_APPLICATION_CREDENTIALS=./config/gcp-credentials.json
-GEMINI_API_KEY=your-gemini-key
-GOOGLE_MAPS_API_KEY=your-maps-key
-DATABASE_URL=postgresql://user:pass@localhost:5432/drishtix
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Effect": "Allow", "Action": ["dynamodb:*"], "Resource": "arn:aws:dynamodb:ap-south-1:*:table/drishtix-*" },
+    { "Effect": "Allow", "Action": ["sqs:*", "sns:*"], "Resource": "arn:aws:sqs:ap-south-1:*:drishtix-*" },
+    { "Effect": "Allow", "Action": ["s3:*"], "Resource": "arn:aws:s3:::drishtix-*" },
+    { "Effect": "Allow", "Action": ["sagemaker:InvokeEndpoint"], "Resource": "*" },
+    { "Effect": "Allow", "Action": ["rekognition:*"], "Resource": "*" },
+    { "Effect": "Allow", "Action": ["location:*"], "Resource": "*" },
+    { "Effect": "Allow", "Action": ["comprehend:*"], "Resource": "*" },
+    { "Effect": "Allow", "Action": ["bedrock:InvokeModel"], "Resource": "*" }
+  ]
+}
 ```
+
+### Step 3 — Environment Variables
+
+```env
+# AWS Core
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+
+# Amazon Cognito (Auth)
+COGNITO_USER_POOL_ID=ap-south-1_XXXXXXXXX
+COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Amazon DynamoDB
+DYNAMODB_TABLE_PREFIX=drishtix
+
+# Amazon SQS / SNS
+CROWD_DATA_QUEUE_URL=https://sqs.ap-south-1.amazonaws.com/ACCOUNT/drishtix-crowd-data.fifo
+ALERTS_TOPIC_ARN=arn:aws:sns:ap-south-1:ACCOUNT:drishtix-alerts
+
+# Amazon SageMaker
+SAGEMAKER_ENDPOINT_NAME=drishtix-crowd-forecaster
+SAGEMAKER_REGION=ap-south-1
+
+# Amazon S3
+S3_BUCKET_NAME=drishtix-prod-data
+S3_REGION=ap-south-1
+
+# Amazon Location Service
+AWS_LOCATION_MAP_NAME=drishtix-map
+VITE_AWS_MAP_API_KEY=your-location-api-key
+
+# Amazon Athena
+ATHENA_DATABASE=drishtix_analytics
+ATHENA_WORKGROUP=drishtix-workgroup
+ATHENA_OUTPUT_BUCKET=s3://drishtix-athena-results/
+
+# Amazon Bedrock (Voice AI)
+BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+```
+
+---
 
 ## 🎨 Frontend Integration
 
-### Real-time Updates
+### Real-time Updates (via SQS → Lambda → WebSocket)
 
 ```typescript
 import { io } from 'socket.io-client';
@@ -199,7 +255,24 @@ socket.on('anomaly:detected', (anomaly) => {
 });
 ```
 
-### Voice Commands
+### Map Integration (Amazon Location Service)
+
+```typescript
+import maplibregl from 'maplibre-gl';
+import { withAPIKey } from '@aws/amazon-location-utilities-auth-helper';
+
+const authHelper = await withAPIKey(process.env.VITE_AWS_MAP_API_KEY);
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: `https://maps.geo.ap-south-1.amazonaws.com/maps/v0/maps/drishtix-map/style-descriptor`,
+  center: [72.8777, 19.0760],
+  zoom: 14,
+  ...authHelper.getMapAuthenticationOptions()
+});
+```
+
+### Voice Commands (Amazon Lex + Bedrock)
 
 ```typescript
 const response = await fetch('/api/voice/command', {
@@ -213,31 +286,40 @@ const response = await fetch('/api/voice/command', {
 });
 
 const { data } = await response.json();
-console.log('AI Response:', data.text);
-console.log('Action:', data.action);
+console.log('AI Response:', data.text);     // Bedrock Claude response
+console.log('Action:', data.action);         // Lex intent action
 console.log('Visual Data:', data.visualData);
 ```
 
+---
+
 ## 📊 Database Schema
 
-Key models:
-- `Event` - Event information
-- `Prediction` - Crowd density forecasts
-- `Incident` - Recorded incidents
-- `Alert` - Generated alerts
-- `Dispatch` - Emergency response dispatches
-- `CrowdDensity` - Real-time density data
+Key models (DynamoDB tables + Prisma PostgreSQL):
+- `Event` — Event information
+- `Prediction` — Crowd density forecasts (SageMaker output)
+- `Incident` — Recorded incidents
+- `Alert` — Generated alerts (SNS fan-out)
+- `Dispatch` — Emergency response dispatches (Location Service routes)
+- `CrowdDensity` — Real-time density data (DynamoDB time-series)
 
-See `prisma/schema.prisma` for complete schema.
+See `prisma/schema.prisma` for complete relational schema.
+
+---
 
 ## 🧪 Testing
 
 ```bash
-# Run tests
+# Run all tests
 pnpm test
 
-# Run tests with UI
-pnpm test:ui
+# Run AWS service integration tests
+pnpm test:cognito        # Cognito auth
+pnpm test:dynamodb       # DynamoDB CRUD
+pnpm test:sqs-sns        # Messaging
+pnpm test:sagemaker      # ML inference
+pnpm test:rekognition    # Computer vision
+pnpm test:location       # Maps & routing
 
 # Type checking
 pnpm type-check
@@ -246,75 +328,80 @@ pnpm type-check
 pnpm lint
 ```
 
+---
+
 ## 🚢 Deployment
 
-### Backend
+### Backend (AWS App Runner)
 
 ```bash
-# Build server
-pnpm build:server
-
-# Run migrations
-pnpm db:migrate:prod
-
-# Start production server
-NODE_ENV=production node dist/server/index.js
+# Build and push to ECR
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com
+docker build -t drishtix-api .
+docker tag drishtix-api:latest ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/drishtix-api:latest
+docker push ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/drishtix-api:latest
 ```
 
-### Frontend
+### Frontend (S3 + CloudFront)
 
 ```bash
 # Build frontend
 pnpm build
 
-# Preview build
-pnpm preview
+# Deploy to S3
+aws s3 sync dist/ s3://drishtix-prod-frontend/ --delete
+
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation --distribution-id YOUR_DIST_ID --paths "/*"
 ```
+
+---
 
 ## 📈 Performance Targets
 
 - **Prediction Lead Time**: 15-20 minutes
-- **Anomaly Detection Latency**: < 5 seconds
+- **Anomaly Detection Latency**: < 5 seconds (Rekognition)
 - **Response Time Reduction**: 50-70%
 - **Prediction Accuracy**: ≥ 75%
-- **Cost Efficiency**: 60% reduction vs CCTV systems
+- **Cost Efficiency**: ~$68/month production on AWS (~$0 with credits)
+
+---
 
 ## 🔒 Privacy & Compliance
 
-- PII automatically scrubbed using Cloud DLP
+- PII automatically detected and scrubbed using **Amazon Comprehend + Amazon Macie**
 - Data aggregated to grid-level (no individual tracking)
-- Audit logs for all operations
-- Configurable data retention (default: 90 days)
+- Audit logs via **AWS CloudTrail**
+- Configurable data retention via **S3 Lifecycle Rules** (default: 90 days)
 - GDPR/CCPA compliant
+- Encryption at rest: **AWS KMS** (AES-256)
+- Encryption in transit: **TLS 1.3**
 
-## 🤝 Contributing
+---
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+## 📖 Related Documentation
 
-## 📄 License
+- [AWS Solution Architecture](AWS_SOLUTION_ARCHITECTURE.md)
+- [AWS Setup Complete Guide](docs/AWS_SETUP_COMPLETE_GUIDE.md)
+- [Cognito Auth Setup](@guides/AWS_COGNITO_AUTH_SETUP_GUIDE.md)
+- [DynamoDB Setup](@guides/AWS_DYNAMODB_SETUP_GUIDE.md)
+- [SQS/SNS/Location Setup](@guides/AWS_SQS_SNS_SETUP_GUIDE.md)
+- [SNS Push Notifications](@guides/AWS_SNS_PUSH_SETUP_GUIDE.md)
+- [System Architecture](technical-design/01-SYSTEM_ARCHITECTURE.md)
 
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check documentation in `/docs`
-- Review example scripts in `/scripts`
+---
 
 ## 🙏 Acknowledgments
 
 Built with:
-- Google Cloud AI Platform
-- Gemini Pro & Gemini Vision
-- React & TypeScript
-- Prisma ORM
-- shadcn/ui
+- Amazon Web Services (AWS) — entire cloud stack
+- Amazon SageMaker — ML training and inference
+- Amazon Rekognition — Computer vision
+- Amazon Bedrock — AI foundation models
+- React & TypeScript — Frontend
+- Prisma ORM — Database ORM
+- shadcn/ui — Component library
 
 ---
 
-**DrishtiX** - Predict. Prevent. Protect. 🎯
+**DrishtiX** — Predict. Prevent. Protect. 🎯

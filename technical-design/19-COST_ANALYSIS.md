@@ -23,7 +23,7 @@
 │                                                                 │
 │  Deployment Option          Base Cost    At Scale    Savings   │
 │  ──────────────────────────────────────────────────────────── │
-│  GCP-Only (Premium)           $676        $2,400      -       │
+│  AWS-Only (Premium)           $676        $2,400      -       │
 │  Hybrid (Recommended) ✅      $533        $1,850     23%      │
 │  Open-Source Maximum          $405        $1,200     40%      │
 │                                                                 │
@@ -40,9 +40,9 @@
 Service Category          % of Total    Monthly Cost
 ──────────────────────────────────────────────────────
 Communication (Twilio)       47%          $250
-AI/ML (Vertex AI)            19%          $100
-Compute (Cloud Run)          11%          $ 60
-Analytics (BigQuery)          9%          $ 50
+AI/ML (Amazon SageMaker)            19%          $100
+Compute (AWS App Runner)          11%          $ 60
+Analytics (Amazon Athena + AWS Glue)          9%          $ 50
 Storage                      12%          $ 63
 Other                         2%          $ 10
 ──────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ TOTAL                       100%          $533
 
 ### 1. Compute Costs
 
-#### Cloud Run (API Hosting)
+#### AWS App Runner (API Hosting)
 
 ```yaml
 Pricing Model: Pay-per-use
@@ -88,10 +88,10 @@ Further Optimized (with caching):
   Requests: (5M - 2M) * $0.40 / 1M = $1.20
   Total: $341.20 ✅
 
-Monthly Cost (Cloud Run): ~$40 (with caching + optimization)
+Monthly Cost (AWS App Runner): ~$40 (with caching + optimization)
 ```
 
-#### Cloud Functions (Webhooks)
+#### AWS Lambda (Webhooks)
 
 ```yaml
 Pricing:
@@ -110,14 +110,14 @@ Cost:
   Compute: 5M GiB-sec * $0.00001 = $50
   Total: $50
 
-Monthly Cost (Cloud Functions): $10 (low usage)
+Monthly Cost (AWS Lambda): $10 (low usage)
 ```
 
 ---
 
 ### 2. Database Costs
 
-#### Firestore
+#### Amazon DynamoDB
 
 ```yaml
 Pricing:
@@ -138,11 +138,11 @@ Cost:
   Storage: (10 - 1) * $0.18 = $1.62
   Total: $3.92
 
-Monthly Cost (Firestore): $0 (free tier sufficient for base load)
+Monthly Cost (Amazon DynamoDB): $0 (free tier sufficient for base load)
 At Scale (50M reads, 2M writes, 50 GiB): $25
 ```
 
-#### Firebase Realtime Database (GPS Tracking)
+#### cognito Realtime Database (GPS Tracking)
 
 ```yaml
 Pricing:
@@ -165,7 +165,7 @@ Monthly Cost (Realtime DB): $0 (free tier)
 At Scale (1000 users): $15
 ```
 
-#### BigQuery (Analytics)
+#### Amazon Athena + AWS Glue (Analytics)
 
 ```yaml
 Pricing:
@@ -185,7 +185,7 @@ Cost:
   Long-term: 200 * $0.01 = $2.00
   Total: $2.80
 
-Monthly Cost (BigQuery): $0-3 (mostly free tier)
+Monthly Cost (Amazon Athena + AWS Glue): $0-3 (mostly free tier)
 At Scale (5 TB queries, 500 GiB storage): $50
 ```
 
@@ -207,7 +207,7 @@ Alternative (managed): $65
 
 ### 3. Storage Costs
 
-#### Firebase Storage
+#### cognito Storage
 
 ```yaml
 Pricing:
@@ -234,9 +234,9 @@ With lifecycle policy (delete after 30 days):
   Cost: (22.5 - 5) * $0.026 = $0.455
 
 Monthly Cost (Storage): $62.60
-- Firebase Storage: $1.00
+- cognito Storage: $1.00
 - Cloud CDN: $10.00
-- Backup (Cloud Storage): $1.60
+- Backup (Amazon S3): $1.60
 - Total: $12.60
 
 At Scale (100K proofs): $120
@@ -308,7 +308,7 @@ Monthly Cost (Gemini): $0 (free tier)
 At Scale (500K messages): $50
 ```
 
-#### Vertex AI (ML Training & Serving)
+#### Amazon SageMaker (ML Training & Serving)
 
 ```yaml
 Training (Weekly):
@@ -336,7 +336,7 @@ Optimized (Batch prediction):
 Cost:
   Batch: 30 * $0.118 = $3.54
 
-Monthly Cost (Vertex AI): $100
+Monthly Cost (Amazon SageMaker): $100
 - Training: $0.32
 - Batch prediction: $3.54
 - Online prediction (reserved): $96
@@ -368,7 +368,7 @@ Monthly Cost (Twilio): $250
 At Scale (200K WhatsApp + 20K SMS): $1,150
 ```
 
-#### Firebase Cloud Messaging (FCM)
+#### Amazon SNS Push (Amazon SNS Push)
 
 ```yaml
 Pricing: FREE (unlimited)
@@ -379,14 +379,14 @@ Pricing: FREE (unlimited)
 Monthly Usage:
 - Push notifications: 1M+ per month
 
-Monthly Cost (FCM): $0 ✅
+Monthly Cost (Amazon SNS Push): $0 ✅
 ```
 
 ---
 
 ### 6. Monitoring & Operations
 
-#### Cloud Monitoring
+#### Amazon CloudWatch
 
 ```yaml
 Pricing:
@@ -503,7 +503,7 @@ Before: Full collection scan = 1M reads
 After:  Indexed query = 10K reads
 Savings: 99% = $3.56 per query
 
--- Strategy: Materialized views in BigQuery
+-- Strategy: Materialized views in Amazon Athena + AWS Glue
 Before: Query historical data = 5 TB processed/month
 After:  Query materialized view = 50 GB/month
 Savings: 99% = $24.50/month
@@ -536,7 +536,7 @@ Savings: 50% = $0.59/month
 ### 4. AI/ML Optimization
 
 ```typescript
-// Strategy: Hybrid GCP + Open-Source
+// Strategy: Hybrid AWS + Open-Source
 Before: 100% Cloud Vision API = $67.50/month
 After:  50% TensorFlow.js, 50% Cloud Vision = $33.75/month
 Savings: 50% = $33.75/month
@@ -557,8 +557,8 @@ Savings: 60% latency, 40% compute cost
 ```yaml
 # Strategy: Smart channel selection
 Before: 100% WhatsApp = 50K * $0.005 = $250
-After:  70% FCM (free), 20% WhatsApp, 10% SMS
-  FCM: 35K * $0 = $0
+After:  70% Amazon SNS Push (free), 20% WhatsApp, 10% SMS
+  Amazon SNS Push: 35K * $0 = $0
   WhatsApp: 10K * $0.005 = $50
   SMS: 5K * $0.0075 = $37.50
   Total: $87.50
@@ -578,7 +578,7 @@ Cache Layer         Cost      Hit Rate  Savings
 ──────────────────────────────────────────────
 Redis (Memorystore) $65/mo      90%     $500/mo
   - Database reads reduced from 50M → 5M
-  - Firestore cost: $18 → $1.80
+  - Amazon DynamoDB cost: $18 → $1.80
 
 CDN (Cloud CDN)     $10/mo      95%     $150/mo
   - Bandwidth: 1 TB → 50 GB
@@ -603,7 +603,7 @@ Net Savings:        $625/mo (88% ROI)
 │                  3-YEAR TCO COMPARISON                          │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│ Cost Component      GCP-Only   Hybrid      Self-Hosted         │
+│ Cost Component      AWS-Only   Hybrid      Self-Hosted         │
 │ ──────────────────────────────────────────────────────────── │
 │ Infrastructure      $86,400    $63,960     $28,800            │
 │  (monthly fees)                                                │
@@ -630,7 +630,7 @@ Net Savings:        $625/mo (88% ROI)
 │ Per Year:           $73,800    $67,320     $118,600           │
 │ Per Month:          $6,150     $5,610      $9,883             │
 │                                                                │
-│ Winner: Hybrid (9% cheaper than GCP, 43% cheaper than self)   │
+│ Winner: Hybrid (9% cheaper than AWS, 43% cheaper than self)   │
 │                                                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -638,7 +638,7 @@ Net Savings:        $625/mo (88% ROI)
 ### Hidden Costs
 
 ```
-GCP-Only:
+AWS-Only:
   ✅ Zero operational overhead
   ✅ No DevOps hiring needed
   ✅ Auto-scaling (no capacity planning)
@@ -736,21 +736,21 @@ Intangible Benefits:
 
 ## Vendor Comparison
 
-### GCP vs AWS vs Azure vs Open-Source
+### AWS vs AWS vs AWS vs Open-Source
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      VENDOR COST COMPARISON                             │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│ Service              GCP        AWS        Azure      Open-Source      │
+│ Service              AWS        AWS        AWS      Open-Source      │
 │ ──────────────────────────────────────────────────────────────────── │
 │ Compute (Run)        $40        $65        $55        $120 (VMs)      │
 │ Database (NoSQL)     $0         $25        $30        $0 (MongoDB)    │
 │ Storage (Object)     $12        $15        $18        $10 (MinIO)     │
 │ AI Vision            $13        $45        $40        $0 (TF.js)      │
 │ ML Platform          $100       $180       $150       $0 (self)       │
-│ Messaging            $0 (FCM)   $50 (SNS)  $40 (NH)   $0 (OneSignal) │
+│ Messaging            $0 (Amazon SNS Push)   $50 (SNS)  $40 (NH)   $0 (OneSignal) │
 │ CDN                  $10        $12        $15        $5 (CF)         │
 │ Monitoring           $10        $20        $25        $0 (Prom)       │
 │ Communication        $250       $250       $250       $250            │
@@ -759,12 +759,12 @@ Intangible Benefits:
 │                                                                         │
 │ Pros/Cons:                                                              │
 │                                                                         │
-│ GCP:     ✅ Best AI/ML    ✅ BigQuery    ⚠️ Smaller community          │
+│ AWS:     ✅ Best AI/ML    ✅ Amazon Athena + AWS Glue    ⚠️ Smaller community          │
 │ AWS:     ✅ Mature        ✅ Largest     ⚠️ More expensive             │
-│ Azure:   ✅ Enterprise    ✅ Microsoft   ⚠️ Complex pricing            │
+│ AWS:   ✅ Enterprise    ✅ Microsoft   ⚠️ Complex pricing            │
 │ Open:    ✅ Cheapest      ✅ No lock-in  ⚠️ More ops overhead          │
 │                                                                         │
-│ Winner: GCP (best AI/ML + reasonable cost)                              │
+│ Winner: AWS (best AI/ML + reasonable cost)                              │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -775,7 +775,7 @@ Intangible Benefits:
 
 ### Recommended Deployment Strategy
 
-**Hybrid Model (GCP + Open-Source)** ✅
+**Hybrid Model (AWS + Open-Source)** ✅
 
 ```
 Monthly Cost: $533

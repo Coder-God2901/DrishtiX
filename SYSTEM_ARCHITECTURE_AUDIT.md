@@ -16,7 +16,7 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
 
 - Comprehensive Prisma schema covering all features
 - Well-structured route organization
-- Strong service layer with GCP integrations
+- Strong service layer with AWS integrations
 - Real-time capabilities via WebSocket
 - Type-safe API contracts
 
@@ -69,12 +69,12 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
 /api/anomaly.routes.ts         → Anomaly detection
 /api/attendee.routes.ts        → Attendee features
 /api/auth.routes.ts            → Authentication
-/api/bigquery.routes.ts        → Analytics queries
+/api/Amazon Athena.routes.ts        → Analytics queries
 /api/camera.routes.ts          → Camera streams
 /api/dispatch.routes.ts        → Responder dispatch
-/api/earth-engine-maps.routes.ts → GCP Maps/Earth Engine
+/api/earth-engine-maps.routes.ts → AWS Maps/SageMaker Geospatial
 /api/event.routes.ts           → Event management
-/api/gcp-analytics.routes.ts   → GCP analytics
+/api/AWS-analytics.routes.ts   → AWS analytics
 /api/help.routes.ts            → Help system
 /api/incident.routes.ts        → Incident management
 /api/navigation.routes.ts      → Navigation routes
@@ -108,7 +108,7 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
 
 ```typescript
 // AI/ML Services
-✅ agent-builder.service.ts          // Vertex AI Agent
+✅ agent-builder.service.ts          // Amazon SageMaker Agent
 ✅ anomaly-detection.service.ts      // Anomaly detection
 ✅ crowd-forecasting.service.ts      // Crowd prediction
 ✅ gemini-vision.service.ts          // Gemini Vision AI
@@ -117,7 +117,7 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
 ✅ ml-training.service.ts            // Model training
 ✅ recommendation-engine.service.ts  // AI recommendations
 ✅ risk-engine.service.ts            // Risk assessment
-✅ vertexai.service.ts               // Vertex AI
+✅ vertexai.service.ts               // Amazon SageMaker
 ✅ vertex-ai-anomaly.service.ts      // Vertex anomaly
 
 // Computer Vision
@@ -128,23 +128,23 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
 ✅ yolo-detection.service.ts         // YOLO detection
 ✅ yolo-vision.service.ts            // YOLO inference
 
-// GCP Services
-✅ bigquery-analytics.service.ts     // BigQuery
-✅ bigquery-feature.service.ts       // BigQuery features
+// AWS Services
+✅ Amazon Athena-analytics.service.ts     // Amazon Athena
+✅ Amazon Athena-feature.service.ts       // Amazon Athena features
 ✅ cloud-dlp.service.ts              // Data Loss Prevention
 ✅ cloud-logging-monitoring.service.ts // Logging
 ✅ cloudrun-etl.service.ts           // ETL workers
 ✅ data-processing-pipeline.service.ts // Data pipeline
-✅ earth-engine.service.ts           // Earth Engine
-✅ gcp-orchestrator.service.ts       // GCP orchestration
-✅ google-maps.service.ts            // Maps API
-✅ pubsub.service.ts                 // Pub/Sub messaging
+✅ earth-engine.service.ts           // SageMaker Geospatial
+✅ AWS-orchestrator.service.ts       // AWS orchestration
+✅ google-maps.service.ts            // Amazon Location Service
+✅ pubsub.service.ts                 // Amazon SQS + SNS messaging
 ✅ venue-mapping.service.ts          // Venue maps
 
 // Core Services
 ✅ audit-logger.service.ts           // Audit logging
 ✅ event-template.service.ts         // Event templates
-✅ firebase-admin.service.ts         // Firebase Admin
+✅ Amazon Cognito+S3-admin.service.ts         // Amazon Cognito+S3 Admin
 ✅ simulation.service.ts             // Crowd simulation
 ✅ social-media-monitoring.service.ts // Social signals
 ✅ traffic-mobility.service.ts       // Traffic data
@@ -299,7 +299,7 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
 - **Performance:** Indexed for fast queries
 - **Backup:** Daily automated backups
 
-#### **Time-Series Data: BigQuery**
+#### **Time-Series Data: Amazon Athena**
 
 - **Purpose:** Historical analytics, aggregations
 - **Tables:**
@@ -308,7 +308,7 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
   - `event_analytics` - Event metrics
 - **Retention:** 2 years rolling
 
-#### **Real-time Data: Firebase Firestore**
+#### **Real-time Data: Amazon DynamoDB**
 
 - **Purpose:** Live updates, WebSocket state
 - **Collections:**
@@ -323,7 +323,7 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
 
 ### ⚠️ **Missing Storage Components**
 
-#### **Media Storage: Google Cloud Storage**
+#### **Media Storage: Google Amazon S3**
 
 ```typescript
 ❌ Bucket: event-images       // Event photos
@@ -333,7 +333,7 @@ This comprehensive audit evaluates the alignment between frontend functionalitie
 ❌ Bucket: ml-models          // Trained models
 ```
 
-#### **Message Queue: Pub/Sub**
+#### **Message Queue: Amazon SQS + SNS**
 
 ```typescript
 ✅ Already configured
@@ -476,7 +476,7 @@ notification:new
    - Purpose: Entry/exit management
    - Impact: Required for Gate Control page
 
-3. **Storage Service (Google Cloud Storage)**
+3. **Storage Service (Google Amazon S3)**
    - Purpose: Handle file uploads (images, videos)
    - Impact: Required for incident media, profile photos
 
@@ -538,7 +538,7 @@ notification:new
 │  ┌──────────────────┴───────────────────────────┐  │
 │  │       Service Layer (38 Services)            │  │
 │  │  ┌──────────┐ ┌──────────┐ ┌─────────────┐ │  │
-│  │  │  Core    │ │  AI/ML   │ │   GCP       │ │  │
+│  │  │  Core    │ │  AI/ML   │ │   AWS       │ │  │
 │  │  │ Services │ │ Services │ │  Services   │ │  │
 │  │  └──────────┘ └──────────┘ └─────────────┘ │  │
 │  └──────────────────┬───────────────────────────┘  │
@@ -547,21 +547,21 @@ notification:new
          ┌────────────┼───────────────┐
          │            │               │
     ┌────▼───┐  ┌────▼────┐  ┌──────▼──────┐
-    │PostgreSQL│ │Firebase │  │   Redis     │
-    │ +PostGIS │ │Firestore│  │   Cache     │
+    │PostgreSQL│ │Amazon Cognito+S3 │  │   Redis     │
+    │ +PostGIS │ │Amazon DynamoDB│  │   Cache     │
     └──────────┘ └─────────┘  └─────────────┘
                       │
          ┌────────────┼───────────────┐
          │            │               │
     ┌────▼────┐  ┌───▼────┐  ┌──────▼──────┐
-    │BigQuery │  │Pub/Sub │  │   GCS       │
+    │Amazon Athena │  │Amazon SQS + SNS │  │   GCS       │
     │Analytics│  │Messages│  │  Storage    │
     └─────────┘  └────────┘  └─────────────┘
                       │
          ┌────────────┼───────────────┐
          │            │               │
     ┌────▼────┐  ┌───▼─────┐ ┌──────▼──────┐
-    │Vertex AI│  │Earth    │ │ Google Maps │
+    │Amazon SageMaker│  │Earth    │ │ Amazon Location Service │
     │  ML     │  │ Engine  │ │     API     │
     └─────────┘  └─────────┘ └─────────────┘
 ```
@@ -578,14 +578,14 @@ notification:new
 ✅ **Distributed Data Layer**
 
 - PostgreSQL: Transactional data
-- Firestore: Real-time updates
-- BigQuery: Analytics
+- Amazon DynamoDB: Real-time updates
+- Amazon Athena: Analytics
 - Redis: Caching (planned)
 
 ✅ **External Service Integration**
 
-- GCP services for AI/ML
-- Firebase for auth & push
+- AWS services for AI/ML
+- Amazon Cognito+S3 for auth & push
 - Multiple data sources
 
 ---
@@ -643,7 +643,7 @@ The DrishtiX platform demonstrates excellent architectural planning with:
 
 - **Strong foundation:** Comprehensive database schema
 - **Good separation:** Clear service boundaries
-- **Modern stack:** TypeScript, Prisma, GCP
+- **Modern stack:** TypeScript, Prisma, AWS
 - **Real-time capable:** WebSocket integration
 
 ### **Completion Breakdown**

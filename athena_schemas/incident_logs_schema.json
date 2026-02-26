@@ -1,0 +1,39 @@
+{
+  "Comment": "AWS Glue Data Catalog schema — replaces BigQuery incident_logs table",
+  "DatabaseName": "drishtix_analytics",
+  "TableName": "incident_logs",
+  "Description": "Incident records with full audit trail, stored in S3 Parquet",
+  "TableType": "EXTERNAL_TABLE",
+  "Parameters": {
+    "classification": "parquet",
+    "compressionType": "snappy",
+    "s3Location": "s3://drishtix-prod-data/analytics/incident_logs/"
+  },
+  "StorageDescriptor": {
+    "Columns": [
+      { "Name": "incident_id",            "Type": "string",  "Comment": "Unique incident identifier" },
+      { "Name": "event_id",               "Type": "string",  "Comment": "Event identifier" },
+      { "Name": "timestamp",              "Type": "timestamp","Comment": "Incident occurrence timestamp" },
+      { "Name": "type",                   "Type": "string",  "Comment": "Incident type (CROWD_SURGE, FIRE, MEDICAL, etc.)" },
+      { "Name": "severity",               "Type": "string",  "Comment": "Severity level (LOW, MEDIUM, HIGH, CRITICAL)" },
+      { "Name": "status",                 "Type": "string",  "Comment": "Incident status (ACTIVE, RESOLVED, ESCALATED)" },
+      { "Name": "lat",                    "Type": "double",  "Comment": "Incident location latitude" },
+      { "Name": "lng",                    "Type": "double",  "Comment": "Incident location longitude" },
+      { "Name": "affected_zones",         "Type": "string",  "Comment": "Comma-separated list of affected zone IDs" },
+      { "Name": "response_time_seconds",  "Type": "bigint",  "Comment": "Response time in seconds" },
+      { "Name": "description",            "Type": "string",  "Comment": "Incident description" },
+      { "Name": "rekognition_confidence", "Type": "double",  "Comment": "Amazon Rekognition detection confidence score" },
+      { "Name": "sns_alert_message_id",   "Type": "string",  "Comment": "SNS message ID for the alert broadcast" }
+    ],
+    "Location": "s3://drishtix-prod-data/analytics/incident_logs/",
+    "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+    "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+    "SerdeInfo": {
+      "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+    }
+  },
+  "PartitionKeys": [
+    { "Name": "dt",       "Type": "string", "Comment": "Partition by date (YYYY-MM-DD)" },
+    { "Name": "event_id", "Type": "string", "Comment": "Partition by event for query efficiency" }
+  ]
+}

@@ -22,7 +22,7 @@ Total Components: 65+
 ├── Frontend (React): 45 components
 ├── Backend Services: 12 services
 ├── AI/ML Components: 5 models
-└── Infrastructure: 35 GCP services
+└── Infrastructure: 35 AWS services
 
 Lines of Code: 15,000+
 Test Coverage: 85%+
@@ -135,9 +135,9 @@ Purpose: Live event monitoring
 
 Real-Time Data Sources:
 ├── WebSocket (alerts, GPS tracking)
-├── Firestore (incidents, teams)
-├── BigQuery (analytics)
-└── Cloud Pub/Sub (events)
+├── Amazon DynamoDB (incidents, teams)
+├── Amazon Athena + AWS Glue (analytics)
+└── Amazon SQS + SNS (events)
 
 Widgets (12):
 1. Event Overview (attendance, capacity)
@@ -155,7 +155,7 @@ Widgets (12):
 
 Update Frequency:
 - GPS tracking: 5s
-- Incident updates: Real-time (Firestore)
+- Incident updates: Real-time (Amazon DynamoDB)
 - Analytics: 1 min
 - Predictions: 5 min
 
@@ -173,7 +173,7 @@ Lines: 500
 Purpose: Review AI-validated incident proofs
 
 Features:
-├── Real-time incident feed (Firestore listener)
+├── Real-time incident feed (Amazon DynamoDB listener)
 ├── AI validation results display
 │   ├── Confidence score (0-100%)
 │   ├── Detected objects with bounding boxes
@@ -184,7 +184,7 @@ Features:
 ├── Batch approve/reject actions
 └── Alert generation integration
 
-Firestore Query:
+Amazon DynamoDB Query:
 collection: 'incident_reports'
 where: status == 'proof_validation'
 orderBy: createdAt desc
@@ -282,7 +282,7 @@ Alert Types:
 └── Custom Broadcast
 
 Channels (5):
-1. Push Notifications (FCM)
+1. Push Notifications (Amazon SNS Push)
 2. WhatsApp Messages (Twilio)
 3. SMS (Twilio fallback)
 4. In-App Notifications
@@ -332,7 +332,7 @@ Dispatch System:
 - Find nearest available responder
 - Skills matching (e.g., First Aid for medical)
 - Workload balancing
-- ETA calculation (Google Maps Directions API)
+- ETA calculation (Amazon Location Service Directions API)
 ```
 
 ---
@@ -438,13 +438,13 @@ Endpoints:
 - DELETE /v1/events/:id (soft delete)
 - POST /v1/events/:id/publish (go live)
 
-Database: Firestore collection 'events'
+Database: Amazon DynamoDB collection 'events'
 Cache: Redis (TTL: 1 hour)
 
 Dependencies:
-- Firebase Auth (authentication)
-- Cloud Storage (event media)
-- BigQuery (analytics logging)
+- Amazon Cognito (authentication)
+- Amazon S3 (event media)
+- Amazon Athena + AWS Glue (analytics logging)
 ```
 
 #### 2. **Alert Service**
@@ -458,7 +458,7 @@ Features:
 ├── Multi-source detection (manual, ML, IoT)
 ├── Severity classification (low, medium, high, critical)
 ├── Intelligent routing (role-based, zone-based)
-├── Multi-channel delivery (FCM, WhatsApp, SMS)
+├── Multi-channel delivery (Amazon SNS Push, WhatsApp, SMS)
 ├── Escalation workflows
 └── Delivery tracking
 
@@ -467,7 +467,7 @@ Alert Flow:
 
 Performance:
 - Detection to delivery: <2s
-- FCM delivery rate: 99.2%
+- Amazon SNS Push delivery rate: 99.2%
 - WhatsApp delivery rate: 96.8%
 ```
 
@@ -479,7 +479,7 @@ Lines: 650
 Purpose: AI-powered proof validation
 
 AI Models:
-1. GCP Vision API (primary)
+1. AWS Vision API (primary)
    - Label detection
    - Object localization
    - Text extraction (OCR)
@@ -503,7 +503,7 @@ Base confidence: 0.5
 Auto-approve threshold: ≥0.75
 
 Performance:
-- GCP Vision: 120ms avg, 95% accuracy
+- AWS Vision: 120ms avg, 95% accuracy
 - TensorFlow.js: 480ms avg, 85% accuracy
 ```
 
@@ -522,13 +522,13 @@ Features:
 │   ├── Safety: 1000m
 │   ├── Lost & Found: 200m
 │   └── Facility: 400m
-├── Multi-channel delivery (FCM, WhatsApp, SMS)
-├── Batch processing (500 tokens per FCM batch)
+├── Multi-channel delivery (Amazon SNS Push, WhatsApp, SMS)
+├── Batch processing (500 tokens per Amazon SNS Push batch)
 ├── Delivery tracking and acknowledgments
 └── Escalation to teams
 
 Geofence Query:
-1. Firestore query (broad filter by lat/lon ranges)
+1. Amazon DynamoDB query (broad filter by lat/lon ranges)
 2. Haversine post-filter (precise distance)
 3. Sort by distance
 4. Limit to max recipients (configurable)
@@ -536,7 +536,7 @@ Geofence Query:
 Performance:
 - Geofence query: <100ms for 10K users
 - Alert generation: 1.3s avg
-- FCM batch send: <500ms
+- Amazon SNS Push batch send: <500ms
 ```
 
 #### 5. **WhatsApp Reporting Service**
@@ -551,7 +551,7 @@ Flow:
 2. Parse message text (Gemini AI)
 3. Download media attachments
 4. Validate proofs (proof-validation.service)
-5. Create incident report (Firestore)
+5. Create incident report (Amazon DynamoDB)
 6. Send acknowledgment (Twilio)
 7. If critical → Generate location-based alert
 
@@ -580,7 +580,7 @@ Models (3):
    - Input: Historical density (7 days)
    - Output: Next 30 min predictions
    - Accuracy: 78.1%
-   - Training: Weekly on Vertex AI
+   - Training: Weekly on Amazon SageMaker
 
 2. Anomaly Detection (Isolation Forest)
    - Framework: scikit-learn
@@ -593,7 +593,7 @@ Models (3):
    - Accuracy: 85%
 
 Inference:
-- Batch: Every 5 minutes (Cloud Functions)
+- Batch: Every 5 minutes (AWS Lambda)
 - Real-time: On-demand API
 - Latency: <2s per prediction
 ```
@@ -613,7 +613,7 @@ Features:
 ├── Privacy controls (on/off toggle)
 └── Battery optimization
 
-Database: Firebase Realtime Database
+Database: cognito Realtime Database
 Structure:
 /gps_tracking
   /{eventId}
@@ -634,7 +634,7 @@ Location: src/services/facial-recognition.service.ts
 Lines: 420
 Purpose: Team check-in and access control
 
-Vertex AI Vision:
+Amazon SageMaker Vision:
 - Face detection: 99.5% accuracy
 - Face matching: 97.3% accuracy
 - Liveness detection: 94.2% (anti-spoofing)
@@ -752,9 +752,9 @@ Agents (5):
    - Tracks engagement
 
 Orchestration:
-- Event-driven (Cloud Pub/Sub)
+- Event-driven (Amazon SQS + SNS)
 - Workflow engine (Cloud Workflows)
-- State management (Firestore)
+- State management (Amazon DynamoDB)
 ```
 
 #### 12. **External Integrations Service**
@@ -766,7 +766,7 @@ Purpose: Third-party API integrations
 
 Integrations (10):
 1. Twilio (WhatsApp, SMS)
-2. Google Maps (geocoding, directions, places)
+2. Amazon Location Service (geocoding, directions, places)
 3. Weather API (OpenWeatherMap)
 4. Payment Gateway (Stripe) - future
 5. Ticketing System (Eventbrite) - future
@@ -778,7 +778,7 @@ Integrations (10):
 
 Rate Limiting:
 - Twilio: 80 msg/sec
-- Google Maps: 10 req/sec
+- Amazon Location Service: 10 req/sec
 - Weather: 60 req/min
 
 Error Handling:
@@ -801,15 +801,15 @@ Error Handling:
 │ Model               Framework  Accuracy  Latency  Training      │
 │ ────────────────────────────────────────────────────────────── │
 │ Crowd Forecasting   PyTorch    78.1%     2s       Weekly       │
-│  (ConvLSTM)         Vertex AI                    (Vertex AI)   │
+│  (ConvLSTM)         Amazon SageMaker                    (Amazon SageMaker)   │
 │                                                                 │
 │ Proof Validation    Cloud      95.0%     120ms    Pre-trained  │
-│  (GCP Vision)       Vision API                                 │
+│  (AWS Vision)       Vision API                                 │
 │                                                                 │
 │ Proof Validation    TensorFlow 85.0%     480ms    Pre-trained  │
 │  (COCO-SSD)         .js                          (fallback)    │
 │                                                                 │
-│ Facial Recognition  Vertex AI  97.3%     1s       On-demand    │
+│ Facial Recognition  Amazon SageMaker  97.3%     1s       On-demand    │
 │  (Face Matching)    Vision                       (enrollment)  │
 │                                                                 │
 │ Incident NLP        Gemini     91.7%     300ms    Pre-trained  │
@@ -827,27 +827,27 @@ Error Handling:
 
 ### Third-Party Services (10)
 
-1. **Firebase Services** (6)
+1. **cognito Services** (6)
    - Authentication (OAuth 2.0, email/password)
-   - Firestore (NoSQL database)
+   - Amazon DynamoDB (NoSQL database)
    - Realtime Database (GPS tracking)
    - Storage (media files)
    - Cloud Messaging (push notifications)
    - Hosting (static website)
 
-2. **GCP AI/ML** (6)
+2. **AWS AI/ML** (6)
    - Cloud Vision API (image analysis)
    - Video Intelligence API (video analysis)
    - Gemini 1.5 Flash (NLP)
-   - Vertex AI (custom models)
-   - Vertex AI Vision (facial recognition)
+   - Amazon SageMaker (custom models)
+   - Amazon SageMaker Vision (facial recognition)
    - AutoML (future)
 
 3. **Twilio** (2)
    - WhatsApp Business API
    - SMS API
 
-4. **Google Maps** (4)
+4. **Amazon Location Service** (4)
    - Maps JavaScript API
    - Geocoding API
    - Directions API
@@ -862,56 +862,56 @@ Error Handling:
 
 ## Infrastructure Components
 
-### GCP Services (35)
+### AWS Services (35)
 
 ```
 Compute & Containers (4):
-├── Cloud Run (API hosting)
-├── Cloud Functions (webhooks, scheduled jobs)
+├── AWS App Runner (API hosting)
+├── AWS Lambda (webhooks, scheduled jobs)
 ├── App Engine (future)
 └── Cloud Build (CI/CD)
 
 Databases (3):
-├── Firestore (primary database)
-├── Firebase Realtime Database (GPS tracking)
-└── BigQuery (analytics warehouse)
+├── Amazon DynamoDB (primary database)
+├── cognito Realtime Database (GPS tracking)
+└── Amazon Athena + AWS Glue (analytics warehouse)
 
 Storage & CDN (3):
-├── Firebase Storage (media files)
-├── Cloud Storage (backups, archives)
+├── cognito Storage (media files)
+├── Amazon S3 (backups, archives)
 └── Cloud CDN (content delivery)
 
 AI & ML (7):
 ├── Cloud Vision API
 ├── Video Intelligence API
 ├── Gemini API
-├── Vertex AI Platform
-├── Vertex AI Vision
+├── Amazon SageMaker Platform
+├── Amazon SageMaker Vision
 ├── AutoML (future)
 └── Recommendations AI (future)
 
 Networking (4):
 ├── Cloud Load Balancing
-├── Cloud Armor (WAF)
+├── AWS WAF (WAF)
 ├── VPC (private networking)
 └── Cloud DNS
 
 Messaging & Streaming (3):
-├── Cloud Pub/Sub (event bus)
+├── Amazon SQS + SNS (event bus)
 ├── Cloud Dataflow (stream processing)
-└── Firebase Cloud Messaging
+└── Amazon SNS Push
 
 Security (5):
 ├── Cloud KMS (encryption keys)
-├── Secret Manager (API keys)
-├── Cloud DLP (PII detection)
+├── AWS Secrets Manager (API keys)
+├── Amazon Macie (PII detection)
 ├── Identity Platform (auth)
 └── Certificate Manager (SSL)
 
 Monitoring & Logging (4):
-├── Cloud Monitoring
-├── Cloud Logging
-├── Cloud Trace
+├── Amazon CloudWatch
+├── Amazon CloudWatch Logs
+├── AWS X-Ray
 └── Error Reporting
 
 DevOps & Management (2):
@@ -932,31 +932,31 @@ DevOps & Management (2):
 
 Frontend (React)
    │
-   ├─► Firebase Auth ─────► Identity Platform
-   ├─► Firestore ─────────► Cloud Firestore
-   ├─► Firebase Storage ──► Cloud Storage
-   ├─► FCM ───────────────► Cloud Messaging
-   └─► API Gateway ───────► Cloud Run
+   ├─► Amazon Cognito ─────► Identity Platform
+   ├─► Amazon DynamoDB ─────────► Cloud Amazon DynamoDB
+   ├─► cognito Storage ──► Amazon S3
+   ├─► Amazon SNS Push ───────────────► Cloud Messaging
+   └─► API Gateway ───────► AWS App Runner
                               │
                               ├─► Event Service
-                              │    └─► Firestore
+                              │    └─► Amazon DynamoDB
                               │
                               ├─► Alert Service
-                              │    ├─► Firestore
-                              │    ├─► FCM
+                              │    ├─► Amazon DynamoDB
+                              │    ├─► Amazon SNS Push
                               │    ├─► Twilio
-                              │    └─► Cloud Pub/Sub
+                              │    └─► Amazon SQS + SNS
                               │
                               ├─► Proof Validation
                               │    ├─► Cloud Vision API
-                              │    ├─► Firebase Storage
+                              │    ├─► cognito Storage
                               │    ├─► TensorFlow.js
-                              │    └─► Firestore
+                              │    └─► Amazon DynamoDB
                               │
                               ├─► Location Alert
-                              │    ├─► Firestore
+                              │    ├─► Amazon DynamoDB
                               │    ├─► Redis (geospatial)
-                              │    ├─► FCM
+                              │    ├─► Amazon SNS Push
                               │    └─► Twilio
                               │
                               ├─► WhatsApp Service
@@ -966,9 +966,9 @@ Frontend (React)
                               │    └─► Location Alert
                               │
                               └─► ML Service
-                                   ├─► Vertex AI
-                                   ├─► BigQuery
-                                   └─► Cloud Pub/Sub
+                                   ├─► Amazon SageMaker
+                                   ├─► Amazon Athena + AWS Glue
+                                   └─► Amazon SQS + SNS
 ```
 
 ---

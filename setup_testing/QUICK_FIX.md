@@ -6,24 +6,24 @@
 
 ---
 
-## ✅ Step 1: BigQuery Permission (DONE!)
+## ✅ Step 1: Amazon Athena Permission (DONE!)
 
 Already completed:
 ```powershell
-✅ Granted roles/bigquery.jobUser to drishtix-sa@drishtix-479606.iam.gserviceaccount.com
+✅ Granted roles/Amazon Athena.jobUser to arn:aws:iam::YOUR_ACCOUNT_ID:role/drishtix-service-role
 ```
 
 ---
 
-## 📊 Step 2: Create BigQuery Datasets (5 minutes)
+## 📊 Step 2: Create Amazon Athena Datasets (5 minutes)
 
-BigQuery Console should now be open. If not, open it:
+Amazon Athena Console should now be open. If not, open it:
 ```powershell
-Start-Process "https://console.cloud.google.com/bigquery?project=drishtix-479606"
+Start-Process "https://console.aws.amazon.com/Amazon Athena?project=YOUR_AWS_ACCOUNT_ID"
 ```
 
 ### Create Test Dataset:
-1. In the Explorer panel (left side), click your project: `drishtix-479606`
+1. In the Explorer panel (left side), click your project: `YOUR_AWS_ACCOUNT_ID`
 2. Click the 3 dots (⋮) next to the project name
 3. Click **"Create dataset"**
 4. Fill in:
@@ -35,7 +35,7 @@ Start-Process "https://console.cloud.google.com/bigquery?project=drishtix-479606
 
 ### Create Production Dataset:
 Repeat the same steps:
-1. Click the 3 dots (⋮) next to `drishtix-479606`
+1. Click the 3 dots (⋮) next to `YOUR_AWS_ACCOUNT_ID`
 2. Click **"Create dataset"**
 3. Fill in:
    - **Dataset ID**: `drishtix_analytics`
@@ -45,25 +45,25 @@ Repeat the same steps:
 
 ---
 
-## 🔥 Step 3: Deploy Firestore Indexes (Optional - 2 minutes)
+## 🔥 Step 3: Deploy Amazon DynamoDB Indexes (Optional - 2 minutes)
 
-This will fix the 2 failing Firestore tests:
+This will fix the 2 failing Amazon DynamoDB tests:
 
 ```powershell
 cd "C:\Users\akjai\Desktop\open-source\DrishtiX"
 
-# Login to Firebase (if not already logged in)
-firebase login
+# Login to Amazon Cognito+S3 (if not already logged in)
+Amazon Cognito+S3 login
 
 # Deploy indexes
-firebase deploy --only firestore:indexes
+Amazon Cognito+S3 deploy --only Amazon DynamoDB:indexes
 ```
 
 ---
 
 ## ✅ Step 4: Run Tests Again
 
-After creating the BigQuery datasets:
+After creating the Amazon Athena datasets:
 
 ```powershell
 cd "C:\Users\akjai\Desktop\open-source\DrishtiX\setup_testing"
@@ -71,10 +71,10 @@ npm run test
 ```
 
 **Expected Improvements**:
-- ✅ Pub/Sub: 7/7 → 7/7 (still 100%)
-- ✅ BigQuery: 3/10 → 10/10 (30% → 100%) 🎉
-- ✅ Firestore: 9/11 → 11/11 (82% → 100%) 🎉
-- ✅ Firebase Auth: 14/15 → 14/15 (still 93%)
+- ✅ Amazon SQS + SNS: 7/7 → 7/7 (still 100%)
+- ✅ Amazon Athena: 3/10 → 10/10 (30% → 100%) 🎉
+- ✅ Amazon DynamoDB: 9/11 → 11/11 (82% → 100%) 🎉
+- ✅ Amazon Cognito: 14/15 → 14/15 (still 93%)
 
 **New Total**: ~46/64 tests passing (72%) ✨
 
@@ -82,10 +82,10 @@ npm run test
 
 ## 📋 Complete Checklist
 
-- [x] **BigQuery Permission**: `roles/bigquery.jobUser` granted ✅
-- [ ] **BigQuery Test Dataset**: Create `drishtix_analytics_test`
-- [ ] **BigQuery Production Dataset**: Create `drishtix_analytics`
-- [ ] **Firestore Indexes**: Deploy with `firebase deploy --only firestore:indexes` (optional)
+- [x] **Amazon Athena Permission**: `roles/Amazon Athena.jobUser` granted ✅
+- [ ] **Amazon Athena Test Dataset**: Create `drishtix_analytics_test`
+- [ ] **Amazon Athena Production Dataset**: Create `drishtix_analytics`
+- [ ] **Amazon DynamoDB Indexes**: Deploy with `Amazon Cognito+S3 deploy --only Amazon DynamoDB:indexes` (optional)
 - [ ] **Re-run Tests**: `npm run test` in setup_testing folder
 
 ---
@@ -93,12 +93,12 @@ npm run test
 ## 🎉 After These Fixes
 
 Your test results will show:
-- ✅ **Pub/Sub Integration**: 100% ✅
-- ✅ **BigQuery Analytics**: 100% ✅ (after datasets created)
-- ✅ **Firestore Database**: 100% ✅ (after indexes deployed)
-- ✅ **Firebase Auth & FCM**: 93% ✅
+- ✅ **Amazon SQS + SNS Integration**: 100% ✅
+- ✅ **Amazon Athena Analytics**: 100% ✅ (after datasets created)
+- ✅ **Amazon DynamoDB Database**: 100% ✅ (after indexes deployed)
+- ✅ **Amazon Cognito & Amazon SNS Push**: 93% ✅
 - ⚠️ **Maps Platform**: 12.5% (debug later)
-- ⚪ **Earth Engine**: 0% (disabled - OK)
+- ⚪ **SageMaker Geospatial**: 0% (disabled - OK)
 - ⚪ **Local ML Services**: 28% (Docker not running - OK for dev)
 
 **Overall**: 72-78% tests passing! 🎊
@@ -116,11 +116,11 @@ Your test results will show:
 - **Action**: Debug later, not critical for development
 
 ### Local ML Services (Optional)
-- Only needed if using local ML instead of Vertex AI
+- Only needed if using local ML instead of Amazon SageMaker
 - Requires Docker containers running
 - **Action**: Skip for now unless needed
 
-### Earth Engine (Not Needed)
+### SageMaker Geospatial (Not Needed)
 - Intentionally disabled
 - Optional satellite imagery features
 - **Action**: Keep disabled
@@ -129,11 +129,11 @@ Your test results will show:
 
 ## 🚀 Ready to Start!
 
-Once you create the BigQuery datasets, you'll have:
-- ✅ **100%** of Pub/Sub working
-- ✅ **100%** of BigQuery working
-- ✅ **100%** of Firestore working (with indexes)
-- ✅ **93%** of Firebase Auth working
+Once you create the Amazon Athena datasets, you'll have:
+- ✅ **100%** of Amazon SQS + SNS working
+- ✅ **100%** of Amazon Athena working
+- ✅ **100%** of Amazon DynamoDB working (with indexes)
+- ✅ **93%** of Amazon Cognito working
 - ✅ **Core infrastructure fully functional**
 
 **You can start building features immediately!** 🎉
