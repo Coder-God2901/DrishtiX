@@ -1,0 +1,14 @@
+# Python environments
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Vision API heavy files
+DrishtiX-Anomaly-Detection/vision_api/uploads/*
+DrishtiX-Anomaly-Detection/vision_api/outputs/*
+!DrishtiX-Anomaly-Detection/vision_api/uploads/.keep
+!DrishtiX-Anomaly-Detection/vision_api/outputs/.keep
+
+# OS generated files
+.DS_Store
